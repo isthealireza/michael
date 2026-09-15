@@ -1,7 +1,0 @@
-NOT COVERED — run ingestion for Privacy Act 1988 (Cth) notification requirements  
-
-OPEN ITEMS — 1. [ MISSING: source document for Privacy Act 1988 (Cth) provisions on eligible data breach notification requirements ]  
-
-VERIFY BEFORE USE — No provisions retrieved; ensure appropriate source is ingested.  
-
-Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

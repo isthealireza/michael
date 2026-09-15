@@ -1,5 +1,0 @@
-I've noted the coverage gap in memory so this doesn't need re-discovering next session.
-
-The short version: the question is answerable in principle — Part IIIC of the Privacy Act 1988 (Cth) is exactly the right place — but that Act isn't in Michael's corpus, so I have no provisions to quote and won't fill the gap from memory or the web.
-
-Want me to find and ingest the Privacy Act 1988 (Cth) compilation from an allowlisted host? That's a two-step job (allowlist check, then `ingest_source_url`), after which I can re-run this request properly with section numbers, operative words and a snapshot date.

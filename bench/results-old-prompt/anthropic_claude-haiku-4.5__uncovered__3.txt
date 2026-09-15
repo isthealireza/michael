@@ -1,9 +1,0 @@
-NOT COVERED — run ingestion for eligible data breach notification requirements Privacy Act
-
-The Michael corpus does not currently contain provisions on data breach notification under the Privacy Act 1988 (Cth). Although the domain 'privacy' is recognised in the system and templates exist for privacy matters, the Privacy Act itself has not been ingested into the corpus yet.
-
-To get an answer to your question, the Privacy Act 1988 (Cth) — specifically the sections dealing with eligible data breaches and notification obligations (Part IIIA of the Act) — would need to be ingested first.
-
-If you have access to the Privacy Act 1988 (Cth) or official guidance on data breach notification requirements, I can ingest that source and then answer your question with full citations to the operative provisions.
-
-Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

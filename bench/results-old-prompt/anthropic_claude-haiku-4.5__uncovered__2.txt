@@ -1,7 +1,0 @@
-**NOT COVERED — run ingestion for data breach notification requirements Privacy Act**
-
-The Michael corpus does not currently hold provisions on Privacy Act 1988 (Cth) data breach notification requirements. The privacy domain is recognised, but no ingested documents meet the retrieval threshold.
-
-To answer your question, I would need to ingest official Privacy Act materials covering the Notifiable Data Breaches scheme (Part IIIC of the Privacy Act). You can request that ingestion be run against the Privacy Act, and then I can retrieve the specific notification requirements with proper citations.
-
-Alternatively, the official Australian Government Office of the Australian Information Commissioner (OAIC) website holds current guidance on data breach notification — but I cannot cite a web page or summary as legal authority; only provisions from an ingested source count as retrieved law.
