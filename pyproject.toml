@@ -1,0 +1,61 @@
+[project]
+name = "michael"
+version = "0.1.0"
+description = "Internal legal research and drafting assistant (single user, not published)"
+readme = "README.md"
+requires-python = ">=3.13,<3.14"
+dependencies = [
+    "httpx>=0.28.1,<0.29",
+    "psycopg[binary]>=3.3.4,<3.4",
+    "pyyaml>=6.0.2,<7",
+]
+
+[project.optional-dependencies]
+# Only needed to seed from the Open Australian Legal Corpus.
+corpus = ["datasets>=4.0.0,<5"]
+# Only needed to expose the tools over MCP to an agent runtime.
+mcp = ["mcp>=1.2.0,<2"]
+
+[project.scripts]
+michael = "michael.cli:main"
+
+[dependency-groups]
+dev = ["mypy", "pytest", "pytest-cov", "ruff"]
+
+[build-system]
+requires = ["uv_build>=0.11.29,<0.12"]
+build-backend = "uv_build"
+
+[tool.uv.build-backend]
+module-name = "michael"
+
+[tool.ruff]
+target-version = "py313"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = ["B", "E", "F", "I", "UP"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["michael", "tests"]
+
+[tool.ruff.format]
+line-ending = "lf"
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+
+[[tool.mypy.overrides]]
+module = ["yaml", "datasets", "mcp.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = ["--import-mode=importlib", "-m", "not integration and not network"]
+pythonpath = [".", "src"]
+markers = [
+    "integration: requires a running michael-postgres container",
+    "network: reaches an allowlisted host; excluded from the default run",
+]

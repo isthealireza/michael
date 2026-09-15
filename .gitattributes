@@ -1,0 +1,4 @@
+# Keep the repository LF so ruff format --check passes on a fresh clone.
+* text=auto eol=lf
+*.png binary
+*.docx binary

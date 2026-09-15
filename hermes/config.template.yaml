@@ -1,0 +1,50 @@
+# TEMPLATE. Rendered to hermes/config.yaml by hermes/render_config.py,
+# which substitutes ${...} from ../.env. The rendered file carries the
+# database passwords and the embedding key, so it is git-ignored.
+# Hermes Agent configuration for the Michael instance.
+# Lives in the volume at /opt/data/config.yaml (chmod 600: it carries secrets).
+
+model:
+  # Strong reasoning model: strict rule-following and tool use over long
+  # statutory context. Reasoning-capable, 1M context on OpenRouter.
+  default: anthropic/claude-opus-5
+
+_config_version: 39
+
+mcp_servers:
+  michael:
+    # Container path: Hermes runs stdio MCP servers as subprocesses inside its
+    # own container, so a host path would not resolve.
+    command: /opt/michael/.venv/bin/python
+    args:
+      - -m
+      - michael.mcp_server
+      - --allow-writes
+    connect_timeout: 60.0
+    enabled: true
+    # Hermes deliberately filters the environment of stdio subprocesses to a
+    # small allowlist (PATH, HOME, USER, LANG). Michael's settings therefore
+    # have to be declared here; inheriting them from the container does not work.
+    env:
+      PYTHONUNBUFFERED: "1"
+      EMBEDDING_API_KEY: "${EMBEDDING_API_KEY}"
+      EMBEDDING_BASE_URL: "https://openrouter.ai/api/v1"
+      EMBEDDING_DIM: "1536"
+      EMBEDDING_MAX_CHARS: "16000"
+      EMBEDDING_MODEL: "openai/text-embedding-3-small"
+      MICHAEL_DATABASE_URL: "${MICHAEL_DATABASE_URL}"
+      MICHAEL_DOMAINS_FILE: "/opt/michael/domains.yaml"
+      MICHAEL_INGESTION_LOG: "/opt/michael/sources/ingestion.log.jsonl"
+      MICHAEL_RO_DATABASE_URL: "${MICHAEL_RO_DATABASE_URL}"
+      MICHAEL_SOURCES_DIR: "/opt/michael/sources"
+      MICHAEL_SYSTEM_PROMPT: "/opt/michael/MICHAEL.md"
+      MICHAEL_TEMPLATES_DIR: "/opt/michael/templates"
+      RETRIEVAL_CANDIDATES: "200"
+      RETRIEVAL_MIN_SCORE: "0.60"
+      RETRIEVAL_TOP_K: "12"
+    tools:
+      exclude:
+        # Schema changes are an operator action, not an agent action.
+        - apply_schema
+      resources: false
+      prompts: false

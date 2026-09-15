@@ -1,0 +1,158 @@
+# Domain routing is configuration, not sub-agents. Each entry only changes
+# WHICH provisions are searched and WHICH template directory is offered.
+# It never changes the answering procedure and never restates a safety rule:
+# all safety rules live in MICHAEL.md only.
+#
+# Fields:
+#   name          domain identifier
+#   keywords      lowercase phrases matched against the request
+#   jurisdictions retrieval filter on documents.jurisdiction; [] means no filter
+#   doc_types     retrieval filter on documents.doc_type; [] means no filter
+#   templates     directory under templates/
+
+version: 1
+
+domains:
+  - name: employment
+    keywords:
+      - employment
+      - employee
+      - employer
+      - casual
+      - part-time
+      - full-time
+      - unfair dismissal
+      - redundancy
+      - modern award
+      - award
+      - national employment standards
+      - fair work
+      - wage
+      - wages
+      - pay rate
+      - penalty rate
+      - overtime
+      - annual leave
+      - personal leave
+      - long service leave
+      - superannuation
+      - termination
+      - notice period
+      - enterprise agreement
+      - casual conversion
+      - casual loading
+    # National-system employment is Commonwealth. WA state employment law
+    # applies only to non-national-system employees; MICHAEL.md governs that
+    # distinction. This filter only narrows the search.
+    jurisdictions: [commonwealth]
+    doc_types: [act, regulation, award]
+    templates: employment
+
+  - name: contracts
+    keywords:
+      - contract
+      - agreement
+      - breach of contract
+      - consideration
+      - indemnity
+      - warranty
+      - liability
+      - termination clause
+      - force majeure
+      - service agreement
+      - supply agreement
+      - non-disclosure
+      - confidentiality
+      - licence
+      - electronic signature
+      - electronic transactions
+    jurisdictions: [commonwealth, wa]
+    doc_types: [act, regulation, case]
+    templates: contracts
+
+  - name: consumer
+    keywords:
+      - consumer
+      - australian consumer law
+      - consumer guarantee
+      - misleading or deceptive
+      - unfair contract term
+      - refund
+      - product safety
+      - unconscionable conduct
+      - competition and consumer act
+    jurisdictions: [commonwealth]
+    doc_types: [act, regulation, case]
+    templates: consumer
+
+  - name: property
+    keywords:
+      - property
+      - land
+      - lease
+      - tenancy
+      - residential tenancy
+      - landlord
+      - tenant
+      - strata
+      - easement
+      - caveat
+      - transfer of land
+      - mortgage
+      - retail shop lease
+      - settlement
+    jurisdictions: [wa]
+    doc_types: [act, regulation, case]
+    templates: property
+
+  - name: corporate
+    keywords:
+      - corporation
+      - company
+      - director
+      - shareholder
+      - corporations act
+      - insolvency
+      - winding up
+      - shares
+      - company constitution
+      - directors duties
+      - related party
+      - financial report
+    jurisdictions: [commonwealth]
+    doc_types: [act, regulation, case]
+    templates: corporate
+
+  - name: work_health_safety
+    keywords:
+      - work health and safety
+      - whs
+      - occupational safety
+      - occupational health
+      - safe work
+      - hazard
+      - psychosocial
+      - notifiable incident
+      - pcbu
+      - workers compensation
+      - risk assessment
+      - safety duty
+    jurisdictions: [wa, commonwealth]
+    doc_types: [act, regulation]
+    templates: work_health_safety
+
+  - name: privacy
+    keywords:
+      - privacy
+      - privacy act
+      - australian privacy principles
+      - personal information
+      - data breach
+      - notifiable data breach
+      - collection notice
+      - privacy policy
+      - sensitive information
+      - cross-border disclosure
+    jurisdictions: [commonwealth]
+    doc_types: [act, regulation]
+    templates: privacy

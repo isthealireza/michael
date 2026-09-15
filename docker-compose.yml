@@ -1,0 +1,33 @@
+# Michael — internal legal research and drafting assistant.
+# Deliberately a separate instance from "Albert": own container name, own
+# volume, own port, own .env. Nothing here is shared with another project.
+
+name: michael
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: michael-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-michael}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env}
+      POSTGRES_DB: ${POSTGRES_DB:-michael}
+      # Read-only role used by the answering path. Provisioned by db/init.
+      MICHAEL_RO_PASSWORD: ${MICHAEL_RO_PASSWORD:?MICHAEL_RO_PASSWORD must be set in .env}
+    ports:
+      # Loopback only. Never expose this database on a routable interface.
+      - "127.0.0.1:${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - michael_postgres_data:/var/lib/postgresql/data
+      - ./db/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
+
+volumes:
+  michael_postgres_data:
+    name: michael_postgres_data

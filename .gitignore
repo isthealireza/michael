@@ -1,0 +1,19 @@
+.env
+.env.*
+!.env.example
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+# Downloaded originals are immutable evidence but are not committed:
+# they are reproducible from source_url + sha256 recorded in the database.
+sources/**
+!sources/.gitkeep
+!sources/fixtures/
+
+# Hermes instance secrets, generated from ../.env
+hermes/hermes.env
+hermes/config.yaml

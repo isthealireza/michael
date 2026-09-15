@@ -1,0 +1,56 @@
+# Michael's Hermes instance. Deliberately separate from any other Hermes on
+# this machine: its own image tag, container name, named volume and port.
+#
+#   docker compose -f hermes/docker-compose.yml up -d --build
+
+name: michael-hermes
+
+services:
+  gateway:
+    build:
+      context: ..
+      dockerfile: hermes/Dockerfile
+    image: michael-hermes:v0.21.0
+    container_name: michael-hermes
+    restart: unless-stopped
+    volumes:
+      - michael_hermes_data:/opt/data
+    env_file:
+      - hermes.env
+    environment:
+      - HERMES_UID=10000
+      - HERMES_GID=10000
+    networks:
+      # Michael's Postgres is on this network as michael-postgres:5432, so no
+      # host networking is needed and the database stays off the host interface.
+      - michael_default
+    command: ["gateway", "run"]
+
+  dashboard:
+    image: michael-hermes:v0.21.0
+    container_name: michael-hermes-dashboard
+    restart: unless-stopped
+    depends_on:
+      - gateway
+    volumes:
+      - michael_hermes_data:/opt/data
+    env_file:
+      - hermes.env
+    environment:
+      - HERMES_UID=10000
+      - HERMES_GID=10000
+      - HERMES_DASHBOARD_HOST=0.0.0.0
+    ports:
+      # Loopback only. The dashboard stores API keys.
+      - "127.0.0.1:9120:9119"
+    networks:
+      - michael_default
+    command: ["dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open", "--insecure"]
+
+volumes:
+  michael_hermes_data:
+    name: michael_hermes_data
+
+networks:
+  michael_default:
+    external: true
