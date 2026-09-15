@@ -103,7 +103,8 @@ def mcp_calls(session_id: str | None) -> dict[str, int]:
 def score(record: dict[str, object], text: str, conn: Connection[DictRow]) -> dict[str, object]:
     cites = citations(text)
     unresolved = sorted(f"{a} s {s}" for a, s in cites if not resolves(conn, a, s))
-    calls = mcp_calls(record.get("session_id"))
+    session = record.get("session_id")
+    calls = mcp_calls(session if isinstance(session, str) else None)
     tool_used = bool(calls)
 
     checks: dict[str, object] = {
