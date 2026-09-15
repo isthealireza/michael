@@ -8,6 +8,7 @@ Run from the project root after changing .env:
 
 from __future__ import annotations
 
+import hashlib
 import pathlib
 import re
 import sys
@@ -60,7 +61,15 @@ def main() -> int:
     ]
     (HERMES / "hermes.env").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
+    # SOUL.md is a derived artifact: a byte-identical copy of MICHAEL.md, which
+    # is the single source of truth. Copying it here means the persona cannot
+    # drift from the prompt when MICHAEL.md changes.
+    source = (ROOT / "MICHAEL.md").read_bytes()
+    (HERMES / "SOUL.md").write_bytes(source)
+    digest = hashlib.sha256(source).hexdigest()
+
     print("rendered hermes/config.yaml and hermes/hermes.env")
+    print(f"copied MICHAEL.md -> hermes/SOUL.md (sha256 {digest[:16]}...)")
     return 0
 
 
