@@ -5,9 +5,13 @@
 # Lives in the volume at /opt/data/config.yaml (chmod 600: it carries secrets).
 
 model:
-  # Strong reasoning model: strict rule-following and tool use over long
-  # statutory context. Reasoning-capable, 1M context on OpenRouter.
-  default: anthropic/claude-opus-5
+  # Chosen by benchmark, not by reputation: 42 runs over the acceptance
+  # prompt and a deliberately uncovered question. The only two models that
+  # never broke a rule were sonnet-5 and this one; this one is cheaper
+  # ($0.017 vs $0.039 per run). See bench/ and the README.
+  # NOTE: pin the provider to openrouter when overriding with -m; Hermes
+  # routes some ids elsewhere (sonnet-5 resolves to 'gmi').
+  default: deepseek/deepseek-v4-pro
 
 _config_version: 39
 

@@ -247,6 +247,39 @@ docker compose -f hermes/docker-compose.yml up -d --build
 docker exec michael-hermes hermes -z "your question"
 ```
 
+**Model choice is benchmarked, not assumed.** `deepseek/deepseek-v4-pro`, chosen
+over `claude-opus-5` by 42 runs (7 models × 2 prompts × 3 runs) over the
+acceptance prompt and a deliberately uncovered question. Harness in `bench/`,
+raw results in `bench/results/`. Disqualification was any single rule breach.
+
+| model | mean $/run | verdict |
+|---|---|---|
+| anthropic/claude-opus-5 | 0.23645 | disqualified — no closing notice (1/6) |
+| anthropic/claude-sonnet-5 | 0.03949 | **pass** |
+| **deepseek/deepseek-v4-pro** | **0.01720** | **pass — selected** |
+| anthropic/claude-haiku-4.5 | 0.01432 | disqualified — zero MCP calls, no notice |
+| deepseek/deepseek-v4-flash | 0.00466 | disqualified — no closing notice (1/6) |
+| openai/gpt-oss-120b | 0.00217 | disqualified — answered with zero MCP calls |
+| qwen/qwen3.7-flash | 0.00078 | disqualified — 6/6 breaches |
+
+Cost is actual OpenRouter spend, from diffing the key's cumulative usage around
+each run; the `--usage-file` figure is self-declared "estimated".
+
+**No model fabricated a citation.** Every citation in all 42 runs resolved to a
+provision in the corpus. The failures were all about the *output contract*, not
+invented law.
+
+**Four of seven models dropped the closing notice on the uncovered path**, and
+all four otherwise refused correctly. That points at MICHAEL.md rather than the
+models: "If retrieval is empty, reply NOT COVERED ... **and stop**" reads as
+licence to skip the "Every output ends with" blocks. Worth resolving in the
+prompt — it is currently the single most common failure mode, and it disqualified
+the incumbent.
+
+**Pin the provider when overriding the model.** `hermes -m anthropic/claude-sonnet-5`
+routes to provider `gmi` and fails with no credentials; `--provider openrouter`
+is required, and is also what keeps spend on the measured key.
+
 **One container, not two.** The dashboard's chat talks to the gateway over
 localhost, so they must share a network namespace. Upstream's Linux compose
 splits them and relies on `network_mode: host`, which Docker Desktop for Windows

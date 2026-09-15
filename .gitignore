@@ -17,3 +17,4 @@ sources/**
 # Hermes instance secrets, generated from ../.env
 hermes/hermes.env
 hermes/config.yaml
+bench/results/
