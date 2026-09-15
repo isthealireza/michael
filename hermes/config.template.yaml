@@ -20,10 +20,14 @@ mcp_servers:
     # Container path: Hermes runs stdio MCP servers as subprocesses inside its
     # own container, so a host path would not resolve.
     command: /opt/michael/.venv/bin/python
+    # No --allow-writes. The answering agent must not be able to write to the
+    # corpus. A deployed agent used ingest_source_url mid-answer, pulled a
+    # headings-only page into the corpus, and cited it in the same turn; the
+    # read-only database role could not prevent it because ingestion runs
+    # under the read/write URL by design. Ingestion is an operator action.
     args:
       - -m
       - michael.mcp_server
-      - --allow-writes
     connect_timeout: 60.0
     enabled: true
     # Hermes deliberately filters the environment of stdio subprocesses to a
@@ -47,9 +51,18 @@ mcp_servers:
       RETRIEVAL_MIN_SCORE: "0.60"
       RETRIEVAL_TOP_K: "12"
     tools:
+      # An allowlist, not a blocklist: a tool added to Michael later is off
+      # for the agent until someone names it here.
+      include:
+        - classify_request
+        - search_provisions
+        - draft_document
       exclude:
-        # Schema changes are an operator action, not an agent action.
+        # Named as well as omitted, so the intent survives an edit to include.
         - apply_schema
+        - ingest_source_url
+        - ingest_local_file
+        - seed_corpus
       resources: false
       prompts: false
 

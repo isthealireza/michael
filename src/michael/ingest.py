@@ -388,7 +388,7 @@ def ingest_url(
 
     text = extract_text(source.body, content_type=source.content_type, origin=url)
 
-    return ingest_document(
+    result = ingest_document(
         jurisdiction=jurisdiction,
         title=title,
         citation=citation,
@@ -399,6 +399,11 @@ def ingest_url(
         text=text,
         fetched_at=source.fetched_at,
     )
+    # BM25 reads N and avgdl from corpus_stats. Leaving it stale makes every
+    # subsequent score wrong, and silently invalidates the calibrated
+    # retrieval threshold.
+    refresh_corpus_stats()
+    return result
 
 
 def extract_text(body: bytes, *, content_type: str = "", origin: str = "") -> str:
@@ -455,7 +460,7 @@ def ingest_file(
     digest = hashlib.sha256(body).hexdigest()
     text = extract_text(body, origin=str(path))
 
-    return ingest_document(
+    result = ingest_document(
         jurisdiction=jurisdiction,
         title=title,
         citation=citation,
@@ -465,6 +470,8 @@ def ingest_file(
         doc_type=doc_type,
         text=text,
     )
+    refresh_corpus_stats()
+    return result
 
 
 def _log_refusal(*, url: str, reason: str) -> None:

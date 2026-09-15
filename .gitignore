@@ -20,3 +20,6 @@ hermes/config.yaml
 bench/results/
 bench/results-old-prompt/
 deploy/*.dump
+deploy/.ro_password
+deploy/.dashboard_password
+deploy/.dashboard_hash

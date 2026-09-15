@@ -88,3 +88,38 @@ def test_the_rendered_config_keeps_every_guarantee() -> None:
     assert out["dashboard"]["basic_auth"]["password_hash"]
     # The benchmarked model is pinned.
     assert out["model"]["default"] == "deepseek/deepseek-v4-pro"
+
+
+def test_the_agent_profile_grants_no_write_tool() -> None:
+    """The incident this guards against.
+
+    A deployed agent called ingest_source_url mid-answer, pulled a
+    headings-only page into the corpus, and cited it in the same turn. The
+    read-only database role could not stop it: ingestion runs under the
+    read/write URL by design. So the write tools must not reach the agent at
+    all, and --allow-writes must not be passed on the answering path.
+    """
+    import yaml
+
+    out = yaml.safe_load(mod.render(body(), FULL_ENV))
+    michael = out["mcp_servers"]["michael"]
+
+    assert "--allow-writes" not in michael["args"], (
+        "the answering path must not enable Michael's writing tools"
+    )
+
+    granted = set(michael["tools"]["include"])
+    assert granted == {"classify_request", "search_provisions", "draft_document"}
+
+    writers = {"ingest_source_url", "ingest_local_file", "seed_corpus", "apply_schema"}
+    assert not (granted & writers), f"write tools granted: {sorted(granted & writers)}"
+    assert writers <= set(michael["tools"]["exclude"]), "write tools must also be excluded by name"
+
+
+def test_michael_still_refuses_writers_without_allow_writes() -> None:
+    """Defence in depth: the dispatcher refuses even if the transport slips."""
+    from michael import tools
+
+    for name in ("ingest_source_url", "ingest_local_file", "seed_corpus", "apply_schema"):
+        with pytest.raises(PermissionError):
+            tools.dispatch(name, {})
