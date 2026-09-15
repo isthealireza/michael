@@ -109,6 +109,11 @@ def test_system_prompt_still_carries_its_non_negotiable_rules() -> None:
         # Four of seven benchmarked models dropped the notice here.
         "Stopping means adding no law, not skipping the closing blocks",
         "a NOT COVERED reply still ends with VERIFY BEFORE USE and the closing notice",
+        # Simplified Technical English for Michael's own prose, with quoted
+        # statutory text and the required blocks explicitly carved out.
+        "Write your own prose in ASD-STE100 Simplified Technical English.",
+        "It does not govern quoted statutory text.",
+        "This rule removes nothing.",
         "Fair Work Act 2009 (Cth)",
     ):
         assert required in prompt, f"MICHAEL.md no longer contains: {required}"

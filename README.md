@@ -320,6 +320,13 @@ small allowlist, so Michael's settings are declared in the `env:` block of the
 server entry in `config.yaml`. Inheriting them from the container does not work
 — the first deployment failed exactly this way.
 
+**Michael writes in Simplified Technical English.** MICHAEL.md requires
+ASD-STE100 for Michael's own prose: short sentences, one idea each, active
+voice, present tense, plain words, no filler. The rule is carved out twice so it
+cannot erode the guarantees — it does not touch quoted statutory text, which
+stays verbatim including long or passive wording, and it removes nothing from
+OPEN ITEMS, VERIFY BEFORE USE or the closing notice.
+
 **Web search is a locator, not a source.** The `web` toolset stays enabled so
 the agent can find a document worth ingesting, but MICHAEL.md forbids citing a
 web page, search result, snippet or summary: only a provision retrieved from the
