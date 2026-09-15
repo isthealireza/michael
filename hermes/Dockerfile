@@ -27,5 +27,20 @@ RUN uv venv /opt/michael/.venv --python 3.13 \
 RUN mkdir -p /opt/michael/sources /opt/michael/templates/drafts \
     && chown -R 10000:10000 /opt/michael
 
-# Leave ENTRYPOINT alone: /init is s6-overlay's PID 1 and must stay first.
+# NOTE: deleting the bundled headless Chromium here does NOT shrink the image.
+# Layers are additive, so an rm in a later layer leaves the bytes in the base
+# layer and only adds another. The uncompressed image stays ~4.07GB; the
+# compressed size that registries transfer is ~1.0GB. If Railway rejects the
+# image on size, the fix is a slimmer base image, not a delete here.
+
+# Rendered at boot from the environment, for hosts where no .env exists.
+COPY hermes/config.template.yaml hermes/render_runtime_config.py /opt/michael/hermes/
+COPY hermes/railway-entrypoint.sh /usr/local/bin/railway-entrypoint.sh
+RUN chmod +x /usr/local/bin/railway-entrypoint.sh
+
 WORKDIR /opt/data
+
+# The wrapper renders config, then execs /init - s6-overlay's PID 1 - which
+# must stay first in the chain.
+ENTRYPOINT ["/usr/local/bin/railway-entrypoint.sh"]
+CMD ["gateway", "run"]

@@ -19,3 +19,4 @@ hermes/hermes.env
 hermes/config.yaml
 bench/results/
 bench/results-old-prompt/
+deploy/*.dump

@@ -1,0 +1,23 @@
+# Keep the build context small: Railway uploads it on every deploy.
+.git
+.venv
+.mypy_cache
+.pytest_cache
+.ruff_cache
+__pycache__
+*.py[cod]
+.coverage
+
+# Secrets never enter an image layer.
+.env
+.env.*
+!.env.example
+hermes/hermes.env
+hermes/config.yaml
+
+# Data and artefacts, not source.
+sources/**
+deploy/*.dump
+bench/results
+bench/results-old-prompt
+templates/drafts/*.md
