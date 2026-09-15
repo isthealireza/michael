@@ -1,12 +1,21 @@
 # Michael's Hermes instance. Deliberately separate from any other Hermes on
 # this machine: its own image tag, container name, named volume and port.
 #
+#   uv run python hermes/render_config.py
 #   docker compose -f hermes/docker-compose.yml up -d --build
+#
+# One container on purpose. The dashboard's chat talks to the gateway over
+# localhost, so they must share a network namespace. Upstream's Linux compose
+# splits them and relies on `network_mode: host`, which Docker Desktop for
+# Windows does not support; splitting them onto a bridge network instead leaves
+# the dashboard reporting "Gateway Status: Stopped" and no websocket, because
+# its localhost is not the gateway's. HERMES_DASHBOARD=1 has s6 supervise both
+# in this container, which is the supported single-container mode.
 
 name: michael-hermes
 
 services:
-  gateway:
+  hermes:
     build:
       context: ..
       dockerfile: hermes/Dockerfile
@@ -20,32 +29,21 @@ services:
     environment:
       - HERMES_UID=10000
       - HERMES_GID=10000
-    networks:
-      # Michael's Postgres is on this network as michael-postgres:5432, so no
-      # host networking is needed and the database stays off the host interface.
-      - michael_default
-    command: ["gateway", "run"]
-
-  dashboard:
-    image: michael-hermes:v0.21.0
-    container_name: michael-hermes-dashboard
-    restart: unless-stopped
-    depends_on:
-      - gateway
-    volumes:
-      - michael_hermes_data:/opt/data
-    env_file:
-      - hermes.env
-    environment:
-      - HERMES_UID=10000
-      - HERMES_GID=10000
+      # Supervise the dashboard in this container, beside the gateway.
+      - HERMES_DASHBOARD=1
+      # 0.0.0.0 so Docker's port proxy can reach it; the published port is
+      # loopback-only. A non-loopback bind requires auth, and
+      # HERMES_DASHBOARD_INSECURE has been a no-op since the June 2026
+      # hardening, so credentials are mandatory and come from hermes.env.
       - HERMES_DASHBOARD_HOST=0.0.0.0
+      - HERMES_DASHBOARD_PORT=9119
     ports:
-      # Loopback only. The dashboard stores API keys.
       - "127.0.0.1:9120:9119"
     networks:
+      # Michael's Postgres is on this network as michael-postgres:5432, so the
+      # database never has to be reachable on the host interface.
       - michael_default
-    command: ["dashboard", "--host", "0.0.0.0", "--port", "9119", "--no-open", "--insecure"]
+    command: ["gateway", "run"]
 
 volumes:
   michael_hermes_data:

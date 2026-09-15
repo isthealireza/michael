@@ -247,6 +247,26 @@ docker compose -f hermes/docker-compose.yml up -d --build
 docker exec michael-hermes hermes -z "your question"
 ```
 
+**One container, not two.** The dashboard's chat talks to the gateway over
+localhost, so they must share a network namespace. Upstream's Linux compose
+splits them and relies on `network_mode: host`, which Docker Desktop for Windows
+does not support; on a bridge network the dashboard reports "Gateway Status:
+Stopped" and never opens a websocket, because its localhost is not the
+gateway's. `HERMES_DASHBOARD=1` has s6 supervise both in one container.
+
+**The dashboard requires auth.** A non-loopback bind is refused outright without
+an auth provider, and `--insecure` has been a no-op since the June 2026
+hardening — the process exits 0 and `restart: unless-stopped` loops it, which
+presents to the browser as ERR_EMPTY_RESPONSE. Inside a container the bind must
+be `0.0.0.0` for Docker's port proxy to reach it, so credentials are mandatory:
+`HERMES_DASHBOARD_BASIC_AUTH_USERNAME` / `_PASSWORD` in `hermes.env`. The
+published port is `127.0.0.1` only.
+
+**`agent.disabled_toolsets` lives in `config.yaml`,** the same file
+`render_config.py` writes — so it is declared in the template. It is not
+per-platform: omitting it once restored the full toolset to the web chat while
+the CLI stayed restricted.
+
 The image tag is `nousresearch/hermes-agent:v2026.8.31` — there is no `v0.21.0`
 tag; the registry uses date tags, and `hermes --version` in that image reports
 `v0.21.0 (2026.8.31)`.

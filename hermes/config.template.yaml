@@ -48,3 +48,33 @@ mcp_servers:
         - apply_schema
       resources: false
       prompts: false
+
+# The dashboard refuses any non-loopback bind without an auth provider, and
+# --insecure has been a no-op since the June 2026 hardening. Inside a container
+# the bind must be 0.0.0.0 for Docker's port proxy to reach it, so auth is
+# mandatory. The published port is still 127.0.0.1 only.
+dashboard:
+  basic_auth:
+    username: "${DASHBOARD_USERNAME}"
+    password_hash: "${DASHBOARD_PASSWORD_HASH}"
+
+# Everything that can write a file or execute code is off, for every surface.
+# `hermes tools disable` writes this list, but it lives in the same file this
+# template renders, so it must be declared here or a redeploy silently restores
+# the full toolset - which is exactly what happened to the web chat once.
+#
+# skills, cronjob and delegation are included because each is an indirect route
+# back to execution: installing a package, scheduling a job, or spawning a
+# subagent with its own tools.
+agent:
+  disabled_toolsets:
+    - terminal
+    - file
+    - code_execution
+    - computer_use
+    - skills
+    - cronjob
+    - delegation
+    - browser
+    - image_gen
+    - tts
