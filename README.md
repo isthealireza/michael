@@ -270,11 +270,17 @@ provision in the corpus. The failures were all about the *output contract*, not
 invented law.
 
 **Four of seven models dropped the closing notice on the uncovered path**, and
-all four otherwise refused correctly. That points at MICHAEL.md rather than the
-models: "If retrieval is empty, reply NOT COVERED ... **and stop**" reads as
-licence to skip the "Every output ends with" blocks. Worth resolving in the
-prompt — it is currently the single most common failure mode, and it disqualified
-the incumbent.
+all four otherwise refused correctly. That pointed at MICHAEL.md rather than the
+models: "If retrieval is empty, reply NOT COVERED ... **and stop**" read as
+licence to skip the "Every output ends with" blocks. **Fixed** — the prompt now
+says stopping means adding no law, not skipping the closing blocks, and that a
+NOT COVERED reply still ends with VERIFY BEFORE USE and the notice. Verified 3/3
+on deepseek-v4-pro.
+
+The disqualifications above were measured against the *old* wording, so
+re-running the benchmark could requalify opus-5, haiku-4.5 and
+deepseek-v4-flash. deepseek-v4-flash is 3.7x cheaper again than the model now in
+use, so the recommendation may change.
 
 **Pin the provider when overriding the model.** `hermes -m anthropic/claude-sonnet-5`
 routes to provider `gmi` and fails with no credentials; `--provider openrouter`

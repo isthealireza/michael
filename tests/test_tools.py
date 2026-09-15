@@ -105,6 +105,10 @@ def test_system_prompt_still_carries_its_non_negotiable_rules() -> None:
         # Web search locates documents for ingestion; it is never a source.
         "Web search locates documents. It never answers questions.",
         "Never cite a web page, a search result, a snippet or a summary.",
+        # A NOT COVERED reply is still an output and still closes properly.
+        # Four of seven benchmarked models dropped the notice here.
+        "Stopping means adding no law, not skipping the closing blocks",
+        "a NOT COVERED reply still ends with VERIFY BEFORE USE and the closing notice",
         "Fair Work Act 2009 (Cth)",
     ):
         assert required in prompt, f"MICHAEL.md no longer contains: {required}"
