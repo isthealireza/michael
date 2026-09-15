@@ -17,6 +17,9 @@ from michael.cli import load_dotenv  # noqa: E402
 
 load_dotenv()
 
+from psycopg import Connection  # noqa: E402
+from psycopg.rows import DictRow  # noqa: E402
+
 from michael.db import readonly  # noqa: E402
 
 BENCH = pathlib.Path("bench/results")
@@ -53,7 +56,7 @@ def citations(text: str) -> set[tuple[str, str]]:
     return out
 
 
-def resolves(conn, act: str, section: str) -> bool:
+def resolves(conn: Connection[DictRow], act: str, section: str) -> bool:
     with conn.cursor() as cur:
         cur.execute(
             "SELECT 1 FROM provisions p JOIN documents d ON d.id = p.document_id "
@@ -91,12 +94,13 @@ def mcp_calls(session_id: str | None) -> dict[str, int]:
         text=True,
     )
     try:
-        return json.loads(proc.stdout.strip() or "{}")
+        parsed: dict[str, int] = json.loads(proc.stdout.strip() or "{}")
     except json.JSONDecodeError:
         return {}
+    return parsed
 
 
-def score(record: dict, text: str, conn) -> dict:
+def score(record: dict[str, object], text: str, conn: Connection[DictRow]) -> dict[str, object]:
     cites = citations(text)
     unresolved = sorted(f"{a} s {s}" for a, s in cites if not resolves(conn, a, s))
     calls = mcp_calls(record.get("session_id"))
