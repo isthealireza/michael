@@ -1,0 +1,16 @@
+NOT COVERED — run ingestion for the Privacy Act 1988 (Cth), Part IIIC (Notifiable Data Breaches scheme, ss 26WE–26WW).
+
+The corpus currently holds no provisions from the Privacy Act 1988 (Cth). The retrieval system's best fused scores (0.48–0.58) are all below the 0.600 threshold, confirming the Act has not been ingested. This was also noted in my memory: "Michael corpus has NO privacy provisions: Privacy Act 1988 (Cth) is not ingested."
+
+If you would like me to ingest the Privacy Act 1988 (Cth) (which is hosted on legislation.gov.au, an allowlisted host), I can do so. Once ingested, I will be able to retrieve and answer on:
+
+  - The definition of an "eligible data breach" (s 26WE)
+  - The obligation to notify the OAIC Commissioner (s 26WK)
+  - The obligation to notify affected individuals (s 26WL)
+  - The content requirements for a data breach notification statement (s 26WN)
+  - Exceptions (e.g. remediated breaches, s 26WF)
+  - The assessment and notification timeline (generally 30 days after awareness of reasonable grounds to suspect an eligible data breach)
+
+---
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

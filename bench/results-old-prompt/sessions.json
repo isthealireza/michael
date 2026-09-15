@@ -1,0 +1,842 @@
+﻿[
+  {
+    "session_id": "20260915_041956_8c7ba7",
+    "model": "anthropic/claude-opus-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 2,
+      "mcp__list_domains": 1
+    },
+    "michael_total": 3,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 3,
+      "search_files": 8,
+      "read_file": 14,
+      "terminal": 38,
+      "skill_view": 4,
+      "memory": 2
+    }
+  },
+  {
+    "session_id": "20260915_042734_a07cee",
+    "model": "anthropic/claude-opus-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 4,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 7,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 7,
+      "execute_code": 2
+    }
+  },
+  {
+    "session_id": "20260915_043609_32aea1",
+    "model": "anthropic/claude-opus-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 6,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 9,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 9
+    }
+  },
+  {
+    "session_id": "20260915_044423_66d59f",
+    "model": "anthropic/claude-opus-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 7,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 10,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 10
+    }
+  },
+  {
+    "session_id": "20260915_045900_2385a5",
+    "model": "anthropic/claude-opus-5",
+    "kind": "other",
+    "prompt_head": "What does the Fair Work Act say about the meaning of casual employee?",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 3,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 3
+    }
+  },
+  {
+    "session_id": "20260915_050308_cbfc13",
+    "model": "anthropic/claude-opus-5",
+    "kind": "other",
+    "prompt_head": "lCite the Fair Work Act provision on the Casual Employment Information Statement.",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 3,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 3
+    }
+  },
+  {
+    "session_id": "20260915_050736_532bfa",
+    "model": "anthropic/claude-opus-5",
+    "kind": "other",
+    "prompt_head": "Can a small business employer dismiss a casual employee without notice,\nand what does the ",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 9
+    },
+    "michael_total": 11,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 11
+    }
+  },
+  {
+    "session_id": "20260915_051144_2e756b",
+    "model": "qwen/qwen3.7-flash",
+    "kind": "other",
+    "prompt_head": "Reply with exactly: OK",
+    "michael_calls": {},
+    "michael_total": 0,
+    "other_tools": {}
+  },
+  {
+    "session_id": "20260915_051342_02eb52",
+    "model": "anthropic/claude-opus-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 7,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 10,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 10
+    }
+  },
+  {
+    "session_id": "20260915_051540_614e83",
+    "model": "anthropic/claude-opus-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__draft_document": 1,
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 4,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 4,
+      "memory": 2
+    }
+  },
+  {
+    "session_id": "20260915_051717_6948bf",
+    "model": "anthropic/claude-opus-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 2,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 5,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 5
+    }
+  },
+  {
+    "session_id": "20260915_051857_b15c44",
+    "model": "anthropic/claude-opus-5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 3
+    },
+    "michael_total": 5,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 5
+    }
+  },
+  {
+    "session_id": "20260915_051923_04f5e7",
+    "model": "anthropic/claude-opus-5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 3
+    },
+    "michael_total": 5,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 5
+    }
+  },
+  {
+    "session_id": "20260915_051959_61b59b",
+    "model": "anthropic/claude-opus-5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 4,
+      "mcp__allowed_hosts": 1
+    },
+    "michael_total": 7,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 7
+    }
+  },
+  {
+    "session_id": "20260915_052109_b8eb9e",
+    "model": "anthropic/claude-opus-5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 4
+    },
+    "michael_total": 6,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 6,
+      "memory": 2
+    }
+  },
+  {
+    "session_id": "20260915_052213_a592f0",
+    "model": "anthropic/claude-opus-5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__search_provisions": 2
+    },
+    "michael_total": 3,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 3
+    }
+  },
+  {
+    "session_id": "20260915_052409_7f19e0",
+    "model": "anthropic/claude-haiku-4.5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 2,
+    "other_tools": {
+      "clarify": 2,
+      "tool_search": 2,
+      "tool_call": 2
+    }
+  },
+  {
+    "session_id": "20260915_052453_0e899f",
+    "model": "anthropic/claude-haiku-4.5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {},
+    "michael_total": 0,
+    "other_tools": {
+      "clarify": 2
+    }
+  },
+  {
+    "session_id": "20260915_052519_8e951a",
+    "model": "anthropic/claude-haiku-4.5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__draft_document": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "clarify": 2,
+      "tool_search": 2,
+      "tool_describe": 2,
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_052602_56578b",
+    "model": "anthropic/claude-haiku-4.5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_052632_50829c",
+    "model": "anthropic/claude-haiku-4.5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_052703_980cfd",
+    "model": "anthropic/claude-haiku-4.5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_052735_3d6f98",
+    "model": "deepseek/deepseek-v4-pro",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 4,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_describe": 2,
+      "tool_call": 4
+    }
+  },
+  {
+    "session_id": "20260915_052744_26e3ce",
+    "model": "anthropic/claude-sonnet-5",
+    "kind": "other",
+    "prompt_head": "Reply with exactly: OK",
+    "michael_calls": {},
+    "michael_total": 0,
+    "other_tools": {}
+  },
+  {
+    "session_id": "20260915_052854_5f67f1",
+    "model": "anthropic/claude-sonnet-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 2,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 2
+    }
+  },
+  {
+    "session_id": "20260915_053005_d82b90",
+    "model": "anthropic/claude-sonnet-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__list_domains": 1,
+      "mcp__classify_request": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 3,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 2
+    }
+  },
+  {
+    "session_id": "20260915_053115_816b6b",
+    "model": "anthropic/claude-sonnet-5",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__draft_document": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "tool_describe": 2,
+      "clarify": 2,
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_053219_9c7cc5",
+    "model": "anthropic/claude-sonnet-5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 2,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 2
+    }
+  },
+  {
+    "session_id": "20260915_053254_2b5aea",
+    "model": "anthropic/claude-sonnet-5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_053329_423e8d",
+    "model": "anthropic/claude-sonnet-5",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_053405_4f218d",
+    "model": "deepseek/deepseek-v4-pro",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__search_provisions": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 3,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 3
+    }
+  },
+  {
+    "session_id": "20260915_053534_3a1d2d",
+    "model": "deepseek/deepseek-v4-pro",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 2,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 5,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_describe": 2,
+      "tool_call": 5
+    }
+  },
+  {
+    "session_id": "20260915_053648_7783c1",
+    "model": "deepseek/deepseek-v4-pro",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 1,
+      "mcp__draft_document": 2
+    },
+    "michael_total": 5,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_describe": 2,
+      "tool_call": 5
+    }
+  },
+  {
+    "session_id": "20260915_053844_656118",
+    "model": "deepseek/deepseek-v4-pro",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 3,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_describe": 2,
+      "tool_call": 3
+    }
+  },
+  {
+    "session_id": "20260915_053937_17b8cb",
+    "model": "deepseek/deepseek-v4-pro",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 2,
+      "mcp__search_provisions": 3,
+      "mcp__list_domains": 1,
+      "mcp__allowed_hosts": 1
+    },
+    "michael_total": 7,
+    "other_tools": {
+      "tool_call": 7,
+      "tool_describe": 2
+    }
+  },
+  {
+    "session_id": "20260915_054038_306eaa",
+    "model": "deepseek/deepseek-v4-pro",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 2,
+    "other_tools": {
+      "tool_describe": 2,
+      "tool_call": 2
+    }
+  },
+  {
+    "session_id": "20260915_054114_aa57c4",
+    "model": "deepseek/deepseek-v4-flash",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 3,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 6,
+    "other_tools": {
+      "tool_call": 10,
+      "tool_search": 2,
+      "tool_describe": 2
+    }
+  },
+  {
+    "session_id": "20260915_054251_d62879",
+    "model": "deepseek/deepseek-v4-flash",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 4,
+    "other_tools": {
+      "tool_call": 8,
+      "tool_describe": 2,
+      "web_extract": 4,
+      "terminal": 1
+    }
+  },
+  {
+    "session_id": "20260915_054413_d1af3b",
+    "model": "deepseek/deepseek-v4-flash",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 2,
+      "mcp__list_domains": 2,
+      "mcp__search_provisions": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 6,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_describe": 2,
+      "tool_call": 4,
+      "clarify": 2,
+      "todo": 8,
+      "web_extract": 4,
+      "session_search": 2
+    }
+  },
+  {
+    "session_id": "20260915_054617_0a7f97",
+    "model": "deepseek/deepseek-v4-flash",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 3
+    },
+    "michael_total": 5,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_describe": 2,
+      "tool_call": 5
+    }
+  },
+  {
+    "session_id": "20260915_054725_309dc5",
+    "model": "deepseek/deepseek-v4-flash",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 4
+    },
+    "michael_total": 6,
+    "other_tools": {
+      "tool_call": 8
+    }
+  },
+  {
+    "session_id": "20260915_054825_8875ca",
+    "model": "deepseek/deepseek-v4-flash",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 4
+    },
+    "michael_total": 6,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 6
+    }
+  },
+  {
+    "session_id": "20260915_054919_19102d",
+    "model": "qwen/qwen3.7-flash",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {},
+    "michael_total": 0,
+    "other_tools": {}
+  },
+  {
+    "session_id": "20260915_054947_5729d4",
+    "model": "qwen/qwen3.7-flash",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {},
+    "michael_total": 0,
+    "other_tools": {
+      "tool_search": 2,
+      "read_file": 1,
+      "tool_describe": 2
+    }
+  },
+  {
+    "session_id": "20260915_055020_678dbc",
+    "model": "qwen/qwen3.7-flash",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 2,
+    "other_tools": {
+      "clarify": 2,
+      "tool_search": 2,
+      "tool_describe": 2,
+      "memory": 2,
+      "tool_call": 2
+    }
+  },
+  {
+    "session_id": "20260915_055125_3111ca",
+    "model": "qwen/qwen3.7-flash",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_055151_a0905d",
+    "model": "qwen/qwen3.7-flash",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_055216_242921",
+    "model": "qwen/qwen3.7-flash",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 2,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_describe": 4,
+      "tool_call": 2
+    }
+  },
+  {
+    "session_id": "20260915_055257_76bcc9",
+    "model": "openai/gpt-oss-120b",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__list_domains": 2,
+      "mcp__search_provisions": 3,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 6,
+    "other_tools": {
+      "tool_call": 8,
+      "tool_describe": 2
+    }
+  },
+  {
+    "session_id": "20260915_055435_70b9be",
+    "model": "openai/gpt-oss-120b",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 2,
+      "mcp__classify_request": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 5,
+    "other_tools": {
+      "tool_call": 17
+    }
+  },
+  {
+    "session_id": "20260915_055615_951d09",
+    "model": "openai/gpt-oss-120b",
+    "kind": "contract",
+    "prompt_head": "I need a casual employment contract between Company X and Mr Y, with conditions A and B",
+    "michael_calls": {
+      "mcp__classify_request": 1,
+      "mcp__search_provisions": 1,
+      "mcp__draft_document": 1
+    },
+    "michael_total": 3,
+    "other_tools": {
+      "todo": 2,
+      "tool_search": 2,
+      "tool_call": 3
+    }
+  },
+  {
+    "session_id": "20260915_055753_3352a9",
+    "model": "openai/gpt-oss-120b",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 1,
+    "other_tools": {
+      "tool_call": 1
+    }
+  },
+  {
+    "session_id": "20260915_055836_12014c",
+    "model": "openai/gpt-oss-120b",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {},
+    "michael_total": 0,
+    "other_tools": {}
+  },
+  {
+    "session_id": "20260915_055855_bbf8d8",
+    "model": "openai/gpt-oss-120b",
+    "kind": "uncovered",
+    "prompt_head": "What are the notification requirements for an eligible data breach under the Privacy Act 1",
+    "michael_calls": {
+      "mcp__list_domains": 1,
+      "mcp__search_provisions": 1
+    },
+    "michael_total": 2,
+    "other_tools": {
+      "tool_search": 2,
+      "tool_call": 2
+    }
+  }
+]

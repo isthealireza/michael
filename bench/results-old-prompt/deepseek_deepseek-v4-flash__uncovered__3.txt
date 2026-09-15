@@ -1,0 +1,7 @@
+The search returned "covered: false" for all queries targeting Part IIIC of the Privacy Act 1988 (Cth) (the Notifiable Data Breaches scheme). The best score across three targeted queries peaked at 0.594, below the 0.600 relevance threshold.
+
+**NOT COVERED — run ingestion for Privacy Act 1988 (Cth) Part IIIC (Notifiable Data Breaches scheme)**
+
+The Privacy Act 1988 (Cth) is not currently present in the Michael corpus. The single near-miss result was section 504 of the Fair Work Act 2009 (Cth), which is not the relevant source.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

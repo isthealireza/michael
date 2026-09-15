@@ -1,0 +1,23 @@
+Before I can draft this properly, I need several details — every placeholder must be real, not invented:
+
+**Parties**
+- Full legal name of the employer (e.g., "TechWorks Pty Ltd" — not "Company X")
+- Full legal name of the employee (e.g., "John Smith" — not "Mr Y")
+- ABN/ACN of the employer, if applicable
+- Address of the employer
+
+**Conditions A and B**
+- What are conditions A and B in substance? (e.g., "hourly rate above minimum wage", "12.5% casual loading", "remote work arrangement", etc.) — please state them fully.
+
+**Other key terms**
+- Start date
+- Job title / position
+- Hours of work pattern
+- Base hourly rate or annual salary figure
+- Superannuation fund (if known — I will mark [MISSING] if you don't specify)
+- Location(s) of employment
+
+**Scope note**
+Employment for national-system employees in Australia is governed by the *Fair Work Act 2009* (Cth) and the applicable Modern Award, not WA state law. I'll base any drafted terms on those provisions once I know the occupation/industry so I can check relevant award coverage.
+
+Please provide as many of the above as you have available.

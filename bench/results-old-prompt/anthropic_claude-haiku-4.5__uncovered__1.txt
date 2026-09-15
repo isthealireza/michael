@@ -1,0 +1,14 @@
+NOT COVERED — run ingestion for data breach notification eligible Privacy Act 1988
+
+The Michael corpus does not currently contain provisions of the Privacy Act 1988 (Cth). The privacy domain is configured but the Privacy Act has not been ingested yet, so I cannot retrieve the notification requirements for eligible data breaches from the corpus.
+
+To get an answer, you would need to:
+
+1. Ingest the Privacy Act 1988 (Cth) through Michael's ingestion tool from an official Commonwealth source
+2. Then re-run the search
+
+Alternatively, you could consult the official privacy legislation directly from the Australian Government's legislation website.
+
+VERIFY BEFORE USE — This is a research request that requires provisions from the Privacy Act 1988 (Cth), which is not yet in the corpus.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

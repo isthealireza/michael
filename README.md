@@ -247,40 +247,37 @@ docker compose -f hermes/docker-compose.yml up -d --build
 docker exec michael-hermes hermes -z "your question"
 ```
 
-**Model choice is benchmarked, not assumed.** `deepseek/deepseek-v4-pro`, chosen
-over `claude-opus-5` by 42 runs (7 models × 2 prompts × 3 runs) over the
-acceptance prompt and a deliberately uncovered question. Harness in `bench/`,
-raw results in `bench/results/`. Disqualification was any single rule breach.
+**Model choice is benchmarked, not assumed.** `deepseek/deepseek-v4-pro`,
+chosen by 42 runs (7 models x 2 prompts x 3 runs) over the acceptance prompt and
+a deliberately uncovered question. Harness in `bench/`. Disqualification was any
+single rule breach. Re-measured against the corrected MICHAEL.md; an earlier run
+against the old "and stop" wording is void.
 
 | model | mean $/run | verdict |
 |---|---|---|
-| anthropic/claude-opus-5 | 0.23645 | disqualified — no closing notice (1/6) |
-| anthropic/claude-sonnet-5 | 0.03949 | **pass** |
-| **deepseek/deepseek-v4-pro** | **0.01720** | **pass — selected** |
-| anthropic/claude-haiku-4.5 | 0.01432 | disqualified — zero MCP calls, no notice |
-| deepseek/deepseek-v4-flash | 0.00466 | disqualified — no closing notice (1/6) |
-| openai/gpt-oss-120b | 0.00217 | disqualified — answered with zero MCP calls |
-| qwen/qwen3.7-flash | 0.00078 | disqualified — 6/6 breaches |
+| anthropic/claude-opus-5 | 0.21727 | pass |
+| anthropic/claude-sonnet-5 | 0.06036 | pass |
+| **deepseek/deepseek-v4-pro** | **0.01171** | **pass — selected** |
+| anthropic/claude-haiku-4.5 | 0.01117 | disqualified — asked a question instead of drafting |
+| deepseek/deepseek-v4-flash | 0.00403 | disqualified — drafted with no pinpoint citation (2/3) |
+| openai/gpt-oss-120b | 0.00185 | disqualified — bare "can't provide that" refusal |
+| qwen/qwen3.7-flash | 0.00115 | disqualified — no notice, no [MISSING], no citation |
 
 Cost is actual OpenRouter spend, from diffing the key's cumulative usage around
-each run; the `--usage-file` figure is self-declared "estimated".
+each run; the `--usage-file` figure is self-declared "estimated". Total spend for
+the 42 runs was $1.85.
 
-**No model fabricated a citation.** Every citation in all 42 runs resolved to a
-provision in the corpus. The failures were all about the *output contract*, not
-invented law.
+The prompt fix worked: **no model dropped the closing notice on the uncovered
+path**, against four of seven before. opus-5 and haiku-4.5 requalified on that
+rule; haiku still fails elsewhere. The cheapest model, `v4-flash`, is 2.9x
+cheaper again but drafted twice with no pinpoint citation, which is the one
+failure this project cannot tolerate.
 
-**Four of seven models dropped the closing notice on the uncovered path**, and
-all four otherwise refused correctly. That pointed at MICHAEL.md rather than the
-models: "If retrieval is empty, reply NOT COVERED ... **and stop**" read as
-licence to skip the "Every output ends with" blocks. **Fixed** — the prompt now
-says stopping means adding no law, not skipping the closing blocks, and that a
-NOT COVERED reply still ends with VERIFY BEFORE USE and the notice. Verified 3/3
-on deepseek-v4-pro.
-
-The disqualifications above were measured against the *old* wording, so
-re-running the benchmark could requalify opus-5, haiku-4.5 and
-deepseek-v4-flash. deepseek-v4-flash is 3.7x cheaper again than the model now in
-use, so the recommendation may change.
+**The scorer produced two false failures before it was trusted.** A loose
+act-name pattern absorbed a "BASED ON" heading and a leading "and" into the
+citation, which then would not resolve. `bench/score_final.py` now anchors the
+act name to Title Case and **self-tests on known citations before scoring**.
+Every remaining disqualification was confirmed by reading the transcript.
 
 **Pin the provider when overriding the model.** `hermes -m anthropic/claude-sonnet-5`
 routes to provider `gmi` and fails with no credentials; `--provider openrouter`

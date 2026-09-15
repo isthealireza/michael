@@ -1,0 +1,25 @@
+**Classification:** RESEARCH  
+**Domain:** privacy (recognised)
+
+**Result:** NOT COVERED — run ingestion for Privacy Act 1988 (Cth) (Notifiable Data Breaches scheme, Part IIIC)
+
+The corpus does not contain the Privacy Act 1988 (Cth) or any provisions dealing with eligible data breach notification requirements. The best retrieval score was 0.592, below the 0.600 relevance threshold.
+
+To answer this question, the following would need to be ingested into the Michael corpus:
+
+- Privacy Act 1988 (Cth) — particularly Part IIIC (Notification of eligible data breaches) covering sections 26WA through 26WT, which address:
+  - Assessment of suspected eligible data breaches (s 26WH)
+  - Notification to the Australian Information Commissioner (s 26WK)
+  - Notification to affected individuals (s 26WL)
+  - Content requirements for the statement (s 26WM)
+  - Exceptions to notification (s 26WN–26WQ)
+
+These are available from the Federal Register of Legislation at https://www.legislation.gov.au/C2004A03712 (an allowlisted host).
+
+---
+
+OPEN ITEMS — none (research-only query; no drafting)
+
+VERIFY BEFORE USE — no provisions retrieved; corpus ingestion required before any legal statements can be made.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

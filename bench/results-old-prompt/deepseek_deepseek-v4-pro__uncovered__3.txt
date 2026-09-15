@@ -1,0 +1,13 @@
+**NOT COVERED — run ingestion for Privacy Act 1988 (Cth)**
+
+The corpus does not contain provisions of the Privacy Act 1988 (Cth). The best retrieval score was 0.595, below the 0.600 threshold required to return a result. The eligible data breach notification provisions (found in Part IIIC of that Act) are not available for searching.
+
+To answer this question, the following would need to be ingested from an allowlisted host (e.g. www.legislation.gov.au):
+
+- Privacy Act 1988 (Cth) — particularly Part IIIC (Notification of eligible data breaches), comprising sections 26WA through 26WU.
+
+OPEN ITEMS — none (question could not be answered)
+
+VERIFY BEFORE USE — corpus lacks Privacy Act 1988 (Cth) entirely
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

@@ -1,0 +1,7 @@
+**RESEARCH classification.**
+
+NOT COVERED — run ingestion for eligible data breach notification requirements.
+
+The Privacy Act 1988 (Cth) is not currently ingested into the Michael corpus; the domain routing is correct ("privacy"), but no provisions match above the relevance threshold. This is a known gap noted in previous sessions — the privacy domain definition exists in domains.yaml and has corresponding templates, but the actual legislation has not been loaded.
+
+To get coverage you would need to ingest the Privacy Act from an allowlisted official source (e.g. the Federated Database of Australian Law at **legislation.gov.au**). If you'd like me to attempt ingestion, let me know and I can start that process.

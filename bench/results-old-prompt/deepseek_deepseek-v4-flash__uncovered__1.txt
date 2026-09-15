@@ -1,0 +1,12 @@
+NOT COVERED — run ingestion for eligible data breach notification requirements under the Privacy Act 1988 (Cth).
+
+The searches across multiple queries returned scores of 0.503, 0.521, and 0.587, all below the 0.600 relevance threshold, confirming that no provisions covering the Privacy Act 1988 (Cth) data breach notification regime are currently in the corpus. The Privacy Act 1988 (Cth) (including Part IIIC — the Notifiable Data Breaches scheme) has not been ingested.
+
+You will need to run ingestion. For the Privacy Act 1988 (Cth), the allowlisted host for Commonwealth legislation is the Federal Register of Legislation:
+
+- https://www.legislation.gov.au/Details/C2025C00145 (or the current compilation)
+
+You can ingest it via:
+
+    mcp__michael__ingest_source_url (once the URL is on the allowlist)
+    or mcp__michael__ingest_local_file (if already downloaded)

@@ -1,0 +1,35 @@
+RESEARCH — domain: privacy (Commonwealth). Domain was recognised and routed correctly.
+
+NOT COVERED — run ingestion for Privacy Act 1988 (Cth) notifiable data breaches scheme (Part IIIC, ss 26WA–26WT)
+
+Retrieval detail (why I am stopping rather than answering):
+
+  - Query "eligible data breach notification requirements notify Commissioner
+    individuals statement" (domain=privacy, commonwealth, act/regulation):
+    covered=false, best fused score 0.491 against a 0.600 threshold, 0
+    provisions returned.
+  - Broader query "Privacy Act 1988 notifiable data breaches scheme Part IIIC":
+    the single provision above threshold was Fair Work Act 2009 (Cth) s 504
+    (snapshot 2026-07-07), which only cross-references the Privacy Act 1988 for
+    the meaning of "enforcement body" and "personal information". It contains no
+    data breach notification obligation and does not answer the question.
+
+The Privacy Act 1988 (Cth) is not in the corpus. The corpus currently holds 200 WA instruments plus the Fair Work Act 2009 (Cth). I will not answer from general knowledge, from a web page, or from a search snippet — a web result is a pointer to a source, not a source, and it does not make this topic covered.
+
+To get an answer, the Privacy Act 1988 (Cth) must be ingested from an allowlisted official host (legislation.gov.au). Say the word and I will locate the current compilation and run it through Michael's ingestion path, then re-run this retrieval and cite the operative words of the Part IIIC provisions.
+
+OPEN ITEMS
+  1. [MISSING: Privacy Act 1988 (Cth) in corpus] — Part IIIC (notifiable data
+     breaches scheme) not ingested; no provisions available to cite.
+  2. [MISSING: authorisation to ingest] — confirm you want me to fetch and
+     ingest the Privacy Act 1988 (Cth) compilation from legislation.gov.au.
+
+VERIFY BEFORE USE
+  - Nothing in this reply states the content of the eligible data breach
+    notification requirements. I could not confirm any element of them — who
+    must notify, the assessment period, the content of a statement, the
+    exceptions, or the time limits — from any provision in the corpus.
+  - Fair Work Act 2009 (Cth) s 504 is not authority for breach notification and
+     should not be used as such.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.
