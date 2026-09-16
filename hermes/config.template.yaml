@@ -15,6 +15,16 @@ model:
 
 _config_version: 39
 
+# The background/auxiliary lane (context compression, vision, session-title
+# generation, and similar side tasks) falls back to OpenRouter when the main
+# provider is unavailable, and that fallback is not covered by the benchmark:
+# Michael's cost is measured at $0.01171/run (see bench/) with no allowance
+# for a paid model running unmeasured in the background. free_only pins the
+# OpenRouter fallback step to :free SKUs so the auxiliary lane cannot spend
+# outside that number.
+auxiliary:
+  free_only: true
+
 mcp_servers:
   michael:
     # Container path: Hermes runs stdio MCP servers as subprocesses inside its
