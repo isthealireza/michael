@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MICHAEL — Legal Research</title>
+<style>
+  :root{
+    --ink:#11161d; --ink-soft:#4a5568; --line:#dfe3e8; --bg:#f7f8fa;
+    --card:#ffffff; --accent:#1f3a5f; --cite:#0b4f6c; --cite-bg:#eef6f9;
+    --miss:#8a4b00; --miss-bg:#fff5e6; --miss-line:#e0a355;
+    --alarm:#7f1d1d; --alarm-bg:#fdeaea; --alarm-line:#c04545;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--ink);
+       font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
+  header{background:var(--accent);color:#fff;padding:22px 24px 18px}
+  .wrap{max-width:860px;margin:0 auto}
+  h1{margin:0;font-size:30px;letter-spacing:.14em;font-weight:600}
+  .tag{margin-top:4px;font-size:13px;opacity:.82;letter-spacing:.02em}
+  main{padding:26px 24px 64px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
+        padding:18px;margin-bottom:18px}
+  label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:7px}
+  textarea,input{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);
+                 border-radius:7px;background:#fff;color:var(--ink)}
+  textarea{min-height:82px;resize:vertical}
+  .row{display:flex;gap:10px;align-items:center;margin-top:12px}
+  button{font:inherit;font-weight:600;padding:11px 20px;border:0;border-radius:7px;
+         background:var(--accent);color:#fff;cursor:pointer}
+  button[disabled]{opacity:.5;cursor:default}
+  .status{font-size:13px;color:var(--ink-soft)}
+  h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);
+     margin:0 0 10px;font-weight:700}
+  .answer{white-space:pre-wrap;word-wrap:break-word}
+  .cite{display:inline-block;background:var(--cite-bg);color:var(--cite);
+        border:1px solid #bcd9e3;border-radius:5px;padding:1px 7px;
+        font-weight:600;font-size:14px;white-space:nowrap}
+  .missing{display:inline-block;background:var(--miss-bg);color:var(--miss);
+           border:1px solid var(--miss-line);border-radius:5px;padding:1px 8px;
+           font-weight:700;font-size:13px;letter-spacing:.02em}
+  .banner{background:var(--alarm-bg);border:2px solid var(--alarm-line);
+          border-radius:9px;padding:15px 17px;margin-bottom:18px}
+  .banner .h{color:var(--alarm);font-weight:800;letter-spacing:.09em;font-size:14px}
+  .banner .b{margin-top:5px;color:#5c1b1b;font-size:15px}
+  .block{border-left:3px solid var(--line);padding:2px 0 2px 14px;margin:16px 0}
+  .block .h{font-size:11px;letter-spacing:.1em;text-transform:uppercase;
+            color:var(--ink-soft);font-weight:700}
+  .block.verify{border-left-color:var(--miss-line)}
+  .notice{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);
+          font-size:13px;color:var(--ink-soft);font-style:italic}
+  .tools{font-size:12px;color:var(--ink-soft);margin-top:10px}
+  .hidden{display:none}
+  footer{max-width:860px;margin:0 auto;padding:0 24px 40px;font-size:12px;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <h1>MICHAEL</h1>
+  <div class="tag">Legal research and drafting — Western Australia and Commonwealth</div>
+</div></header>
+
+<main class="wrap">
+  <div class="card" id="loginCard">
+    <label for="pw">Sign in to continue</label>
+    <input id="pw" type="password" autocomplete="current-password" placeholder="Password">
+    <div class="row"><button id="loginBtn">Sign in</button>
+      <span class="status" id="loginStatus"></span></div>
+  </div>
+
+  <div class="card hidden" id="askCard">
+    <label for="q">Your question</label>
+    <textarea id="q" placeholder="What must an entity do when it becomes aware of an eligible data breach?"></textarea>
+    <div class="row"><button id="askBtn">Ask Michael</button>
+      <span class="status" id="status"></span></div>
+    <div class="tools hidden" id="tools"></div>
+  </div>
+
+  <div id="out"></div>
+</main>
+
+<footer>
+  Internal research only. Not legal advice. Requires review by an admitted
+  Australian legal practitioner.
+</footer>
+<script src="michael.js"></script>
+</body>
+</html>

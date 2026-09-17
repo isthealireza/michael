@@ -38,6 +38,14 @@ COPY hermes/config.template.yaml hermes/render_runtime_config.py /opt/michael/he
 COPY hermes/railway-entrypoint.sh /usr/local/bin/railway-entrypoint.sh
 RUN chmod +x /usr/local/bin/railway-entrypoint.sh
 
+# Michael's own presentable surface, served from the dashboard's static root
+# so it shares the origin and therefore the session: no CORS, no second auth,
+# and no new service. It is a CLIENT of /api/ws prompt.submit - the same
+# choke point every dashboard submit passes through - so Hermes still runs the
+# model with MICHAEL.md and still calls the three MCP tools. The page renders;
+# it never answers.
+COPY web/michael.html web/michael.js /opt/hermes/hermes_cli/web_dist/
+
 WORKDIR /opt/data
 
 # The wrapper renders config, then execs /init - s6-overlay's PID 1 - which
