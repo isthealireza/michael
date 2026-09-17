@@ -174,7 +174,23 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
 /* A pinpoint as Michael emits it: "Privacy Act 1988 (Cth) s 26WL (snapshot
  * 2026-06-04)". "Sch 1 cl 11" is matched too: a Schedule clause is a different
  * provision from a section of the same number, and the corpus contains both. */
-const CITATION = /\b([A-Z][A-Za-z'’\-. ]+?(?:Act|Regulations|Code|Rules|Award)\s+\d{4}(?:\s*\((?:Cth|WA|NSW|Vic|Qld|SA|Tas|NT|ACT|Imp)\))?)\s+(ss?\s+[\w.()]+|Sch\s+\w+\s+cl\s+[\w.]+)(\s*\(snapshot\s+[\d-]+\))?/g;
+/* An Act name is title case, so every word before "Act 2009" is capitalised
+ * apart from the connectors a real name carries: Occupational Safety and
+ * Health Act 1984, Minimum Conditions of Employment Act 1993.
+ *
+ * The old pattern allowed any letters and spaces, lazily, so it ran backwards
+ * from "Act 2009" across a full stop and highlighted a whole sentence as a
+ * citation: "Either party may terminate the agreement with notice required by
+ * the Fair Work Act 2009 (Cth)" rendered as one 826px citation chip. Measured
+ * over the 84 real outputs in bench/: 332 citations matched, 26 of them with
+ * an act name longer than six words. The highlight exists to mark a pinpoint
+ * citation, and marking prose as one destroys the signal it carries.
+ *
+ * A capitalised word opening a sentence looks exactly like the first word of a
+ * title, so the leading word is excluded by a stop list. That is a heuristic,
+ * not a rule. After it the same 84 outputs yield 332 citations - none lost -
+ * over three distinct act names, every one of them correct. */
+const CITATION = new RegExp(String.raw`\b((?!(?:The|A|An|In|On|Of|And|To|For|Under|This|That|Its|Their|Whether|When|Where|While|If|Because|Although|See|Note|Both|Each|Every|However|Therefore|Here|There|It|As|At|By|But|So|Such|These|Those|Section|Schedule|Part|Division)\b)[A-Z][A-Za-z'’-]*(?:[ ](?:[A-Z][A-Za-z'’-]*|of|and|the|for|to|in|on)){0,7}[ ](?:Act|Regulations|Code|Rules|Award)\s+\d{4}(?:\s*\((?:Cth|WA|NSW|Vic|Qld|SA|Tas|NT|ACT|Imp)\))?)\s+(ss?\s+[\w.()]+|Sch\s+\w+\s+cl\s+[\w.]+)(\s*\(snapshot\s+[\d-]+\))?`, "g");
 const MISSING = /\[MISSING:\s*([^\]]+)\]/g;
 /* The closing notice, with any markdown emphasis wrapping it. Michael writes it
  * plain in some outputs and as *…* or **…** in others. Matching only the
