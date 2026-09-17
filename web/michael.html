@@ -52,12 +52,19 @@
   h2{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--soft);
     margin:0 0 9px;font-weight:700}
   .answer{white-space:pre-wrap;word-wrap:break-word}
-  .cite{display:inline-block;background:var(--cite-bg);color:var(--cite);
+  /* inline, not inline-block, and wrapping allowed: a citation chip measures
+     348-387px and the page is read at phone width too. As an unwrappable
+     inline-block it ran past the viewport and was clipped, so a reader saw
+     half a pinpoint. box-decoration-break keeps the border and background
+     closed on both lines when one wraps. */
+  .cite{display:inline;background:var(--cite-bg);color:var(--cite);
     border:1px solid var(--cite-line);border-radius:5px;padding:1px 7px;
-    font-weight:600;font-size:14.5px;white-space:nowrap}
-  .missing{display:inline-block;background:var(--miss-bg);color:var(--miss);
+    font-weight:600;font-size:14.5px;
+    -webkit-box-decoration-break:clone;box-decoration-break:clone}
+  .missing{display:inline;background:var(--miss-bg);color:var(--miss);
     border:1px solid var(--miss-line);border-radius:5px;padding:1px 8px;
-    font-weight:700;font-size:13px}
+    font-weight:700;font-size:13px;
+    -webkit-box-decoration-break:clone;box-decoration-break:clone}
   .classline{display:inline-block;margin-bottom:13px;padding:4px 10px;
     border:1px solid var(--line);border-radius:3px;font-size:11.5px;
     letter-spacing:.06em;text-transform:uppercase;font-weight:700}
