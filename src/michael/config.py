@@ -82,6 +82,7 @@ class Settings:
     ingestion_log: Path
     domains_file: Path
     system_prompt_file: Path
+    elements_file: Path
 
     def require_embeddings(self) -> None:
         if not self.embedding_api_key:
@@ -116,4 +117,5 @@ def settings() -> Settings:
         ingestion_log=_path("MICHAEL_INGESTION_LOG", "sources/ingestion.log.jsonl"),
         domains_file=_path("MICHAEL_DOMAINS_FILE", "domains.yaml"),
         system_prompt_file=_path("MICHAEL_SYSTEM_PROMPT", "MICHAEL.md"),
+        elements_file=_path("MICHAEL_ELEMENTS_FILE", "elements.yaml"),
     )

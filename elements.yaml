@@ -1,0 +1,104 @@
+# Reference list of contract elements. Data, not law.
+#
+# `basis` is the honesty field. An element either points at a provision in the
+# corpus or is marked `drafting convention` with no legal claim attached. The
+# report words it "related provision", never "required by": MICHAEL.md permits
+# stating what a clause is based on and forbids certifying it in either
+# direction, and a checklist saying an Act "requires" a clause has become advice.
+#
+# Per-domain lists exist only where the corpus can ground them.
+universal:
+  - id: parties
+    label: Parties
+    placeholder: PARTY_A_NAME
+    synonyms: [parties, between, party a, party b]
+    basis: drafting convention
+  - id: term
+    label: Term and commencement
+    placeholder: COMMENCEMENT_DATE
+    synonyms: [term, commencement, duration, expiry, expiration]
+    basis: drafting convention
+  - id: payment
+    label: Payment terms
+    placeholder: PAYMENT_TERMS
+    synonyms: [payment, fees, invoice, remuneration, consideration]
+    basis: drafting convention
+  - id: termination
+    label: Termination
+    placeholder: TERMINATION_NOTICE_PERIOD
+    synonyms: [termination, terminate, notice period, end of agreement]
+    basis: drafting convention
+  - id: renewal
+    label: Renewal
+    placeholder: RENEWAL_TERMS
+    synonyms: [renewal, auto-renewal, extension, rollover]
+    basis: drafting convention
+  - id: governing_law
+    label: Governing law
+    placeholder: GOVERNING_LAW_JURISDICTION
+    synonyms: [governing law, applicable law, choice of law, proper law]
+    basis: drafting convention
+  - id: dispute_resolution
+    label: Dispute resolution
+    placeholder: DISPUTE_RESOLUTION_FORUM
+    synonyms: [dispute resolution, arbitration, mediation, jurisdiction of courts]
+    basis: drafting convention
+  - id: liability
+    label: Limitation of liability
+    placeholder: LIABILITY_CAP_AMOUNT
+    synonyms: [limitation of liability, liability cap, indemnity, exclusion of liability]
+    basis: drafting convention
+  - id: intellectual_property
+    label: Intellectual property
+    placeholder: IP_OWNERSHIP
+    synonyms: [intellectual property, ip ownership, moral rights, copyright]
+    basis: drafting convention
+  - id: confidentiality
+    label: Confidentiality
+    placeholder: CONFIDENTIALITY_DURATION
+    synonyms: [confidentiality, confidential information, non-disclosure]
+    basis: drafting convention
+  - id: notices
+    label: Notices
+    placeholder: NOTICE_ADDRESS
+    synonyms: [notices, service of notice, address for service]
+    basis: drafting convention
+  - id: variation
+    label: Variation
+    placeholder: VARIATION_TERMS
+    synonyms: [variation, amendment, written agreement to vary]
+    basis: drafting convention
+
+# Verified against the corpus 2026-09-17 via .orca/ro.sh cli search, not taken
+# from the plan on trust: s 47 exists and its heading is "When a modern award
+# applies to an employer, employee, organisation or outworker entity" - the
+# provision that a contract naming its Modern Award is grounded in. s 62
+# exists and is headed "Maximum weekly hours", not "ordinary hours" verbatim,
+# but its own operative text turns on "the employee's ordinary hours of work
+# in a week" (s 62(1)(b)(ii)) - the NES provision that actually engages the
+# concept a contract's ordinary-hours clause sets. Both are related
+# provisions, not the clause's own subject-matter heading; see `basis`'s
+# purpose above.
+employment:
+  - id: modern_award
+    label: Modern Award name
+    placeholder: MODERN_AWARD_NAME
+    synonyms: [modern award, award, classification level]
+    basis: Fair Work Act 2009 (Cth) s 47
+  - id: superannuation
+    label: Superannuation fund
+    placeholder: SUPERANNUATION_FUND
+    synonyms: [superannuation, super fund, contributions]
+    basis: drafting convention
+  - id: ordinary_hours
+    label: Ordinary hours of work
+    placeholder: ORDINARY_HOURS
+    synonyms: [ordinary hours, hours of work, roster, span of hours]
+    basis: Fair Work Act 2009 (Cth) s 62
+
+contracts: []
+consumer: []
+property: []
+corporate: []
+work_health_safety: []
+privacy: []
