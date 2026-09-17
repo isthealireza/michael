@@ -56,6 +56,27 @@ committed, to keep the fixture set to what this task specifies.
 
 **All three fixtures are committed under `tests/fixtures/contracts/`.**
 
+## A note on timing, added after an ORCHESTRATOR follow-up
+
+The ORCHESTRATOR asked, in a message that arrived after this evidence file was
+already drafted and the splitter already run over all three documents, that a
+per-document, per-line prediction of where `CAPS_CLAUSE` would over-match be
+written down *before* running the splitter, as its own section, so the
+prediction could be checked honestly against the result.
+
+**I cannot honestly produce that for this run: the splitter was already run
+before that instruction reached me.** Reconstructing a prediction now and
+presenting it as one made in advance would be exactly the thing I was told
+not to do — writing a prediction after the fact and calling it prior. So this
+is recorded plainly instead: the only prediction that genuinely predates this
+task is the general one from the Tasks 1-2 report (`CAPS_CLAUSE` will
+over-match on a defined term written in capitals inside a clause body, such
+as `CONFIDENTIAL INFORMATION` followed by `means ...`). That prediction is
+checked against these three real documents, honestly, in the "`CAPS_CLAUSE`
+prediction, checked against real documents" section below. No
+document-specific, line-specific prediction was made before this run, and
+none is fabricated here to fill that gap.
+
 ## Step 2 — running the splitter
 
 ```python
@@ -459,6 +480,44 @@ not the failure mode that actually surfaced on these three real documents.
 Anyone testing further real contracts should not assume the
 defined-term-in-caps shape is the main risk; the extraction-loss shape found
 here is at least as significant and was not anticipated before this task.
+
+## Character coverage and overlap, checked explicitly per document
+
+A plausible clause count does not, by itself, prove nothing was lost or
+double-counted — a splitter could return the right number of clauses while
+two of them overlap, or while their spans undercount the source. Checked
+directly, per the ORCHESTRATOR's request, rather than inferred from the
+clause count:
+
+```python
+for path in sorted(pathlib.Path("tests/fixtures/contracts").iterdir()):
+    text = contract_text(path.read_bytes(), origin=path.name)
+    clauses = split_clauses(text)
+    total_span = sum(c.char_end - c.char_start for c in clauses)
+    spans = sorted((c.char_start, c.char_end) for c in clauses)
+    overlaps = [(spans[i], spans[i+1]) for i in range(len(spans) - 1)
+                if spans[i][1] > spans[i+1][0]]
+    print(f"{path.name}: doc_len={len(text)} span_sum={total_span} "
+          f"equal={total_span==len(text)} overlaps={len(overlaps)}")
+```
+
+```
+01_inhouse_casual_employment_contract.md: doc_len=3576 span_sum=3576 equal=True overlaps=0
+02_wa_gov_general_conditions_consultancy_agreement.docx: doc_len=86853 span_sum=86853 equal=True overlaps=0
+03_wa_gov_form1aa_residential_tenancy_agreement.docx: doc_len=44122 span_sum=44122 equal=True overlaps=0
+```
+
+| Document | Document length | Sum of clause spans | Equal? | Overlapping ranges |
+|---|---|---|---|---|
+| `01_inhouse_casual_employment_contract.md` | 3,576 | 3,576 | Yes | 0 |
+| `02_wa_gov_general_conditions_consultancy_agreement.docx` | 86,853 | 86,853 | Yes | 0 |
+| `03_wa_gov_form1aa_residential_tenancy_agreement.docx` | 44,122 | 44,122 | Yes | 0 |
+
+All three: span sum equals document length exactly, and zero overlapping
+ranges. This holds even for document 2, which has 153 clauses across two
+restarted numbering sequences and a duplicated Table of Contents — the
+invariant survives the exact condition (real numbering restarts) that this
+task exists to test.
 
 ## Step 4 — is the splitter fit to proceed?
 
