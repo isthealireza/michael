@@ -1,5 +1,5 @@
 {
-  "corpus": "200 WA legislation documents seeded from the Open Australian Legal Corpus, plus the Fair Work Act 2009 (Cth) compilation 73 (4 volumes) ingested from the Federal Register.",
+  "corpus": "200 WA legislation documents seeded from the Open Australian Legal Corpus, plus the Fair Work Act 2009 (Cth) compilation 73 (4 volumes) and the Privacy Act 1988 (Cth), both ingested from the Federal Register.",
   "note": "Queries are paraphrases, not verbatim provision text, so the test is not trivially lexical. Targets are identified by citation and section, not by database id, so the set survives a reseed. The absent set must be re-checked whenever the corpus grows: two Fair Work queries were retired from it once the Act was ingested, because they stopped being absent.",
   "known_good": [
     {
@@ -76,6 +76,36 @@
       "query": "dismissing an employee in order to re-engage them as a casual",
       "citation": "Fair Work Act 2009 (Cth)",
       "section": "359B"
+    },
+    {
+      "query": "if a hospital already reported a records breach under health records law, must it notify again under the Privacy Act",
+      "citation": "Privacy Act 1988 (Cth)",
+      "section": "26WD"
+    },
+    {
+      "query": "when does unauthorised access to personal information count as a data breach the entity must act on",
+      "citation": "Privacy Act 1988 (Cth)",
+      "section": "26WE"
+    },
+    {
+      "query": "what must the notification to the Commissioner about a data breach describe",
+      "citation": "Privacy Act 1988 (Cth)",
+      "section": "26WK"
+    },
+    {
+      "query": "who does a business have to notify once it decides there has been a data breach",
+      "citation": "Privacy Act 1988 (Cth)",
+      "section": "26WL"
+    },
+    {
+      "query": "can the regulator force a business to notify a data breach it has not reported",
+      "citation": "Privacy Act 1988 (Cth)",
+      "section": "26WR"
+    },
+    {
+      "query": "is a law enforcement body excused from notifying a data breach",
+      "citation": "Privacy Act 1988 (Cth)",
+      "section": "26WN"
     }
   ],
   "known_absent": [

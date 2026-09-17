@@ -13,6 +13,7 @@ the origin.
 
 from __future__ import annotations
 
+import bisect
 import hashlib
 import re
 from collections.abc import Iterable, Iterator
@@ -29,7 +30,7 @@ from michael.docx_text import docx_to_text, looks_like_docx
 from michael.embeddings import embed
 from michael.html_text import html_to_text, looks_like_html
 from michael.schema import DOC_TYPES, JURISDICTIONS, refresh_corpus_stats
-from michael.sources import SourceRefused, check_url, fetch, host_of
+from michael.sources import SourceRefused, check_url, fetch, host_of, log_attempt
 
 #: A section heading in Australian legislation: a number that may carry letter
 #: suffixes ("15", "15A", "23AB"), followed by a heading on the same line.
@@ -53,6 +54,15 @@ STRUCTURAL_PREFIXES = (
     "notes to ",
     "table of ",
     "contents",
+    # A compilation's own front-matter lists these as further TOC-style rows,
+    # unnumbered, right after the last real section in the table of
+    # provisions. Without recognising them as structural too, the prose
+    # lookahead in find_body_start mistakes them for the start of the body -
+    # they are not section-shaped, so _is_structural's other checks pass them
+    # through as if they were operative text.
+    "notes",
+    "compilation table",
+    "defined terms",
 )
 
 #: How many section-like lines must precede the body before we believe we have
@@ -136,6 +146,81 @@ def _adjacent_lines(text: str, position: int) -> tuple[str, str]:
     return previous, following
 
 
+#: How many lines either side of a candidate heading to scan for a table's
+#: pagination signal. A contents row's neighbour is the very next line; a
+#: commencement table's rows wrap a cell of explanatory prose between two
+#: dated rows, so the same signal - another row ending in a bare number -
+#: can sit one line further away without the row in between being anything
+#: but that wrapped cell text.
+_TABLE_ROW_LOOKAROUND = 2
+
+
+def _line_index(text: str) -> tuple[list[str], list[int]]:
+    """The document's lines and the character offset each one starts at.
+
+    Built once per document and passed down, not recomputed per candidate
+    heading: doing it per match made :func:`split_sections` quadratic in
+    document length, measured at 0.006s for 100 sections against 0.331s for
+    800 - fine on a small Act, an hour of needless work across a corpus.
+    """
+    lines = text.splitlines()
+    offsets: list[int] = []
+    running = 0
+    for line in lines:
+        offsets.append(running)
+        running += len(line) + 1
+    return lines, offsets
+
+
+def _is_table_row(
+    text: str,
+    position: int,
+    lines: list[str],
+    offsets: list[int],
+) -> bool:
+    """True when a heading-shaped line at ``position`` sits inside a table.
+
+    This is not :func:`_is_contents_entry` again - that check is accepted and
+    unchanged, and only ever looks one line either side. This is the same
+    underlying claim - a trailing bare number is a pagination or a table-cell
+    marker, not part of the heading's own text, exactly when a *nearby* row
+    carries one too - applied to the wider, more irregular tables a
+    compilation embeds inside a real section's own body: a commencement
+    table's "26 May 2009" or "3. Sections 41 to 572" is not a cited year
+    like Part IIIC's; it is one cell of a table whose neighbouring cells
+    happen to wrap across more than one line of extracted text.
+
+    ``lines`` and ``offsets`` come from :func:`_line_index` over the same
+    ``text``, so the caller pays for them once per document.
+    """
+    line_end = text.find("\n", position)
+    stripped_line = text[position : line_end if line_end != -1 else len(text)]
+    if not _ends_in_bare_number(stripped_line):
+        return False
+
+    index = bisect.bisect_right(offsets, position) - 1
+    for delta in range(1, _TABLE_ROW_LOOKAROUND + 1):
+        for neighbour_index in (index - delta, index + delta):
+            if 0 <= neighbour_index < len(lines) and _ends_in_bare_number(lines[neighbour_index]):
+                return True
+    return False
+
+
+# A monotonic section-sequence floor was tried here and removed. The premise -
+# that an Act numbers its operative body once, in a run whose base number never
+# goes backwards, so a lower number afterwards must be an endnote - is false.
+# A Schedule numbers its own clauses from 1, and a compilation volume carries
+# Schedules alongside sections, so the sequence legitimately restarts inside one
+# document. Measured against the corpus the rule cost 1,199 provisions to
+# recover 44: Fair Work Act volume 04 fell from 198 to 141, the Privacy Act from
+# 355 to 313. Dropping real law to remove duplicate pinpoints is the wrong
+# trade in a system whose whole purpose is that a citation can be trusted.
+#
+# The endnote problem is real and still open. Whatever solves it must key on
+# what the text *is* - an amendment-history table, a schedule, an endnote
+# section - and not on where its number sits in a sequence.
+
+
 def _is_structural(line: str) -> bool:
     """True when a line is a heading, a page number or blank - never operative text."""
     stripped = line.strip()
@@ -146,7 +231,140 @@ def _is_structural(line: str) -> bool:
     if stripped.lower().startswith(STRUCTURAL_PREFIXES):
         return True
     # A bare page number, as tables of provisions carry.
-    return stripped.replace(".", "").replace("-", "").isdigit()
+    if stripped.replace(".", "").replace("-", "").isdigit():
+        return True
+    # A compilation's own front-matter and tail labels paginate themselves
+    # the same way a numbered contents row does - "Compilation table 13",
+    # "Uncommenced provisions table 1", "Other notes 1" - whatever the label
+    # text says, a line that ends in a bare page number here is never
+    # operative prose, so it cannot be what tells find_body_start it has
+    # reached the real body.
+    return _ends_in_bare_number(stripped)
+
+
+#: The heading above a compilation's endnotes, on a line of its own.
+#: Commonwealth compilations say "Endnotes"; Western Australian ones say
+#: "Notes". Everything after it is apparatus *about* the Act - the compilation
+#: table, the amendment history, the defined-terms index - and none of it is
+#: operative text, however section-shaped its rows look.
+ENDNOTES_HEADING = re.compile(r"^(?:end)?notes\s*$", re.IGNORECASE | re.MULTILINE)
+
+#: What must follow that heading for it to be the endnote block rather than a
+#: stray line of prose. "Notes" alone is too common a word to cut a document on.
+ENDNOTES_FOLLOWERS = (
+    "compilation table",
+    "defined terms",
+    "other notes",
+    "about the endnotes",
+    "legislation history",
+    "uncommenced provisions table",
+    "uncommenced amendments",
+    "abbreviation key",
+    "endnote 1",
+)
+
+#: A Schedule's own heading. Schedules are law, but they number their clauses
+#: locally from 1, so their numbers collide with the body's section numbers.
+SCHEDULE_HEADING = re.compile(
+    r"^schedule\s+(\d+[A-Z]*|[IVXLC]+)\b", re.IGNORECASE | re.MULTILINE
+)
+
+
+def find_body_end(text: str, body_start: int) -> int | None:
+    """Character offset where the endnotes begin, or None if there are none.
+
+    The endnotes carry an amendment history whose rows are numbered like
+    sections - "1 The provisions in this Act amending ..." - and restart from
+    1, so stored as provisions they produce a second, competing pinpoint for a
+    section number the body has already used. They are not law and must not be
+    split.
+
+    Two guards, because cutting a document short is worse than keeping junk.
+    The marker is only trusted **after** ``body_start``: a table of provisions
+    lists "Notes" and "Endnotes" among its own rows near the top of the file,
+    and truncating there would discard the entire Act. And it must be followed,
+    within a few lines, by one of :data:`ENDNOTES_FOLLOWERS` - the apparatus
+    headings that only ever appear in an endnote block - because "Notes" on its
+    own line is otherwise ordinary enough to appear inside real text.
+
+    In a multi-volume compilation the endnotes live in the last volume alone,
+    so the earlier volumes have no marker after their body and keep everything.
+    """
+    for match in reversed(list(ENDNOTES_HEADING.finditer(text))):
+        if match.start() <= body_start:
+            continue
+        following = text[match.end() : match.end() + 400].lower()
+        if any(follower in following for follower in ENDNOTES_FOLLOWERS):
+            return match.start()
+    return None
+
+
+#: Markers that open a numbered block *inside* a section's own body. Both open
+#: apparatus that belongs to the section, and both number their items "1.",
+#: "2.", "3." - indistinguishable from section headings once the source's
+#: layout is flattened into lines of text.
+#:
+#: "Column 1" heads a formal table, the commencement table in section 2 above
+#: all. "Notes for this section:" heads an explanatory note list.
+APPARATUS_OPENERS = re.compile(
+    r"^(?:column\s+1\b|notes?\b[^\n]*for this section\s*:)",
+    re.IGNORECASE | re.MULTILINE,
+)
+
+
+def apparatus_rows(text: str, matches: list[re.Match[str]]) -> set[int]:
+    """Start offsets of headings that are really rows of in-body apparatus.
+
+    Apparatus like this is part of a real section and stays in that section's
+    text; what must not happen is its *items* being split off as provisions of
+    their own. "1. Sections 1 and 2 and anything in this Act not elsewhere
+    covered by this table" is a cell of section 2's commencement table, and
+    "1. Subsection (1) incorporates into this Act ..." is a note on section 14
+    - stored as provisions, each becomes a second, competing section 1.
+
+    Suppressing a character *range* after each opener was tried and rejected.
+    A range cannot know where its table ends: bounded by a blank line it
+    swallowed 357,073 characters of a Fair Work volume, because DOCX extraction
+    produces almost none; bounded by a character cap instead it overran the end
+    of its own section and ate the next section's heading, dropping five real
+    Privacy Act sections - 16B, 21J, 38, 38A and 38B - because 16A's permitted-
+    situations table runs right up to 16B.
+
+    So follow the table's own numbering instead. Its rows are numbered 1., 2.,
+    3. - consecutively, from 1 - and that sequence is what ends the table: the
+    first heading that does not continue it is the section's own text resuming.
+    A real section heading after a table never continues from 1, so it cannot
+    be absorbed, whatever its distance from the opener.
+    """
+    if not matches:
+        return set()
+
+    starts = [m.start() for m in matches]
+    suppressed: set[int] = set()
+
+    for opener in APPARATUS_OPENERS.finditer(text):
+        index = bisect.bisect_left(starts, opener.end())
+        expected = 1
+        while index < len(matches):
+            number = matches[index].group("number").strip()
+            if not number.isdigit() or int(number) != expected:
+                break
+            suppressed.add(starts[index])
+            expected += 1
+            index += 1
+
+    return suppressed
+
+
+def schedule_spans(text: str) -> list[tuple[int, str]]:
+    """Where each Schedule starts, and its number, in document order.
+
+    A Schedule is operative law - it is not dropped - but its clauses are
+    numbered locally, from 1, so a Schedule 1 clause 11 and the Act's own
+    section 11 are different provisions that would otherwise share a pinpoint.
+    Knowing where each Schedule begins lets the splitter label them apart.
+    """
+    return [(m.start(), m.group(1).upper()) for m in SCHEDULE_HEADING.finditer(text)]
 
 
 def find_body_start(text: str) -> int | None:
@@ -229,6 +447,13 @@ def split_sections(text: str) -> list[Provision]:
             offset = body_start
             text = text[body_start:]
 
+    # Drop the endnotes, if the document has them. Their amendment history is
+    # numbered like sections and restarts from 1, so left in it produces a
+    # second provision competing for a section number the body already used.
+    body_end = find_body_end(text, 0) if body_start is not None else None
+    if body_end is not None:
+        text = text[:body_end]
+
     matches = list(SECTION_RE.finditer(text))
     if not matches:
         stripped = text.strip()
@@ -245,6 +470,9 @@ def split_sections(text: str) -> list[Provision]:
         ]
 
     provisions: list[Provision] = []
+    lines, offsets = _line_index(text)
+    schedules = schedule_spans(text)
+    apparatus = apparatus_rows(text, matches)
     for index, match in enumerate(matches):
         start = match.start()
         end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
@@ -256,9 +484,26 @@ def split_sections(text: str) -> list[Provision]:
         previous_line, next_line = _adjacent_lines(text, start)
         if _is_contents_entry(match.group(0), previous=previous_line, following=next_line):
             continue
+        # A commencement table, embedded in section 2's own body, wraps a
+        # cell of prose between two dated rows - the same pagination signal
+        # as a contents entry, just one line further away.
+        if _is_table_row(text, start, lines, offsets):
+            continue
+        # An item of an in-body table or note block is part of its section,
+        # not a provision of its own.
+        if start in apparatus:
+            continue
+        number = match.group("number").strip()
+        # A clause inside a Schedule is cited as a clause of that Schedule, not
+        # as a section of the Act. Labelling it here keeps the law and removes
+        # the collision at the same time: "Sch 1 cl 11" and "11" are two
+        # pinpoints, which is what they are.
+        enclosing = [n for position, n in schedules if position < start]
+        if enclosing:
+            number = f"Sch {enclosing[-1]} cl {number}"
         provisions.append(
             Provision(
-                section_number=match.group("number").strip(),
+                section_number=number,
                 heading=match.group("heading").strip(),
                 text=body.strip(),
                 char_start=offset + start,
@@ -388,6 +633,7 @@ def _write(
                 ),
             )
 
+        reason = f"ingested {len(provisions)} provisions"
         cur.execute(
             """
             INSERT INTO ingestion_log (url, host, outcome, reason, sha256, document_id)
@@ -396,11 +642,24 @@ def _write(
             (
                 source_url,
                 host_of(source_url) or "(corpus)",
-                f"ingested {len(provisions)} provisions",
+                reason,
                 sha256,
                 document_id,
             ),
         )
+
+    # The database row lives inside this transaction and is gone if a purge
+    # cascades `documents` away. The file log is the one record meant to
+    # survive that - so it must be written for every path that reaches here
+    # (ingest_url, ingest_file, seed_from_corpus alike), not just the fetch
+    # path that happened to have a logging call already.
+    log_attempt(
+        url=source_url,
+        host=host_of(source_url) or "(corpus)",
+        outcome="allowed",
+        reason=reason,
+        sha256=sha256,
+    )
 
     return IngestResult(
         document_id=document_id,
@@ -513,7 +772,12 @@ def ingest_file(
     as provenance and is still checked against the host allowlist, so a local
     file cannot be used to launder an off-allowlist source.
     """
-    check_url(source_url)
+    try:
+        check_url(source_url)
+    except SourceRefused as exc:
+        _log_refusal(url=source_url, reason=str(exc))
+        log_attempt(url=source_url, host=host_of(source_url), outcome="refused", reason=str(exc))
+        raise
 
     body = path.read_bytes()
     digest = hashlib.sha256(body).hexdigest()

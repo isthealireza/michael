@@ -177,6 +177,33 @@ PowerShell 5.1 silently swallows a native command's stderr, so a remote failure
 looks like empty output — run `railway ssh` from bash when you need to see an
 error.
 
+## 5a. Acceptance criteria a worker cannot test are your error, not theirs
+
+A worker reports against the acceptance criteria you write. If a criterion can
+only be verified by an action the worker is forbidden to take, the worker will
+report green in good faith and the criterion will have proved nothing.
+
+This has already happened once. An endnote fix carried the criterion
+"provisions must not drop below roughly 9303 minus the junk removed". Verifying
+that needs a full purge-and-re-ingest rebuild, which is the owner's operator
+action. The worker proved what it could with fixtures, all of which passed, and
+reported success — while one of its four mechanisms cut 1,199 provisions, 13%
+of the corpus. The gap was in the task design.
+
+So, before you dispatch:
+
+1. Ask of every acceptance criterion: **can this worker actually run this?**
+2. If it cannot, say so IN the task. Require the worker to label the result
+   **UNVERIFIED AGAINST <the thing it cannot run>**, and to state which
+   documents it expects to move and by how much.
+3. Then sequence the real verification yourself — usually by asking the owner
+   to run it — and do not accept the result until that number lands.
+
+**A green suite is evidence about the fixtures, not about the corpus.** For
+anything touching `split_sections`, the settling evidence is a full rebuild
+with a before-and-after count keyed on citation and sha256. That criterion is
+recorded in `.orca/WORKER-1.md`.
+
 ## 6. How to run the work
 
 Resolve the CLI as `orca` on this machine. Load the version-matched guide

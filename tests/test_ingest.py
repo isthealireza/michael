@@ -1,11 +1,21 @@
-"""Section splitting and record normalisation. No database involved."""
+"""Section splitting and record normalisation. No database involved.
+
+The file-log tests below stub the database with a fake connection - they
+never open a socket - to prove the audit trail without needing Postgres.
+"""
 
 from __future__ import annotations
 
-from datetime import date
+import json
+from collections.abc import Iterator
+from contextlib import contextmanager
+from datetime import UTC, date, datetime
+from pathlib import Path
 
 import pytest
 
+from michael import ingest, schema
+from michael.config import settings
 from michael.ingest import (
     IngestionError,
     _validate,
@@ -14,6 +24,7 @@ from michael.ingest import (
     split_sections,
 )
 from michael.schema import JURISDICTIONS
+from michael.sources import FetchedSource, SourceRefused
 
 SAMPLE = """FIXTURE EMPLOYMENT STANDARDS ACT 2000
 
@@ -390,6 +401,500 @@ def test_a_cited_act_year_is_not_a_contents_entry() -> None:
     assert not _is_contents_entry("7B Acts and practices of organisations 1988")
 
 
+# The Ticket Scalping Act 2021 (WA), verbatim and complete (14,601 characters
+# in the real document, only whitespace-adjacent here) - Compilation, sourced
+# from the isaacus/open-australian-legal-corpus record whose text hashes to
+# the sha256 already stored for this document in the michael database. Real,
+# not excerpted: this is the entire Act, contents, body, and compilation
+# tail. It is the fixture for the endnote/table-junk fix because it exercises
+# every part of it in one real document - the contents-block boundary bug in
+# find_body_start (its last row's neighbour is the bare word "Notes", not
+# another paginated row), the required MUST-SURVIVE heading (section 14,
+# "Application of Fair Trading Act 2010"), and an in-body numbered note
+# ("Notes for this section: 1. ... 2. ...") that must not mint two spurious
+# provisions the way the old predicate would have let it.
+TICKET_SCALPING_ACT_2021 = """Western Australia
+Ticket Scalping Act 2021
+Western Australia
+Ticket Scalping Act 2021
+Contents
+Part 1 — Preliminary
+1. Short title 2
+2. Commencement 2
+3. Terms used 2
+4. Act binds Crown 4
+5. Resale restrictions 4
+6. Application of Act 4
+Part 2 — Resale, supply or advertising of tickets
+7. Ticket scalping 5
+8. Invalid resale restrictions 5
+9. Supply of tickets not to be made contingent on other purchases 5
+10. Prohibited advertisements 5
+11. Ticket resale advertising 6
+Part 3 — Online purchase of tickets
+12. Prohibited conduct in relation to use of ticketing websites 7
+Part 4 — Miscellaneous
+13. Functions of Commissioner 8
+14. Application of Fair Trading Act 2010 8
+15. Infringement notices and Criminal Procedure Act 2004 10
+16. Regulations 10
+17. Review of Act 11
+Part 5 — Transitional provision
+18. Transitional provision 12
+Notes
+Compilation table 13
+Defined terms
+Western Australia
+Ticket Scalping Act 2021
+An Act to restrict the resale of event tickets and to prohibit the use of software designed to circumvent security measures on ticket selling websites, and for related purposes.
+
+Part 1 — Preliminary
+
+1. Short title
+This is the Ticket Scalping Act 2021.
+
+2. Commencement
+This Act comes into operation as follows —
+(a) Part 1 — on the day on which this Act receives the Royal Assent;
+(b) the rest of the Act — on the day after that day.
+
+3. Terms used
+In this Act —
+ticket scalping means selling a ticket for admission to an event for an amount which exceeds the original ticket price by more than 10%.
+
+4. Act binds Crown
+This Act binds the Crown in right of Western Australia and, so far as the legislative power of the Parliament permits, the Crown in all its other capacities.
+
+5. Resale restrictions
+(1) For the purposes of this Act, a resale restriction is a term or condition of a ticket for admission to an event that limits the circumstances in which the ticket may be resold.
+(2) A term or condition that limits the circumstances in which a ticket may be resold includes a term or condition that provides for the ticket to be cancelled, surrendered or rendered invalid if the ticket is resold or if the ticket is resold in certain circumstances.
+
+6. Application of Act
+(1) This Act applies to tickets for admission to events in Western Australia that are subject to a resale restriction.
+(2) Subject to subsection (1), this Act extends to conduct, and other acts, matters and things, occurring or existing outside or partly outside Western Australia (whether within or outside Australia).
+
+Part 2 — Resale, supply or advertising of tickets
+
+7. Ticket scalping
+A person must not sell a ticket for admission to an event for an amount which exceeds the original ticket price by more than 10%.
+Penalty: a fine of $20 000.
+
+8. Invalid resale restrictions
+A resale restriction is void to the extent that it provides for the ticket to be cancelled, surrendered or rendered invalid if the ticket is resold for an amount not exceeding 110% of the original ticket price.
+
+9. Supply of tickets not to be made contingent on other purchases
+(1) A person (the supplier) must not supply a ticket for admission to an event to any other person (the recipient) under an agreement that makes the liability of the supplier to supply the ticket to the recipient contingent on payment by the recipient to the supplier of an amount in consideration for the provision to the recipient of any other goods or services.
+Penalty for this subsection: a fine of $20 000.
+(2) Subsection (1) does not apply to the supply of a ticket under —
+(a) an agreement that has been authorised by the event organiser for the relevant event; or
+(b) any other agreement of a kind prescribed by the regulations.
+
+10. Prohibited advertisements
+(1) A ticket resale advertisement must not specify an amount for the sale of the ticket that is more than 110% of the original ticket price.
+(2) A ticket resale advertisement must specify —
+(a) the original ticket price; and
+(b) details of the location from which the ticket holder is authorised to view the event (including, for example, any bay number, row number and seat number for the ticket).
+
+11. Ticket resale advertising
+(1) The owner of an advertising publication must ensure that no prohibited advertisement is published in the publication.
+Penalty for this subsection: a fine of $20 000.
+(2) It is a defence to a charge of an offence under subsection (1) to prove that —
+(a) the advertisement was received by the person charged, or by a person acting on that person's behalf, in the ordinary course of carrying on the business or undertaking associated with the advertising publication; and
+(b) the agreement relating to the publication of the advertisement between the person charged and the person placing the advertisement was subject to terms or conditions prohibiting the publication of prohibited advertisements; and
+(c) the person charged, or a person responsible for managing the advertising publication on that person's behalf, as soon as practicable after becoming aware that the prohibited advertisement had been published in the publication, took reasonable steps to ensure that the advertisement was removed from the publication; and
+(d) the person charged took such other steps as were reasonable in the circumstances to ensure that no prohibited advertisement was published in the publication.
+
+Part 3 — Online purchase of tickets
+
+12. Prohibited conduct in relation to use of ticketing websites
+(1) In this section —
+security measures, in relation to a website, include any measures of a kind prescribed by the regulations for the purposes of this definition.
+(2) A person must not use any software to enable or assist the person to circumvent the security measures of a website to purchase tickets in contravention of the published terms of use of the website.
+Penalty for this subsection: a fine of $100 000.
+(3) For the purposes of subsection (2), terms of use of a website are published if they are published on the website.
+
+Part 4 — Miscellaneous
+
+13. Functions of Commissioner
+(1) The functions of the Commissioner include the following —
+(a) to promote the operation and effect of this Act;
+(b) to conduct educational activities associated with promoting compliance with this Act;
+(c) to receive complaints and information concerning potential breaches of this Act and, if the Commissioner considers it warranted, to investigate any matter and to take any action in respect of those complaints or that information considered to be appropriate by the Commissioner;
+(d) to publish (in any form) statements identifying and giving warnings about conduct or practices that are in breach of this Act, including by identifying persons who engage or are likely to engage in such conduct or practices;
+(e) to perform other functions associated with the operation or enforcement of this Act, or otherwise conferred on the Commissioner under, or for the purposes of, this Act.
+(2) The Commissioner must not make or issue a statement under subsection (1)(d) that identifies a specific person unless satisfied that it is in the public interest to do so.
+
+14. Application of Fair Trading Act 2010
+(1) The following provisions of the Fair Trading Act 2010 apply, with any modifications that are necessary for the purposes of this Act, as if those provisions were a part of this Act —
+(a) sections 60 and 61;
+(b) Part 6, other than sections 64 and 65 and Division 4A;
+(c) Part 7, other than sections 96, 97, 98, 100 and 108 and Division 4;
+(d) Part 8, other than section 116.
+(2) For the purposes of subsection (1), the Fair Trading Act 2010 is to be read as if —
+(a) a reference to "this Act" or "this or any other Act" were a reference to this Act; and
+(b) the words "or another Act", "or any other Act" (other than in section 60(1)) or "or another Act that confers functions on the Commissioner" were deleted.
+(3) Subject to subsection (2), any definition contained in the Fair Trading Act 2010 of a term used in the provisions applied by subsection (1) also applies for the purposes of those provisions.
+Notes for this section:
+1. Subsection (1) incorporates into this Act certain provisions of the Fair Trading Act 2010 that provide for or in relation to the following —
+(a) powers of the Commissioner;
+(b) investigation and enforcement;
+(c) criminal and civil proceedings;
+(d) miscellaneous matters.
+2. Subsection (2) makes certain modifications to those provisions in their application as part of this Act.
+
+15. Infringement notices and Criminal Procedure Act 2004
+(1) If this Act is a prescribed Act for the purposes of the Criminal Procedure Act 2004 Part 2, this section applies in relation to the service of an infringement notice under that Part by an authorised officer in relation to an alleged offence under this Act.
+(2) The infringement notice must be served within —
+(a) 21 days after the day on which the authorised officer forms the opinion that there is sufficient evidence to support the allegation of the offence; and
+(b) 6 months after the day on which the alleged offence is believed to have been committed.
+(3) The Criminal Procedure Act 2004 Part 2 is modified to the extent necessary to give effect to this section.
+
+16. Regulations
+(1) The Governor may make regulations prescribing matters —
+(a) required or permitted by this Act to be prescribed; or
+(b) necessary or convenient to be prescribed for giving effect to the purposes of this Act.
+(2) The regulations may provide for offences against the regulations and prescribe penalties for those offences not exceeding a fine of $5 000.
+
+17. Review of Act
+(1) The Minister must review the operation and effectiveness of this Act, and prepare a report based on the review, as soon as practicable after the 5th anniversary of the day on which this section comes into operation.
+(2) The review must address whether sections 7, 9 and 12 have been effective in reducing the practice of ticket scalping.
+(3) The Minister must cause the report to be laid before each House of Parliament as soon as practicable after it is prepared, but not later than 12 months after the 5th anniversary.
+
+Part 5 — Transitional provision
+
+18. Transitional provision
+This Act does not apply to a ticket purchased from an authorised ticket seller before the day on which Part 2 comes into operation.
+Notes
+This is a compilation of the Ticket Scalping Act 2021. For provisions that have come into operation see the compilation table.
+Compilation table
+Short title               Number and year  Assent      Commencement
+Ticket Scalping Act 2021  17 of 2021       9 Sep 2021  Pt. 1: 9 Sep 2021 (see s. 2(a));
+                                                       Act other than Pt. 1: 10 Sep 2021 (see s. 2(b))
+
+Defined terms
+[This is a list of terms defined and the provisions where they are defined. The list is not part of the law.]
+Defined term Provision(s)
+advertisement 3
+advertising publication 3
+authorised ticket seller 3
+Commissioner 3
+event 3
+event organiser 3
+original ticket price 3
+owner 3
+prohibited advertisement 3
+recipient 9(1)
+resale restriction 3, 5(1)
+security measures 12(1)
+sell 3
+supplier 9(1)
+supply 3
+ticket resale advertisement 3
+ticket scalping 3
+"""
+
+
+def test_the_endnote_fix_recovers_every_real_section_of_a_full_real_act() -> None:
+    """The find_body_start boundary bug this fix also needed.
+
+    Before this fix, find_body_start mistook the LAST row of this Act's
+    contents block for the start of the body: that row's own neighbours are
+    "Part 5 ... (Transitional provision)" above it and the bare word "Notes"
+    below it, and neither ends in a page number, so the accepted
+    _is_contents_entry check (correctly) does not call it a contents row -
+    but nothing else recognised "Notes", "Compilation table N" or "Defined
+    terms" as structural either, so the prose lookahead concluded real body
+    text started right there, at the tail of the contents block, cutting
+    away the entire real Act.
+    """
+    provisions = {p.section_number: p for p in split_sections(TICKET_SCALPING_ACT_2021)}
+    assert [p.section_number for p in split_sections(TICKET_SCALPING_ACT_2021)] == [
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9",
+        "10",
+        "11",
+        "12",
+        "13",
+        "14",
+        "15",
+        "16",
+        "17",
+        "18",
+    ]
+    assert provisions["1"].heading == "Short title"
+    assert provisions["1"].text.rstrip().endswith("This is the Ticket Scalping Act 2021.")
+
+
+def test_must_survive_application_of_fair_trading_act_2010() -> None:
+    """The owner's required MUST-SURVIVE case, verbatim.
+
+    Section 14's own heading ends in a cited Act's year - the class of
+    heading the contents fix (bac667e) exists to keep - and its body itself
+    contains an in-line numbered note ("Notes for this section: 1. ... 2.
+    ..."), the class of row this endnote fix exists to drop. Both must be
+    true of the same real section at once: 14 survives, and the note's "1"
+    and "2" mint no provisions of their own.
+    """
+    provisions = {p.section_number: p for p in split_sections(TICKET_SCALPING_ACT_2021)}
+    assert "14" in provisions
+    assert provisions["14"].heading == "Application of Fair Trading Act 2010"
+    assert "(1) The following provisions of the Fair Trading Act 2010 apply" in provisions["14"].text
+    # The in-body note's own "1." and "2." must not have become sections 1
+    # and 2 again - those numbers are already used, by the real sections 1
+    # and 2 much earlier in the Act.
+    assert provisions["1"].heading == "Short title"
+    assert provisions["2"].heading == "Commencement"
+
+
+# Bank of Western Australia Act 1995 (WA), excerpted (not the full 56,810
+# characters) but every line real and verbatim, sourced from the same
+# corpus record, sha256-verified against the document already in the
+# michael database. This is the owner's worked example: section "1" must
+# resolve to exactly one provision, "Short title" - not the two schedule
+# items that share its number purely by virtue of restarting their own
+# local numbering.
+BANK_OF_WA_SCHEDULE_COLLISION_EXCERPT = """Western Australia
+Bank of Western Australia Act 1995
+Contents
+Part 1 — Preliminary
+1. Short title 1
+2. Commencement 1
+3. Terms used 1
+4. Bank not to be regarded as instrumentality or agent of Crown 5
+Part 2 — Privatisation of Bank
+43. Bank of Western Australia Act 1990, transitional provisions for 32
+44. Other Acts, transitional provisions 32
+Schedule 1 — Provisions relating to Bank of Western Australia Act 1990
+Division 2 — Transitional provisions
+11. Terms used 33
+12. Auditor General may disclose information 33
+13. Payments under repealed s. 31 up to day of privatisation 33
+14. Agreements under s. 33(4a) 34
+15. Securities taken as agent of Crown 34
+Schedule 2 — Provisions relating to other Acts
+Part B — Transitional provisions
+1. Provision relating to Industry (Advances) Act 1947 35
+2. Provisions relating to Superannuation and Family Benefits Act 1938 35
+Notes
+Compilation table 37
+Uncommenced provisions table 38
+Other notes 38
+Defined terms
+Western Australia
+Bank of Western Australia Act 1995
+An Act to provide for the full or partial privatisation of Bank of Western Australia Ltd, to amend the Bank of Western Australia Act 1990 and certain other Acts, and for related purposes.
+
+Part 1 — Preliminary
+
+1. Short title
+This Act may be cited as the Bank of Western Australia Act 1995.
+
+2. Commencement
+(1) The long title, this Part, Part 2 (except section 11) and section 43(1) and (2) come into operation on the day on which this Act receives Royal Assent.
+
+3. Terms used
+In this Act, unless the contrary intention appears —
+Bank means the public company registered under the Corporations Act 2001 (Commonwealth).
+
+4. Bank not to be regarded as instrumentality or agent of Crown
+The Bank is not, and does not represent, the Crown and is not an instrumentality or agency of the Crown.
+
+44. Other Acts, transitional provisions
+(2) Part B of Schedule 2 has effect to make transitional provisions.
+Schedule 1 — Provisions relating to Bank of Western Australia Act 1990
+
+Division 2 — Transitional provisions
+
+11. Terms used
+In this Schedule, unless the contrary intention appears — the 1990 Act means the Bank of Western Australia Act 1990.
+
+12. Auditor General may disclose information
+The Auditor General may disclose to the Treasurer information obtained under the 1990 Act.
+
+Schedule 2 — Provisions relating to other Acts
+[s. 44]
+[Part A omitted under the Reprints Act 1984 s. 7(4)(e).]
+
+Part B — Transitional provisions
+
+1. Provision relating to Industry (Advances) Act 1947
+(1) Any security for the repayment of advances taken under the Industry (Advances) Act 1947 and vested in the Bank immediately before the commencement of section 44 is vested in the Treasurer on that commencement.
+
+2. Provisions relating to Superannuation and Family Benefits Act 1938
+(1) Despite the amendment made by item 13 of Part A of this Schedule, the Bank is to be deemed to be a department under section 3 of the Superannuation and Family Benefits Act 1938.
+
+Notes
+Compilation table
+Short title  Number and year  Assent  Commencement
+Bank of Western Australia Act 1995  4 of 1995  1 Mar 1995  1 Jul 1995 (see s. 2 and Gazette 30 Jun 1995 p. 2837)
+
+Other notes
+1 The provisions in this Act amending the Bank of Western Australia Act 1990 and other Acts have been omitted under the Reprints Act 1984 s. 7(4)(e).
+2 The Bank of Western Australia Act 1990 (originally enacted as the R&I Bank Act 1990), the short title of which was changed to the R & I Holdings Act 1990 by this Act Sch. 1 cl. 2, was repealed by the Financial Legislation Amendment Act 1996.
+"""
+
+
+def test_schedule_local_numbering_does_not_duplicate_the_real_section() -> None:
+    """The owner's worked example, verbatim: section 1 must resolve once.
+
+    Real numbers: the real "1. Short title" is the Act's own section 1. Two
+    more things are also headed "1." further into the document - a Schedule
+    1 clause and a Schedule 2 Part B clause - because each Schedule restarts
+    its own local numbering at 1, exactly the way Schedule 1's "11. Terms
+    used" restarts at 11 rather than colliding with 1 either. Both must be
+    excluded: keeping either would give this document's real section 1 two
+    (or three) competing pinpoints for the same citation, which is the
+    traceability failure this fix exists to prevent.
+    """
+    provisions = split_sections(BANK_OF_WA_SCHEDULE_COLLISION_EXCERPT)
+    ones = [p for p in provisions if p.section_number == "1"]
+    assert len(ones) == 1
+    assert ones[0].heading == "Short title"
+    assert ones[0].text.rstrip().endswith("Bank of Western Australia Act 1995.")
+
+    # Schedule 1's own "11. Terms used" restarts at 11, well below the real
+    # body's last accepted number (44, from "Other Acts, transitional
+    # provisions") by the time the Schedule is reached - so it is excluded,
+    # exactly as the real Act's genuine main-body section 11 (referenced
+    # directly in section 2: "Part 2 (except section 11)") is not shadowed
+    # by a same-numbered Schedule clause about something else entirely.
+    assert not any(
+        p.section_number == "11" and p.heading == "Terms used" for p in provisions
+    )
+
+
+def test_the_endnotes_own_amendment_history_is_not_a_provision() -> None:
+    """The "Other notes" tail - the class of row Phase A first found."""
+    provisions = split_sections(BANK_OF_WA_SCHEDULE_COLLISION_EXCERPT)
+    assert not any(
+        "have been omitted under the Reprints Act 1984" in p.text for p in provisions
+    )
+
+
+# Small Business Development Corporation Act 1983 (WA), excerpted, real and
+# verbatim - a genuine section numbered with a double-letter suffix inserted
+# AFTER a single-letter one, "11" then "11AA" then "11A" in that real
+# document order. Comparing suffixes alphabetically would put "11AA" ahead
+# of "11A" and reject the real "11A" as if it went backwards; this fixture
+# is the regression test for that.
+DOUBLE_LETTER_SUFFIX_OUT_OF_LEXICAL_ORDER = """Western Australia
+Small Business Development Corporation Act 1983
+Contents
+11. Functions of Corporation 10
+11AA. Financial assistance, grants and operational funding in relation to small businesses 12
+11A. Delegation by Corporation 13
+Small Business Development Corporation Act 1983
+An Act to establish the Small Business Development Corporation.
+
+11. Functions of Corporation
+(1) The functions of the Corporation are as set out in this Act.
+
+11AA. Financial assistance, grants and operational funding in relation to small businesses
+(1) The Corporation may provide financial assistance to small businesses.
+[Section 11AA inserted: No. 4 of 2022 s. 6.]
+
+11A. Delegation by Corporation
+(1) The Corporation may, by instrument in writing, delegate the performance of any of its functions, except this power of delegation.
+(2) A delegation under subsection (1) may be made to the Commissioner.
+"""
+
+
+def test_a_later_double_letter_insertion_does_not_reject_an_earlier_single_letter_one() -> None:
+    """Real amendment history: "11AA" was inserted after "11A" already existed.
+
+    Only the base number gates monotonicity for exactly this reason - "AA"
+    sorts after "A" alphabetically, but that is amendment history, not the
+    document's real position order. Comparing suffixes would have rejected
+    the genuine "11A. Delegation by Corporation" as if it came before "11AA"
+    in error, when it is simply the next real section after it.
+    """
+    provisions = {p.section_number: p for p in split_sections(DOUBLE_LETTER_SUFFIX_OUT_OF_LEXICAL_ORDER)}
+    assert set(provisions) == {"11", "11AA", "11A"}
+    assert "Delegation by Corporation" in provisions["11A"].heading
+
+
+# Fair Work Act 2009 (Cth), excerpted, real and verbatim - the commencement
+# table every Commonwealth Act carries right after "2 Commencement", whose
+# own table-item rows ("3 Sections 41 to 572") and bare dates ("26 May
+# 2009") are heading-shaped and increase in number, so monotonicity alone
+# would accept them and then reject the real sections 3, 4 and 5 that
+# genuinely follow, because their numbers no longer exceed the table's.
+FAIR_WORK_ACT_COMMENCEMENT_TABLE_EXCERPT = """1 Short title
+This Act may be cited as the Fair Work Act 2009.
+2 Commencement
+(1) Each provision of this Act specified in column 1 of the table commences, or is taken to have commenced, in accordance with column 2 of the table. Any other statement in column 2 has effect according to its terms.
+
+Commencement information
+Column 1
+Column 2
+Column 3
+Provision(s)
+Commencement
+Date/Details
+1. Sections 1 and 2 and anything in this Act not elsewhere covered by this table
+The day on which this Act receives the Royal Assent.
+7 April 2009
+2. Sections 3 to 40
+A single day to be fixed by Proclamation.
+26 May 2009
+(see F2009L01818)
+3. Sections 41 to 572
+A day or days to be fixed by Proclamation.
+A Proclamation must not specify a day that occurs before the day on which the Fair Work (Transitional Provisions and Consequential Amendments) Act 2009 receives the Royal Assent.
+4. Sections 573 to 718
+At the same time as the provision(s) covered by table item 2.
+26 May 2009
+5. Sections 719 to 800
+A day or days to be fixed by Proclamation.
+6. Schedule 1
+At the same time as the provision(s) covered by table item 2.
+26 May 2009
+Note: This table relates only to the provisions of this Act as originally passed by both Houses of the Parliament and assented to.
+
+3 Object of this Act
+The object of this Act is to provide a balanced framework for cooperative and productive workplace relations.
+
+4 Guide to this Act
+Overview of this Act
+(1) This Act is about workplace relations.
+
+5 Terms and conditions of employment (Chapter 2)
+(1) Chapter 2 provides for terms and conditions of employment of national system employees.
+(2) Part 21 has the core provisions for the Chapter.
+"""
+
+
+def test_a_commencement_table_does_not_swallow_the_real_sections_after_it() -> None:
+    """The class of false accept monotonicity alone cannot catch.
+
+    The table's own rows ("3 Sections 41 to 572", "26 May 2009") are
+    heading-shaped and their numbers increase, so a monotonicity check
+    with nothing else would accept them and set the sequence floor to 26 -
+    above the real sections 3, 4 and 5 that immediately follow, rejecting
+    every one of them. This is why the fix also asks whether a nearby line -
+    not just the immediate neighbour - carries a bare number too: the
+    table's cells wrap prose between the dated rows, but a real section
+    does not sit inside that pattern.
+    """
+    provisions = {p.section_number: p for p in split_sections(FAIR_WORK_ACT_COMMENCEMENT_TABLE_EXCERPT)}
+    assert set(provisions) >= {"1", "2", "3", "4", "5"}
+    assert provisions["1"].heading == "Short title"
+    assert provisions["2"].heading == "Commencement"
+    assert provisions["3"].heading == "Object of this Act"
+    assert provisions["4"].heading == "Guide to this Act"
+    assert provisions["5"].heading == "Terms and conditions of employment (Chapter 2)"
+    # None of the table's own rows became provisions.
+    assert not any("Sections 41 to 572" == p.heading for p in provisions.values())
+    assert not any(p.heading == "May 2009" for p in provisions.values())
+
+
 def test_penalty_table_rows_are_not_mistaken_for_sections() -> None:
     """Civil-remedy tables are full of lines like '60 penalty units'."""
     table = """13 Grounds for review
@@ -417,3 +922,144 @@ This Act may be cited as the Example Act.
 """
     numbers = [p.section_number for p in split_sections(plain)]
     assert numbers == ["1", "2"]
+
+
+# --- File log audit trail -------------------------------------------------
+#
+# The database `ingestion_log` row lives inside a transaction that a purge can
+# cascade away (`TRUNCATE documents CASCADE`); `sources/ingestion.log.jsonl` is
+# meant to survive that. Before this fix, only `ingest_url` reached it -
+# `ingest_file` (and, through the same `_write`, `seed_from_corpus`) wrote the
+# database row alone. These tests stub Postgres with a fake connection so they
+# prove the file log without needing a running database.
+
+
+class _FakeCursor:
+    """Enough of a psycopg cursor for `_write` to run against, nothing more."""
+
+    def __init__(self) -> None:
+        self._last_sql = ""
+
+    def execute(self, query: str, params: object = None) -> None:
+        self._last_sql = query
+
+    def fetchone(self) -> dict[str, int] | None:
+        if "INSERT INTO documents" in self._last_sql:
+            return {"id": 1}
+        return None
+
+    def __enter__(self) -> _FakeCursor:
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        return None
+
+
+class _FakeConnection:
+    def cursor(self) -> _FakeCursor:
+        return _FakeCursor()
+
+    def commit(self) -> None:
+        pass
+
+    def __enter__(self) -> _FakeConnection:
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        return None
+
+
+@contextmanager
+def _fake_writable(*, connect_timeout: int = 10) -> Iterator[_FakeConnection]:
+    yield _FakeConnection()
+
+
+def _stub_database(monkeypatch: pytest.MonkeyPatch) -> None:
+    """No socket opened: `_write` and `refresh_corpus_stats` run against a fake."""
+    monkeypatch.setattr(ingest, "writable", _fake_writable)
+    monkeypatch.setattr(schema, "writable", _fake_writable)
+    monkeypatch.setattr(ingest, "embed", lambda texts, **kw: [[0.0] * 8 for _ in texts])
+
+
+def _file_log_lines() -> list[dict[str, object]]:
+    path = settings().ingestion_log
+    if not path.exists():
+        return []
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
+
+
+def test_a_file_ingest_writes_the_file_log(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _stub_database(monkeypatch)
+    source_file = tmp_path / "act.txt"
+    source_file.write_text(SAMPLE, encoding="utf-8")
+
+    ingest.ingest_file(
+        path=source_file,
+        source_url="https://www.legislation.gov.au/fixture-file",
+        jurisdiction="commonwealth",
+        title="Fixture Act",
+        citation="Fixture Employment Standards Act 2000 (Cth) - file",
+        doc_type="act",
+    )
+
+    lines = _file_log_lines()
+    assert any(
+        line["outcome"] == "allowed" and line["url"] == "https://www.legislation.gov.au/fixture-file"
+        for line in lines
+    ), f"file ingest never reached the file log: {lines}"
+
+
+def test_a_url_ingest_writes_the_file_log(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _stub_database(monkeypatch)
+    fake_source = FetchedSource(
+        url="https://www.legislation.gov.au/fixture-url",
+        host="www.legislation.gov.au",
+        sha256="a" * 64,
+        content_type="text/plain",
+        fetched_at=datetime.now(UTC),
+        path=tmp_path / "fixture-url.bin",
+        body=SAMPLE.encode("utf-8"),
+    )
+    monkeypatch.setattr(ingest, "fetch", lambda url, **kw: fake_source)
+
+    ingest.ingest_url(
+        url="https://www.legislation.gov.au/fixture-url",
+        jurisdiction="commonwealth",
+        title="Fixture Act",
+        citation="Fixture Employment Standards Act 2000 (Cth) - url",
+        doc_type="act",
+    )
+
+    lines = _file_log_lines()
+    assert any(
+        line["outcome"] == "allowed" and line["url"] == "https://www.legislation.gov.au/fixture-url"
+        for line in lines
+    ), f"URL ingest never reached the file log: {lines}"
+
+
+def test_a_refused_file_ingest_still_writes_the_file_log(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    _stub_database(monkeypatch)
+    source_file = tmp_path / "act.txt"
+    source_file.write_text(SAMPLE, encoding="utf-8")
+
+    with pytest.raises(SourceRefused):
+        ingest.ingest_file(
+            path=source_file,
+            source_url="https://example.com/not-allowlisted",
+            jurisdiction="commonwealth",
+            title="Fixture Act",
+            citation="Fixture Employment Standards Act 2000 (Cth) - refused",
+            doc_type="act",
+        )
+
+    lines = _file_log_lines()
+    assert any(
+        line["outcome"] == "refused" and line["url"] == "https://example.com/not-allowlisted"
+        for line in lines
+    ), f"a refused file ingest never reached the file log: {lines}"

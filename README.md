@@ -219,10 +219,26 @@ file cannot be used to launder an off-allowlist source. DOCX and HTML are
 converted to text by `docx_text.py` and `html_text.py`; the sha256 is taken over
 the original bytes either way, so deriving text never weakens provenance.
 
-**Purging documents wipes the database audit log.** `ingestion_log` carries a
-foreign key to `documents`, so `TRUNCATE documents CASCADE` truncates it too.
-The durable record is the append-only file at `sources/ingestion.log.jsonl`,
-which is never truncated.
+**Purging documents wiped the database audit log, and the file log did not
+catch it.** `ingestion_log` carries a foreign key to `documents`, so
+`TRUNCATE documents CASCADE` truncates it too. The intended safety net — the
+append-only file at `sources/ingestion.log.jsonl` — was written only from the
+URL-fetch step inside `ingest_url`; `ingest_file` and `seed_from_corpus`
+reached the database row alone. A full-corpus purge exercised exactly that
+gap: 205 database rows gone, 3 lines left in the file — the record meant to
+survive the purge was the empty one. `_write()` now writes the file-log entry
+itself, for every path that inserts a `documents` row, so an ingestion is
+durable across a purge regardless of which command produced it. Refusals are
+unaffected and are logged the same way they always were, from
+`sources.fetch()` and from `ingest_file`'s own host check.
+
+**The corpus cannot rebuild itself from the database alone.** `documents`
+stores metadata and the sha256 of the original bytes, not the extracted text;
+`provisions.char_start`/`char_end` are offsets into that text, which is kept
+nowhere once ingestion finishes — not even the file log records it. A heading
+a splitter bug dropped was never stored, so it cannot be recovered by
+re-running the splitter over what is in the database. Fixing a splitter bug
+means re-fetching the sources and re-ingesting, not re-splitting in place.
 
 **Very long sections are embedded from their opening only.** Embedding
 providers cap input (8192 tokens for `text-embedding-3-small`), so

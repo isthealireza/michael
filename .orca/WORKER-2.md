@@ -39,6 +39,20 @@ right one.
    failures. Anchor to Title Case and prove the anchor works before you trust
    a single number it prints.
 
+## The `section_number` format changed — this affects your labelled set
+
+Schedule clauses are now stored as **`Sch N cl M`**, not as a bare number. A
+Schedule numbers its own clauses from 1, so labelling them as sections created
+duplicate pinpoints for one citation; they are kept as law and numbered as the
+clauses they are.
+
+**Any labelled query targeting a Schedule clause must use that form.** A query
+pinned to the old bare-number form will silently fail to match and will look
+like a retrieval miss rather than a labelling mismatch.
+
+Re-check `calibration/labelled_queries.json` for this whenever the splitter
+changes the way a provision is identified, not only when the corpus grows.
+
 ## Known traps on this ground
 
 - `--provider openrouter` is mandatory on benchmark runs. Without it six runs

@@ -44,6 +44,62 @@ chunking, hashing, embedding, and the audit trail.
    seeding. BM25 once read N=7,071 against an 8,756-provision corpus because
    it did not.
 
+## Proving a change to `split_sections` — the acceptance criterion
+
+**A splitter change is not proven by fixtures. It is proven by a full rebuild
+with a before-and-after provision count, keyed on citation AND sha256** so a
+metadata change cannot hide a content change.
+
+This is not advice. It is the acceptance criterion for every future change to
+`split_sections` and to any predicate it calls.
+
+You cannot run that rebuild yourself — it purges and re-ingests, which is the
+owner's operator action. So the sequence is:
+
+1. You make the change and prove it as far as you can locally.
+2. You state, in your report, that it is **UNVERIFIED AGAINST A FULL REBUILD**
+   and say which documents you expect to move and by how much.
+3. The ORCHESTRATOR asks the owner to rebuild and measure.
+4. Only the rebuild number settles it.
+
+Never report a splitter change as done on a green suite alone.
+
+### Why this rule exists — the monotonic-section-floor case
+
+A fix added four mechanisms. Three were sound. The fourth — a **monotonic
+section-sequence floor**, which assumed an Act's section numbers only ever
+increase — cut the corpus from 9,111 provisions to 7,956: **44 recovered,
+1,199 lost, a 13% loss.** Worst hit: Petroleum (Submerged Lands) -167,
+Railways (Access) Code -101, Offshore Minerals -69, Fair Work -57,
+Privacy Act -42.
+
+Its premise was simply false. **A Schedule numbers its own clauses from 1**,
+and a compilation volume carries Schedules alongside sections, so an Act's
+numbering legitimately restarts inside one document. Fair Work volume 04 is
+85% Schedule — 168 of its 194 provisions.
+
+**All five tests for the floor passed.** Each fixture was small and hand-cut,
+so the mechanism was tested against what it was designed for and never against
+a whole real document. An 85% loss on a real volume looked like a green suite.
+
+Do not re-add the floor. The collision it targeted is handled instead by
+`find_body_end`, `schedule_spans` with `Sch N cl M` labelling, and
+`apparatus_spans`.
+
+### Two further lessons from the same episode
+
+- **A Schedule clause is law. Keep it, and number it as what it is** —
+  `Sch N cl M`. That removes a duplicate pinpoint without discarding the
+  provision. The floor got that trade backwards: it deleted law to fix a
+  label.
+- **Bound any span-suppression rule.** `apparatus_spans` is capped at 4,000
+  characters. Unbounded, a single `Column 1` swallowed 357,073 characters of
+  Fair Work volume 01 — 85% of the document. DOCX extraction has almost no
+  blank lines, so a blank-line terminator alone is not a safe bound.
+- **Watch the complexity.** `_is_table_row` rebuilt the whole line index per
+  candidate heading, which was quadratic: 0.006s at 100 sections against
+  0.331s at 800.
+
 ## Known traps on this ground
 
 - The Open Australian Legal Corpus labels WA as `western_australia`, not `wa`.
