@@ -1,0 +1,29 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+An entity must notify individuals affected by an eligible data breach. The notification requirements are set out in section 26WL of the Privacy Act 1988 (Cth).
+
+An entity must notify the contents of a statement to:
+
+(1) each individual to whom the relevant information relates, if it is practicable to do so — taking such steps as are reasonable in the circumstances;
+
+(2) each individual who is at risk from the eligible data breach, if it is practicable to do so and notification to all affected individuals is not practicable — taking such steps as are reasonable in the circumstances; or
+
+(3) if neither approach is practicable:
+   (a) publish a copy of the statement on the entity's website (if any); and
+   (b) take reasonable steps to publicise the contents of the statement.
+
+The entity must comply with these notification obligations "as soon as practicable after the completion of the preparation of the statement". Privacy Act 1988 (Cth) s 26WL(3) (snapshot 2026-06-04).
+
+If the entity normally communicates with a particular individual using a particular method, the notification to that individual may use that method. Privacy Act 1988 (Cth) s 26WL(4) (snapshot 2026-06-04).
+
+The statement provided to individuals must set out the entity's identity and contact details, a description of the eligible data breach, the kind or kinds of information concerned, and recommendations about steps individuals should take in response. Privacy Act 1988 (Cth) s 26WK(3) (snapshot 2026-06-04).
+
+An entity must also give a copy of the statement to the Commissioner "as soon as practicable after the entity becomes aware" that there are reasonable grounds to believe an eligible data breach has occurred. Privacy Act 1988 (Cth) s 26WK(2) (snapshot 2026-06-04).
+
+The Commissioner may also direct an entity to notify individuals about an eligible data breach. The entity must comply with such a direction "as soon as practicable after the direction is given". Privacy Act 1988 (Cth) s 26WR (snapshot 2026-06-04).
+
+OPEN ITEMS — None.
+
+VERIFY BEFORE USE — None.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

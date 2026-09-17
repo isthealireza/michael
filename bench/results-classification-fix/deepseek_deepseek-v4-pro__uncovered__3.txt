@@ -1,0 +1,98 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+The notification requirements for an eligible data breach are in Part IIIC of the Privacy Act 1988 (Cth). The regime has three stages: assessment, statement to the Commissioner, and notification to individuals or the public.
+
+---
+
+**1. What is an eligible data breach**
+
+Section 26WE of the Privacy Act 1988 (Cth) (snapshot 2026-06-04) provides:
+
+"(2) For the purposes of this Act, if:
+(a) both of the following conditions are satisfied:
+(i) there is unauthorised access to, or unauthorised disclosure of, the information;
+(ii) a reasonable person would conclude that the access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates; or
+(b) the information is lost in circumstances where:
+(i) unauthorised access to, or unauthorised disclosure of, the information is likely to occur; and
+(ii) assuming that unauthorised access to, or unauthorised disclosure of, the information were to occur, a reasonable person would conclude that the access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates"
+
+The section applies to APP entities, credit reporting bodies, credit providers and file number recipients who hold personal information, credit reporting information, credit eligibility information or tax file number information respectively.
+
+---
+
+**2. Assessment obligation (s 26WH)**
+
+If an entity is aware there are reasonable grounds to suspect an eligible data breach may have happened, but is not yet aware of reasonable grounds to believe one has happened, section 26WH requires the entity to:
+
+"(2) The entity must:
+(a) carry out a reasonable and expeditious assessment of whether there are reasonable grounds to believe that the relevant circumstances amount to an eligible data breach of the entity; and
+(b) take all reasonable steps to ensure that the assessment is completed within 30 days after the entity becomes aware as mentioned in paragraph (1)(a)."
+
+---
+
+**3. Statement to the Commissioner (s 26WK)**
+
+Once the entity is aware there are reasonable grounds to believe an eligible data breach has occurred, section 26WK requires:
+
+"(2) The entity must:
+(a) both:
+(i) prepare a statement that complies with subsection (3); and
+(ii) give a copy of the statement to the Commissioner; and
+(b) do so as soon as practicable after the entity becomes so aware."
+
+The statement must set out (s 26WK(3)):
+
+"(a) the identity and contact details of the entity; and
+(b) a description of the eligible data breach that the entity has reasonable grounds to believe has happened; and
+(c) the particular kind or kinds of information concerned; and
+(d) recommendations about the steps that individuals should take in response to the eligible data breach that the entity has reasonable grounds to believe has happened."
+
+If the entity believes other entities have also suffered the same breach, the statement may also include their identity and contact details (s 26WK(4)).
+
+---
+
+**4. Notification to individuals or the public (s 26WL)**
+
+After completing the statement, section 26WL requires the entity to notify. The cascading hierarchy is:
+
+"(2) The entity must:
+(a) if it is practicable for the entity to notify the contents of the statement to each of the individuals to whom the relevant information relates—take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals to whom the relevant information relates; or
+(b) if it is practicable for the entity to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach—take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach; or
+(c) if neither paragraph (a) nor (b) applies:
+(i) publish a copy of the statement on the entity's website (if any); and
+(ii) take reasonable steps to publicise the contents of the statement."
+
+The notification must be given "as soon as practicable after the completion of the preparation of the statement" (s 26WL(3)).
+
+Section 26WL(4) provides that if the entity normally communicates with an individual using a particular method, that method may be used for notification.
+
+---
+
+**5. Commissioner direction (s 26WR)**
+
+The Commissioner may also independently direct an entity to notify. Under section 26WR(1), if the Commissioner is aware of reasonable grounds to believe an eligible data breach has occurred, the Commissioner may direct the entity to prepare a statement and give a copy to the Commissioner. The direction must also require notification under the same cascading hierarchy as section 26WL (s 26WR(2)). Before giving a direction, the Commissioner must invite the entity to make a submission (s 26WR(3)). The entity must comply as soon as practicable after the direction is given (s 26WR(10)).
+
+---
+
+**6. Exceptions**
+
+- My Health Records Act exception (s 26WD): if the access, disclosure or loss has been or is required to be notified under section 75 of the My Health Records Act 2012, Part IIIC does not apply.
+- Other-entity exception (s 26WJ): if one entity has complied with section 26WH and the same breach is also an eligible data breach of other entities, section 26WH does not apply to those other entities.
+
+---
+
+**7. Consequences of non-compliance**
+
+A contravention of section 26WH(2), 26WK(2), 26WL(3) or 26WR(10) is taken to be an act that is an interference with the privacy of an individual (s 13(4A)).
+
+A statement prepared under section 26WK that does not comply with section 26WK(3) is a civil penalty provision with a maximum penalty of 200 penalty units (s 13K(2), (4)).
+
+---
+
+OPEN ITEMS
+None.
+
+VERIFY BEFORE USE
+All citations are from the Privacy Act 1988 (Cth) snapshot dated 2026-06-04. Confirm that no amendments have commenced since that date.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

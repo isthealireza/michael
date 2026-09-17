@@ -1,0 +1,13 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+- An entity must give notice if it is aware that there are reasonable grounds to believe an eligible data breach has occurred. Privacy Act 1988 (Cth) s 26WL (snapshot 2026‑06‑04) – “This section applies if … an entity is aware that there are reasonable grounds to believe that there has been an eligible data breach of the entity”.
+- The entity must first prepare a statement that complies with s 26WK(3). Privacy Act 1988 (Cth) s 26WK (snapshot 2026‑06‑04) – “The statement … must set out … a description of the eligible data breach … and recommendations about the steps that individuals should take”.
+- The entity must notify the statement’s contents as soon as practicable after preparing the statement. Privacy Act 1988 (Cth) s 26WL (snapshot 2026‑06‑04) – “The entity must comply with subsection (2) as soon as practicable after the completion of the preparation of the statement”.
+- If it is practicable to contact each affected individual directly, the entity must take reasonable steps to notify each individual. Privacy Act 1988 (Cth) s 26WL (snapshot 2026‑06‑04) – “if it is practicable for the entity to notify the contents of the statement to each of the individuals … take such steps as are reasonable in the circumstances to notify…”.
+- If it is practicable only to contact individuals who are at risk, the entity must take reasonable steps to notify those individuals. Privacy Act 1988 (Cth) s 26WL (snapshot 2026‑06‑04) – “if it is practicable for the entity to notify … each of the individuals who are at risk … take such steps as are reasonable…”.
+- If direct notification is not practicable, the entity must publish the statement on its website (if any) and take reasonable steps to publicise the statement. Privacy Act 1988 (Cth) s 26WL (snapshot 2026‑06‑04) – “if neither paragraph (a) nor (b) applies: (i) publish a copy of the statement on the entity’s website … and (ii) take reasonable steps to publicise the contents of the statement”.
+- The Commissioner may direct an entity to prepare and give a statement and to notify as above. Privacy Act 1988 (Cth) s 26WR (snapshot 2026‑06‑04) – “the Commissioner may … direct the entity to: (a) prepare a statement … and (b) give a copy of the statement to the Commissioner”, and the direction includes the same notification steps as s 26WL(2).
+
+OPEN ITEMS — None.  
+VERIFY BEFORE USE — The answer is based on the provisions retrieved from the Privacy Act 1988 (Cth). No additional verification has been performed.  
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

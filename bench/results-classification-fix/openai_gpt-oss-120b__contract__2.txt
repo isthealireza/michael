@@ -1,0 +1,55 @@
+CLASSIFICATION: DRAFT - domain: employment
+
+Casual Employment Agreement
+
+Parties
+The employer is Company X. ABN: [MISSING: Company X ABN]. Address: [MISSING: Company X address].
+The employee is Mr Y. Address: [MISSING: Mr Y address].
+
+1. Commencement
+The employee starts on [MISSING: Commencement date].
+
+2. Position
+The employee works as a casual employee.
+
+3. Hours of Work
+The employee works as required. Hours are set by the employer. Details: [MISSING: Work hours].
+
+4. Remuneration
+The employee is paid an hourly rate of $[MISSING: Hourly rate] per hour.
+
+5. Condition A
+[MISSING: Condition A description]
+
+6. Condition B
+[MISSING: Condition B description]
+
+7. Leave Entitlements
+The employee is entitled to leave as provided under the Fair Work Act 2009 (Cth) and the applicable Modern Award.
+
+8. Termination
+Either party may terminate the agreement with notice required by the Fair Work Act 2009 (Cth).
+
+9. Governing Law
+The agreement is governed by the laws of the Commonwealth of Australia.
+
+Signed
+_____________________________   _____________________________
+[Company X Representative]      Mr Y
+
+Date: _________________________
+
+OPEN ITEMS —
+1. [MISSING: Company X ABN]
+2. [MISSING: Company X address]
+3. [MISSING: Mr Y address]
+4. [MISSING: Commencement date]
+5. [MISSING: Work hours]
+6. [MISSING: Hourly rate]
+7. [MISSING: Condition A description]
+8. [MISSING: Condition B description]
+
+VERIFY BEFORE USE —
+All placeholders must be completed with accurate information. Ensure compliance with the Fair Work Act 2009 (Cth) and the relevant Modern Award.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

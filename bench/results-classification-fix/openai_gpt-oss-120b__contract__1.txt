@@ -1,0 +1,59 @@
+CLASSIFICATION: BOTH - domain: employment
+
+DRAFT — CASUAL EMPLOYMENT CONTRACT
+
+1. Parties  
+   - Employer: Company X (ABN: [MISSING: ABN of Company X]; address: [MISSING: address of Company X])  
+   - Employee: Mr Y (address: [MISSING: address of Mr Y])
+
+2. Commencement  
+   - Employment starts on [MISSING: start date].
+
+3. Nature of employment  
+   - The employee is engaged as a casual employee.  
+   - This is based on Fair Work Act 2009 (Cth) s 15A (snapshot 2026‑07‑07): “An employee is a casual employee … only if … (a) the employment relationship is characterised by an absence of a firm advance commitment to continuing and indefinite work; and (b) the employee would be entitled to a casual loading …”.
+
+4. Hours of work  
+   - The employee works on an as‑needed basis.  
+   - No firm advance commitment to ongoing work exists.  
+   - Hours are recorded in the Employer’s roster system.
+
+5. Pay  
+   - The employee receives the applicable award rate plus the casual loading required by the relevant modern award or enterprise agreement.  
+   - Payment is made weekly/fortnightly by [MISSING: payment method].
+
+6. Casual Employment Information Statement  
+   - The employer will provide the Fair Work Ombudsman’s Casual Employment Information Statement as required by s 125A (snapshot 2026‑07‑07).
+
+7. Termination of casual employment  
+   - The employment ends on the occurrence of any event listed in s 15A(5) (snapshot 2026‑07‑07), including:  
+     a) employee’s status changes to full‑time or part‑time;  
+     b) order of the FWC;  
+     c) employee accepts an alternative offer of employment.
+
+8. No misrepresentation  
+   - The employer must not make a false statement to induce the employee to accept casual employment, pursuant to s 359C (snapshot 2026‑07‑07).
+
+9. Condition A  
+   - [MISSING: description of Condition A].
+
+10. Condition B  
+    - [MISSING: description of Condition B].
+
+11. Governing law  
+    - This agreement is governed by the laws of the Commonwealth of Australia.
+
+OPEN ITEMS —  
+1. ABN of Company X.  
+2. Address of Company X.  
+3. Address of Mr Y.  
+4. Start date.  
+5. Payment method.  
+6. Detailed description of Condition A.  
+7. Detailed description of Condition B.
+
+VERIFY BEFORE USE —  
+- Confirm the applicable modern award or enterprise agreement to determine the exact casual loading rate.  
+- Verify the employee’s entitlement to the Casual Employment Information Statement.  
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

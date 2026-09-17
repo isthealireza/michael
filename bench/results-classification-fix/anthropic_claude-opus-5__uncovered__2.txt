@@ -1,0 +1,85 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+Part IIIC of the Privacy Act 1988 (Cth) holds the notification scheme. All snapshots below are dated 2026-06-04.
+
+1. What triggers the scheme
+
+Privacy Act 1988 (Cth) s 26WE (snapshot 2026-06-04) defines an eligible data breach. Under s 26WE(2), a breach happens if:
+
+  "(a) both of the following conditions are satisfied:
+  (i) there is unauthorised access to, or unauthorised disclosure of, the information;
+  (ii) a reasonable person would conclude that the access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates; or
+  (b) the information is lost in circumstances where:
+  (i) unauthorised access to, or unauthorised disclosure of, the information is likely to occur; and
+  (ii) assuming that unauthorised access to, or unauthorised disclosure of, the information were to occur, a reasonable person would conclude that the access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates"
+
+Section 26WE(1) sets the entities covered. These are an APP entity holding personal information, a credit reporting body, a credit provider and a file number recipient.
+
+2. Assessment of a suspected breach
+
+Privacy Act 1988 (Cth) s 26WH (snapshot 2026-06-04) applies where an entity suspects a breach but does not yet believe one happened. Under s 26WH(2) the entity must:
+
+  "(a) carry out a reasonable and expeditious assessment of whether there are reasonable grounds to believe that the relevant circumstances amount to an eligible data breach of the entity; and
+  (b) take all reasonable steps to ensure that the assessment is completed within 30 days after the entity becomes aware as mentioned in paragraph (1)(a)."
+
+3. Statement to the Commissioner
+
+Privacy Act 1988 (Cth) s 26WK (snapshot 2026-06-04) applies once the entity "is aware that there are reasonable grounds to believe that there has been an eligible data breach". Under s 26WK(2) the entity must:
+
+  "(a) both:
+  (i) prepare a statement that complies with subsection (3); and
+  (ii) give a copy of the statement to the Commissioner; and
+  (b) do so as soon as practicable after the entity becomes so aware."
+
+Section 26WK(3) sets the contents. The statement must set out:
+
+  "(a) the identity and contact details of the entity; and
+  (b) a description of the eligible data breach that the entity has reasonable grounds to believe has happened; and
+  (c) the particular kind or kinds of information concerned; and
+  (d) recommendations about the steps that individuals should take in response to the eligible data breach that the entity has reasonable grounds to believe has happened."
+
+Section 26WK(4) permits the statement to name other entities affected by the same access, disclosure or loss.
+
+4. Notification to individuals
+
+Privacy Act 1988 (Cth) s 26WL (snapshot 2026-06-04) sets the second step. Under s 26WL(2) the entity must:
+
+  "(a) if it is practicable for the entity to notify the contents of the statement to each of the individuals to whom the relevant information relates—take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals to whom the relevant information relates; or
+  (b) if it is practicable for the entity to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach—take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach; or
+  (c) if neither paragraph (a) nor (b) applies:
+  (i) publish a copy of the statement on the entity's website (if any); and
+  (ii) take reasonable steps to publicise the contents of the statement."
+
+On timing, s 26WL(3) states: "The entity must comply with subsection (2) as soon as practicable after the completion of the preparation of the statement."
+
+On method, s 26WL(4) states: "If the entity normally communicates with a particular individual using a particular method, the notification to the individual under paragraph (2)(a) or (b) may use that method."
+
+5. Exceptions
+
+Privacy Act 1988 (Cth) s 26WF (snapshot 2026-06-04) — remedial action. Where the entity acts before serious harm results, and "as a result of the action, a reasonable person would conclude that the access or disclosure would not be likely to result in serious harm", the access or disclosure "is not, and is taken never to have been" an eligible data breach (s 26WF(1)). Subsections 26WF(2) and (5) remove the duty to notify a particular individual on the same basis.
+
+Privacy Act 1988 (Cth) s 26WJ (snapshot 2026-06-04) — where one entity complies with s 26WH for a breach that is also an eligible data breach of other entities, "that section does not apply in relation to those eligible data breaches of those other entities."
+
+Privacy Act 1988 (Cth) s 26WD (snapshot 2026-06-04) — where the access, disclosure or loss "has been, or is required to be, notified under section 75 of the My Health Records Act 2012, this Part does not apply in relation to the access, disclosure or loss."
+
+Privacy Act 1988 (Cth) s 26WQ (snapshot 2026-06-04) — the Commissioner may declare that ss 26WK and 26WL do not apply (s 26WQ(1)(c)), or may extend the time for compliance with s 26WL(2) (s 26WQ(1)(d)).
+
+6. Commissioner's direction
+
+Privacy Act 1988 (Cth) s 26WR (snapshot 2026-06-04) lets the Commissioner direct an entity to prepare a statement and give a copy to the Commissioner, and to notify individuals on the same three-limb basis as s 26WL(2). Under s 26WR(10): "An entity must comply with a direction under subsection (1) as soon as practicable after the direction is given." Before giving a direction the Commissioner must invite a submission from the entity (s 26WR(3)).
+
+7. Penalty for a non-compliant statement
+
+Privacy Act 1988 (Cth) s 13K(2) (snapshot 2026-06-04) makes it a contravention where "(a) the entity prepares a statement under section 26WK (eligible data breaches); and (b) the statement does not comply with subsection 26WK(3)." Section 13K(3) makes this a civil penalty provision. Section 13K(4) caps the penalty at 200 penalty units.
+
+OPEN ITEMS
+  None.
+
+VERIFY BEFORE USE
+  1. The current dollar value of a penalty unit. Section 13K sets the cap in penalty units only. The corpus retrieval did not return the Crimes Act 1914 (Cth) s 4AA conversion.
+  2. Whether ss 13G and 13H (serious interference with privacy) apply to the facts. The note to s 13K(1) points to them. Their text was not retrieved.
+  3. Section 75 of the My Health Records Act 2012 (Cth). The s 26WD exception turns on it. That Act is not in the retrieved corpus.
+  4. Whether the entity in question is an APP entity, credit reporting body, credit provider or file number recipient under s 26WE(1). This turns on facts not supplied.
+  5. Whether the 2026-06-04 snapshot is the current compilation at the date of use.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

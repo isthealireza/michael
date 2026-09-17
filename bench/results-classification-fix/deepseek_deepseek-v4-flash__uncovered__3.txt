@@ -1,0 +1,89 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+The notification requirements for an eligible data breach are set out in Part IIIC of the **Privacy Act 1988 (Cth)** (snapshot 2026-06-04). The key provisions are summarised below.
+
+---
+
+**1. What is an eligible data breach? -- s 26WE**
+
+Section 26WE(2) of the Privacy Act 1988 (Cth) provides:
+
+> "if: (a) both of the following conditions are satisfied: (i) there is unauthorised access to, or unauthorised disclosure of, the information; (ii) a reasonable person would conclude that the access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates; or (b) the information is lost in circumstances where: (i) unauthorised access to, or unauthorised disclosure of, the information is likely to occur; and (ii) assuming that unauthorised access to, or unauthorised disclosure of, the information were to occur, a reasonable person would conclude that the access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates; then: (c) the access or disclosure covered by paragraph (a), or the loss covered by paragraph (b), is an eligible data breach..."
+
+An eligible data breach requires unauthorised access, unauthorised disclosure, or loss of personal information, where a reasonable person would conclude the event is likely to result in serious harm.
+
+---
+
+**2. Remedial action may prevent an eligible data breach -- s 26WF**
+
+Section 26WF provides that if an entity takes remedial action before the access or disclosure results in serious harm, and as a result a reasonable person would conclude the access or disclosure would not be likely to result in serious harm, the access or disclosure is not, and is taken never to have been, an eligible data breach.
+
+---
+
+**3. Assessment of a suspected eligible data breach -- s 26WH**
+
+Section 26WH(2) states:
+
+> "The entity must: (a) carry out a reasonable and expeditious assessment of whether there are reasonable grounds to believe that the relevant circumstances amount to an eligible data breach of the entity; and (b) take all reasonable steps to ensure that the assessment is completed within 30 days after the entity becomes aware as mentioned in paragraph (1)(a)."
+
+This applies when the entity has reasonable grounds to suspect an eligible data breach but does not yet have reasonable grounds to believe one has occurred.
+
+---
+
+**4. Statement about an eligible data breach -- s 26WK**
+
+Section 26WK(2) requires the entity to:
+
+> "(a) both: (i) prepare a statement that complies with subsection (3); and (ii) give a copy of the statement to the Commissioner; and (b) do so as soon as practicable after the entity becomes so aware."
+
+The statement must set out (s 26WK(3)):
+
+> "(a) the identity and contact details of the entity; and (b) a description of the eligible data breach that the entity has reasonable grounds to believe has happened; and (c) the particular kind or kinds of information concerned; and (d) recommendations about the steps that individuals should take in response to the eligible data breach that the entity has reasonable grounds to believe has happened."
+
+---
+
+**5. Notification to affected individuals -- s 26WL**
+
+Section 26WL(2) requires the entity to:
+
+> "(a) if it is practicable for the entity to notify the contents of the statement to each of the individuals to whom the relevant information relates -- take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals to whom the relevant information relates; or (b) if it is practicable for the entity to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach -- take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach; or (c) if neither paragraph (a) nor (b) applies: (i) publish a copy of the statement on the entity's website (if any); and (ii) take reasonable steps to publicise the contents of the statement."
+
+Section 26WL(3) requires compliance "as soon as practicable after the completion of the preparation of the statement."
+
+Section 26WL(4) permits the entity to use its usual method of communication with an individual.
+
+---
+
+**6. Commissioner may direct notification -- s 26WR**
+
+Section 26WR(1) provides that if the Commissioner is aware there are reasonable grounds to believe an eligible data breach has occurred, the Commissioner may direct the entity (by written notice) to prepare a statement and give a copy to the Commissioner. The direction must also require notification to affected individuals or public publication on the same terms as s 26WL(2). Section 26WR(10) requires compliance "as soon as practicable after the direction is given."
+
+---
+
+**7. Exceptions and modifications**
+
+The notification obligations do not apply in the following circumstances:
+
+- **Remedial action** (s 26WF) -- if timely action prevents serious harm, the event is not an eligible data breach.
+- **My Health Records Act notification** (s 26WD) -- if notification is required under s 75 of the My Health Records Act 2012, Part IIIC does not apply.
+- **Multiple entities** (s 26WJ and s 26WM) -- if one entity complies with the assessment or notification obligations, other entities whose eligible data breach arises from the same access, disclosure or loss are also taken to have complied.
+- **Enforcement-related activities** (s 26WN) -- an enforcement body may be exempt from notifying individuals if notification would prejudice enforcement activities.
+- **Commissioner declaration** (s 26WQ) -- the Commissioner may declare that ss 26WK and 26WL do not apply, or may extend the time for compliance.
+
+---
+
+**8. Consequences of non-compliance**
+
+Section 13(4A) of the Privacy Act 1988 (Cth) provides:
+
+> "If an entity (within the meaning of Part IIIC) contravenes subsection 26WH(2), 26WK(2), 26WL(3) or 26WR(10), the contravention is taken to be an act that is an interference with the privacy of an individual."
+
+Section 13K(2) makes it a civil penalty provision if an entity prepares a statement under s 26WK that does not comply with s 26WK(3). The maximum pecuniary penalty is 200 penalty units (s 13K(4)).
+
+---
+
+OPEN ITEMS -- None.
+
+VERIFY BEFORE USE -- The penalty unit value under the Crimes Act 1914 (Cth) at the relevant time should be confirmed to calculate the maximum pecuniary penalty. The definition of "serious harm" is not reproduced above; confirm its scope from the Act.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

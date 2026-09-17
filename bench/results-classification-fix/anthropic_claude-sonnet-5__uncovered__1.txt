@@ -1,0 +1,34 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+An eligible data breach happens when personal information held by an entity is accessed without authority, disclosed without authority, or lost, and the access, disclosure or loss is likely to result in serious harm to an affected individual. This scheme applies to APP entities, credit reporting bodies, credit providers and file number recipients (Privacy Act 1988 (Cth) s 26WE, snapshot 2026-06-04). Section 26WE(2) states an eligible data breach exists where "a reasonable person would conclude that the access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates".
+
+Assessment and statement obligation
+Where an entity is aware there are reasonable grounds to believe an eligible data breach has happened, it must prepare a statement and give a copy to the Commissioner "as soon as practicable after the entity becomes so aware" (Privacy Act 1988 (Cth) s 26WK, snapshot 2026-06-04). Under s 26WK(3), the statement must set out:
+"(a) the identity and contact details of the entity; and
+(b) a description of the eligible data breach that the entity has reasonable grounds to believe has happened; and
+(c) the particular kind or kinds of information concerned; and
+(d) recommendations about the steps that individuals should take in response to the eligible data breach that the entity has reasonable grounds to believe has happened."
+
+Notification to individuals
+Section 26WL sets the notification obligation to affected individuals. The entity must, "as soon as practicable after the completion of the preparation of the statement" (s 26WL(3)):
+"(a) if it is practicable for the entity to notify the contents of the statement to each of the individuals to whom the relevant information relates—take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals to whom the relevant information relates; or
+(b) if it is practicable for the entity to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach—take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach; or
+(c) if neither paragraph (a) nor (b) applies:
+(i) publish a copy of the statement on the entity's website (if any); and
+(ii) take reasonable steps to publicise the contents of the statement."
+(Privacy Act 1988 (Cth) s 26WL, snapshot 2026-06-04)
+
+Commissioner-directed notification
+The Commissioner may also direct an entity to notify, using the same three-tier notification method described above, where the Commissioner has reasonable grounds to believe an eligible data breach has happened (Privacy Act 1988 (Cth) s 26WR, snapshot 2026-06-04). The Commissioner must first invite the entity to make a submission before giving such a direction (s 26WR(3)).
+
+Exception
+Part IIIC does not apply where the access, disclosure or loss has been, or is required to be, notified under section 75 of the My Health Records Act 2012 (Privacy Act 1988 (Cth) s 26WD, snapshot 2026-06-04).
+
+Enforcement
+A contravention of s 26WH(2), 26WK(2), 26WL(3) or 26WR(10) is "taken to be an act that is an interference with the privacy of an individual" (Privacy Act 1988 (Cth) s 13(4A), snapshot 2026-06-04). Preparing a non-compliant statement under s 26WK is also a civil penalty provision, with a maximum pecuniary penalty of "200 penalty units" (Privacy Act 1988 (Cth) s 13K, snapshot 2026-06-04).
+
+OPEN ITEMS — None.
+
+VERIFY BEFORE USE — The current civil penalty unit value (to convert 200 penalty units to a dollar figure) was not retrieved from the corpus and should be checked against the Crimes Act 1914 (Cth) or the current Legislation Act instrument.
+
+"Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner."

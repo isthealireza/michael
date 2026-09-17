@@ -1,0 +1,86 @@
+CLASSIFICATION: RESEARCH - domain: privacy/data breach
+
+## When notification is triggered
+
+An **eligible data breach** occurs under s 26WE(2) where:
+
+(a) There is unauthorised access to, or unauthorised disclosure of, personal information held by an APP entity, credit reporting body, credit provider, or file number recipient; **and**
+
+(b) A reasonable person would conclude that the access or disclosure would be **likely to result in serious harm** to any of the individuals to whom the information relates.
+
+Alternatively, s 26WE(2)(b) covers loss of information where:
+
+(i) Unauthorised access to, or unauthorised disclosure of, the information is likely to occur; **and**
+
+(ii) Assuming that access or disclosure were to occur, a reasonable person would conclude it would be likely to result in serious harm to any affected individual.
+
+s 26WE(2) defines the consequence: "[t]he access or disclosure covered by paragraph (a), or the loss covered by paragraph (b), is an eligible data breach … and an individual … is at risk from the eligible data breach."
+
+Section 26WE(1) lists which entities the definition applies to — those required not to breach APP 11.1, those complying with s 20Q (credit reporting bodies), subsection 21S(1) (credit providers), or s 17 rules relating to tax file number information.
+
+Section 26WD provides an exception: if the same access, disclosure, or loss has been or is required to be notified under s 75 of the *My Health Records Act 2012*, Division 2 does not apply.
+
+## Notification obligation
+
+Under s 26WL(1), the obligation arises when:
+
+(a) An entity is aware that there are reasonable grounds to believe that there has been an eligible data breach of the entity; **and**
+
+(b) The entity has prepared a statement that complies with subsection 26WK(3) and relates to that eligible data breach.
+
+### Step 1: Prepare and give a statement to the Commissioner
+
+Section 26WK(2) requires the entity:
+
+"[t]o prepare a statement that complies with subsection (3) and to give a copy of the statement to the Commissioner" as soon as practicable after becoming aware of reasonable grounds for belief.
+
+Section 26WK(3) requires the statement to set out:
+
+(a) "the identity and contact details of the entity";
+
+(b) "a description of the eligible data breach that the entity has reasonable grounds to believe has happened";
+
+(c) "the particular kind or kinds of information concerned";
+
+(d) "recommendations about the steps that individuals should take in response to the eligible data breach that the entity has reasonable grounds to believe has happened".
+
+Where the entity believes the breach also constitutes a breach of one or more other entities, s 26WK(4) permits inclusion of their identity and contact details.
+
+Section 13K(2)–(4) imposes civil penalty liability (up to 200 penalty units) on an entity that prepares a statement under s 26WK which does not comply with subsection 26WK(3).
+
+### Step 2: Notify affected individuals or publicise
+
+Section 26WL(2) sets a hierarchy of notification methods:
+
+(a) If it is practicable to notify each of the individuals to whom the relevant information relates — "take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals to whom the relevant information relates"; or
+
+(b) If it is practicable to notify each of the individuals who are at risk from the eligible data breach — "take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach"; or
+
+(c) If neither paragraph (a) nor (b) applies: "(i) publish a copy of the statement on the entity's website (if any); and (ii) take reasonable steps to publicise the contents of the statement."
+
+Section 26WL(3) requires compliance "as soon as practicable after the completion of the preparation of the statement."
+
+Section 26WL(4) allows the entity to use its normal method of communication with a particular individual when notifying that individual under paragraph (2)(a) or (b).
+
+### Remedial action exception
+
+Sections 26WF(2) and 26WF(5) deal with remedial action. Where an entity takes timely remedial action to prevent unauthorised access or disclosure that would otherwise constitute an eligible data breach, and the Commissioner is satisfied the remedial action was taken, s 26WF(5) states the act or omission "is taken not to be a contravention of any of the applicable privacy provisions." This can mean notification is not required because the breach is no longer eligible.
+
+## Commissioner-directed notification
+
+Section 26WR(1) gives the Commissioner power to direct an entity to prepare a statement and notify individuals or publicise, even where the entity itself has not initiated notification. Section 26WR(10) requires the entity to comply "as soon as practicable after the direction is given." Before giving a direction, s 26WR(3) requires the Commissioner to invite the entity to make a submission within a specified period. Section 26WR(4) sets similar content requirements for a Commissioner-directed statement, including identity and contact details, description of the breach, kinds of information, and recommendations about steps individuals should take.
+
+## Summary table
+
+| Requirement | Provision | Timing |
+|---|---|---|
+| Assess whether grounds exist for believing an eligible data breach occurred | s 26WE | Upon awareness of potential incident |
+| Prepare statement per s 26WK(3) | s 26WK(2) | As soon as practicable after becoming aware |
+| Give copy of statement to Commissioner | s 26WK(2) | As soon as practicable after becoming aware |
+| Notify affected individuals or publicise statement | s 26WL(2)–(3) | As soon as practicable after preparation of statement |
+
+OPEN ITEMS — None.
+
+VERIFY BEFORE USE — The scope of "serious harm" is not defined in the retrieved text and will depend on guidance issued by the OAIC. The precise temporal requirement ("as soon as practicable") has not been independently verified against regulations or OAIC guidance. Sections cited are snapshot date 2026-06-04; check legislation.gov.au for any subsequent amendments.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

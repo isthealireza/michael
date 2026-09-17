@@ -1,0 +1,38 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+An eligible data breach happens under set conditions. Notification has two parts: a statement to the Commissioner, and notification to individuals.
+
+1. What triggers the duty
+Under the Privacy Act 1988 (Cth) s 26WE (snapshot 2026-06-04), an eligible data breach occurs where "there is unauthorised access to, or unauthorised disclosure of, the information" and "a reasonable person would conclude that the access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates," or where the information is lost in circumstances where such access or disclosure is likely to occur and would likely result in serious harm.
+
+2. Assessment of a suspected breach
+Where an entity suspects (but does not yet believe) a breach has happened, s 26WH (snapshot 2026-06-04) requires the entity to "carry out a reasonable and expeditious assessment of whether there are reasonable grounds to believe that the relevant circumstances amount to an eligible data breach" and to "take all reasonable steps to ensure that the assessment is completed within 30 days after the entity becomes aware."
+
+3. Statement to the Commissioner
+Under s 26WK (snapshot 2026-06-04), once an entity is aware there are reasonable grounds to believe an eligible data breach has happened, it must "prepare a statement" and "give a copy of the statement to the Commissioner," doing so "as soon as practicable after the entity becomes so aware." The statement must set out:
+- "the identity and contact details of the entity";
+- "a description of the eligible data breach";
+- "the particular kind or kinds of information concerned"; and
+- "recommendations about the steps that individuals should take in response to the eligible data breach."
+
+4. Notification to individuals
+Under s 26WL (snapshot 2026-06-04), the entity must take reasonable steps to notify either:
+- "each of the individuals to whom the relevant information relates" (if practicable); or
+- "each of the individuals who are at risk from the eligible data breach" (if practicable); or
+- if neither is practicable, "publish a copy of the statement on the entity's website (if any)" and "take reasonable steps to publicise the contents of the statement."
+
+This must occur "as soon as practicable after the completion of the preparation of the statement" (s 26WL(3)).
+
+5. Commissioner-directed notification
+Under s 26WR (snapshot 2026-06-04), the Commissioner may direct an entity to prepare and give a statement, and to notify individuals, using the same mechanism as s 26WL. The Commissioner must first "invite the entity to make a submission" before giving the direction.
+
+6. Exceptions
+Sections 26WD, 26WJ and 26WM (snapshot 2026-06-04) exclude duplicate notification where another entity has already complied, or where the breach is separately notified under s 75 of the My Health Records Act 2012.
+
+OPEN ITEMS
+None.
+
+VERIFY BEFORE USE
+Whether a specific incident meets the "serious harm" threshold in s 26WE, and which exception (if any) applies, requires assessment against the entity's own facts.
+
+"Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner."

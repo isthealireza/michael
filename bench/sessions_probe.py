@@ -45,7 +45,7 @@ for sid, s in sessions.items():
     label = (
         "contract"
         if "casual employment contract" in (s["prompt"] or "")
-        else ("uncovered" if "data breach" in (s["prompt"] or "") else "other")
+        else ("uncovered" if "labour market testing" in (s["prompt"] or "") else "other")
     )
     out.append(
         {

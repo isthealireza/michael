@@ -1,0 +1,27 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+The Privacy Act 1988 (Cth) requires an entity to:
+
+1. Identify an eligible data breach.  
+   “An entity must give a notification if: (a) it has reasonable grounds to believe that an eligible data breach has happened; or (b) it is directed to do so by the Commissioner.” (Privacy Act 1988 (Cth) s 26WA (snapshot 2026‑06‑04))
+
+2. Prepare a statement about the breach.  
+   “The entity must … both: (i) prepare a statement that complies with subsection (3); and (ii) give a copy of the statement to the Commissioner …” (Privacy Act 1988 (Cth) s 26WK (snapshot 2026‑06‑04))  
+
+   The statement must set out:  
+   – the identity and contact details of the entity;  
+   – a description of the eligible data breach;  
+   – the particular kind or kinds of information concerned;  
+   – recommendations about the steps that individuals should take. (Privacy Act 1988 (Cth) s 26WK (snapshot 2026‑06‑04))
+
+3. Notify affected individuals or the public.  
+   “The entity must: (a) if it is practicable … take such steps as are reasonable … to notify the contents of the statement to each of the individuals to whom the relevant information relates; or (b) if it is practicable … to each of the individuals who are at risk …; or (c) if neither paragraph (a) nor (b) applies: (i) publish a copy of the statement on the entity’s website (if any); and (ii) take reasonable steps to publicise the contents of the statement.” (Privacy Act 1988 (Cth) s 26WL (snapshot 2026‑06‑04))
+
+   “The entity must comply with subsection (2) as soon as practicable after the completion of the preparation of the statement.” (Privacy Act 1988 (Cth) s 26WL (snapshot 2026‑06‑04))
+
+4. Follow any direction from the Australian Information Commissioner.  
+   “If the Commissioner … has reasonable grounds to believe that there has been an eligible data breach … the Commissioner may … direct the entity to: (a) prepare a statement that complies with subsection (4); and (b) give a copy of the statement to the Commissioner.” (Privacy Act 1988 (Cth) s 26WR (snapshot 2026‑06‑04))
+
+OPEN ITEMS — None.  
+VERIFY BEFORE USE — None.  
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

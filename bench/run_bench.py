@@ -36,11 +36,37 @@ PROMPTS = {
     "contract": (
         "I need a casual employment contract between Company X and Mr Y, with conditions A and B"
     ),
+    # Migration law: outside every domain in domains.yaml, and nothing in the
+    # corpus reaches the threshold for it. The previous prompt asked about
+    # eligible data breaches under the Privacy Act, which WAS uncovered when
+    # the benchmark was written. The Privacy Act has since been ingested, so
+    # that prompt scored 0.7332 and every model answered it correctly - and the
+    # uncovered arm silently stopped testing NOT COVERED for 21 of 21 runs.
+    # check_uncovered_is_uncovered() below exists so that cannot recur quietly.
     "uncovered": (
-        "What are the notification requirements for an eligible data breach "
-        "under the Privacy Act 1988 (Cth)?"
+        "What labour market testing must an employer complete before "
+        "nominating an employee for a skilled visa?"
     ),
 }
+
+
+def check_uncovered_is_uncovered() -> None:
+    """Refuse to run if the uncovered prompt is no longer uncovered.
+
+    The uncovered arm tests one thing: that a model replies NOT COVERED
+    instead of answering from its own knowledge. Once the corpus covers the
+    topic, answering is the correct behaviour and the arm proves nothing. It
+    fails open - the runs still pass - so nothing catches it but this.
+    """
+    from michael import tools
+
+    result = tools.search_provisions(PROMPTS["uncovered"])
+    if result["covered"]:
+        raise SystemExit(
+            "the uncovered prompt is covered by the corpus "
+            f"(best_score {result.get('best_score')}); the uncovered arm would "
+            "prove nothing. Choose a new topic and record its score here."
+        )
 
 
 def key_usage() -> float:
@@ -53,6 +79,7 @@ def key_usage() -> float:
 
 
 def main() -> int:
+    check_uncovered_is_uncovered()
     OUT.mkdir(parents=True, exist_ok=True)
     results = OUT / "results.jsonl"
     done = set()

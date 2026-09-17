@@ -1,0 +1,53 @@
+CLASSIFICATION: DRAFT - domain: employment  
+
+DRAFT — NO TEMPLATE  
+
+1. Parties  
+   This Agreement is between **Company X** ("Employer") and **Mr Y** ("Employee").
+
+2. Commencement  
+   The employment starts on [MISSING: commencement date].
+
+3. Position  
+   The Employee works as a casual employee.
+
+4. Hours of Work  
+   The Employee works on an as‑needed basis. The Employer will notify the Employee of each shift.
+
+5. Pay  
+   The Employee is paid at the applicable casual rate for each hour worked. Payment is made [MISSING: payment frequency] into the Employee’s nominated bank account.
+
+6. Condition A  
+   The Employee must [MISSING: description of Condition A].
+
+7. Condition B  
+   The Employee must [MISSING: description of Condition B].
+
+8. Superannuation  
+   The Employer will make superannuation contributions in accordance with the Superannuation Guarantee (Administration) Act 1992 (Cth).
+
+9. Leave Entitlements  
+   The Employee is not entitled to paid leave under the Fair Work Act 2009 (Cth) unless otherwise required by an applicable Modern Award.
+
+10. Termination  
+    Either party may terminate this Agreement by giving [MISSING: notice period] written notice. The Employer may also terminate without notice for serious misconduct.
+
+11. Governing Law  
+    This Agreement is governed by the laws of Australia and the Fair Work Act 2009 (Cth).
+
+12. Entire Agreement  
+    This document constitutes the entire agreement between the parties. Any amendment must be in writing signed by both parties.
+
+OPEN ITEMS — 
+1. [MISSING: commencement date]  
+2. [MISSING: payment frequency]  
+3. [MISSING: description of Condition A]  
+4. [MISSING: description of Condition B]  
+5. [MISSING: notice period]
+
+VERIFY BEFORE USE — 
+- Exact casual hourly rate.  
+- Whether any award or enterprise agreement applies.  
+- Specific requirements for Conditions A and B.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

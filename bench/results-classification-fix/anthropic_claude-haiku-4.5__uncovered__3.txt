@@ -1,0 +1,36 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+An entity must notify of an eligible data breach under Privacy Act 1988 (Cth) s 26WL if:
+
+(a) the entity has reasonable grounds to believe an eligible data breach has happened; and
+
+(b) the entity has prepared a statement that complies with section 26WK(3).
+
+The entity must then "take such steps as are reasonable in the circumstances" to notify individuals. The method of notification depends on what is practicable:
+
+(a) Notify each individual to whom the relevant information relates;
+
+(b) If that is not practicable, notify each individual at risk from the breach; or
+
+(c) If neither is practicable, publish a copy of the statement on the entity's website and "take reasonable steps to publicise the contents of the statement".
+
+The entity must comply "as soon as practicable after the completion of the preparation of the statement" (Privacy Act 1988 (Cth) s 26WL(3), snapshot 2026-06-04).
+
+If the entity normally communicates with an individual using a particular method, the notification to that individual may use that method.
+
+The statement must set out:
+
+— the identity and contact details of the entity
+— a description of the eligible data breach
+— the particular kind or kinds of information concerned
+— recommendations about the steps individuals should take (Privacy Act 1988 (Cth) s 26WK(3), snapshot 2026-06-04)
+
+The entity must also give a copy of the statement to the Commissioner, "as soon as practicable after the entity becomes so aware" (Privacy Act 1988 (Cth) s 26WK(2), snapshot 2026-06-04).
+
+The Commissioner may direct an entity to notify if the Commissioner has reasonable grounds to believe an eligible data breach has happened. The entity must comply "as soon as practicable after the direction is given" (Privacy Act 1988 (Cth) s 26WR(10), snapshot 2026-06-04).
+
+OPEN ITEMS — None.
+
+VERIFY BEFORE USE — the application of these provisions to your specific circumstances, including whether an eligible data breach has occurred and what constitutes "reasonable steps" and "as soon as practicable" in your context.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

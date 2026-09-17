@@ -1,0 +1,156 @@
+CLASSIFICATION: BOTH - domain: employment
+
+RESEARCH — provisions engaged
+
+1. Meaning of casual employee. Fair Work Act 2009 (Cth) s 15A (snapshot 2026-07-07). An employee is a casual employee "only if: (a) the employment relationship is characterised by an absence of a firm advance commitment to continuing and indefinite work; and (b) the employee would be entitled to a casual loading or a specific rate of pay for casual employees under the terms of a fair work instrument if the employee were a casual employee, or the employee is entitled to such a loading or rate of pay under the contract of employment."
+
+2. Substance over label. Fair Work Act 2009 (Cth) s 15A(2) (snapshot 2026-07-07). The absence of a firm advance commitment is assessed "on the basis of the real substance, practical reality and true nature of the employment relationship". A firm advance commitment can arise "in the form of a mutual understanding or expectation between the employer and employee not rising to the level of a term of that contract". A regular pattern of work is one consideration under s 15A(2)(c)(iv), and the note states: "A regular pattern of work does not of itself indicate a firm advance commitment to continuing and indefinite work."
+
+3. Status continues until a specified event. Fair Work Act 2009 (Cth) s 15A(5) (snapshot 2026-07-07). A person who starts as a casual employee "remains a casual employee of the employer until" one of the listed events occurs, including a change of status under Division 4A of Part 2-2 or an FWC order under s 66MA or s 739.
+
+4. Casual Employment Information Statement. Fair Work Act 2009 (Cth) s 125B(1) (snapshot 2026-07-07). "An employer must give a casual employee the Casual Employment Information Statement: (a) before, or as soon as practicable after, the employee starts employment as a casual employee with the employer; and (b) as soon as practicable after the employee has been employed by the employer for a period of 6 months beginning the day the employment started". Paragraph (1)(b) does not apply to a small business employer: s 125B(2).
+
+5. Employee choice about casual employment. Fair Work Act 2009 (Cth) s 66A(1) (snapshot 2026-07-07): "This Division applies in relation to an employee who is a casual employee." The object in s 66AAA is a framework that "provides for the resolution of disputes to support employee choice about employment status".
+
+6. Casual loading and later claims. Fair Work Act 2009 (Cth) s 545A(3)(a) (snapshot 2026-07-07). A court has regard to a contract term that "specifies the relevant entitlements the loading amount is compensating for and specifies the proportion of the loading amount attributable to each such entitlement". The relevant entitlements are listed in s 545A(4): paid annual leave, paid personal/carer's leave, paid compassionate leave, payment for absence on a public holiday, payment in lieu of notice of termination, and redundancy pay.
+
+7. Prohibited conduct. Fair Work Act 2009 (Cth) s 359B (snapshot 2026-07-07): an employer "must not dismiss, or threaten to dismiss" an employee "in order to engage the individual as a casual employee to perform the same, or substantially the same, work". Fair Work Act 2009 (Cth) s 359C (snapshot 2026-07-07) prohibits a statement the employer "knows is false" made "in order to persuade or influence the individual to enter into a contract for casual employment".
+
+This draft treats the employee as a national-system employee. The Fair Work Act 2009 (Cth) and the applicable Modern Award govern the employment. No WA state employment legislation is cited.
+
+"Company X", "Mr Y", "condition A" and "condition B" are placeholders, not facts. They are carried as [MISSING] items.
+
+DRAFT
+
+CASUAL EMPLOYMENT CONTRACT
+
+Status: DRAFT. Not reviewed. Not executed.
+
+Nothing in this document is a statement that any clause is compliant or not compliant.
+
+1. PARTIES
+
+Employer: [MISSING: employer name] (ABN [MISSING: employer ABN]) of [MISSING: employer address]
+
+Employee: [MISSING: employee name] of [MISSING: employee address]
+
+2. NATURE OF EMPLOYMENT
+
+2.1 The Employer engages the Employee as a casual employee in the position of [MISSING: position title]. Employment starts on [MISSING: commencement date].
+
+2.2 There is no firm advance commitment to continuing and indefinite work. Each engagement is a separate period of work. The Employer offers each engagement. The Employee accepts or declines each engagement.
+
+2.3 The Employee does not accrue the paid leave entitlements of a full-time or part-time employee, except as the Fair Work Act 2009 (Cth), the National Employment Standards and [MISSING: modern award name] provide.
+
+Based on: Fair Work Act 2009 (Cth) s 15A (snapshot 2026-07-07).
+
+3. AWARD AND CLASSIFICATION
+
+3.1 [MISSING: modern award name] covers the employment.
+
+3.2 The Employee is classified at [MISSING: classification level] under that award.
+
+3.3 The award name and the classification are as instructed. They are not verified against the award.
+
+4. HOURS AND LOCATION
+
+4.1 Place of work: [MISSING: work location].
+
+4.2 Hours are as offered and accepted for each engagement. [MISSING: modern award name] governs minimum engagement, span of hours, overtime and penalty rates.
+
+5. REMUNERATION
+
+5.1 Base hourly rate: [MISSING: base hourly rate].
+
+5.2 Casual loading: [MISSING: casual loading percentage]. The loading is paid instead of the paid entitlements in clause 2.3.
+
+5.3 The parties record the entitlements that the loading compensates for, and the proportion of the loading for each one: [MISSING: loading attribution breakdown].
+
+Based on: Fair Work Act 2009 (Cth) s 545A(3)-(4) (snapshot 2026-07-07).
+
+5.4 The Employer pays superannuation contributions to [MISSING: superannuation fund], or to another fund the Employee chooses, at the rate the law requires.
+
+5.5 The Employer pays the Employee [MISSING: pay frequency].
+
+6. CASUAL EMPLOYMENT INFORMATION STATEMENT
+
+6.1 The Employer gives the Employee the Casual Employment Information Statement before the Employee starts, or as soon as practicable after the Employee starts, and at the later times that the Act requires.
+
+Based on: Fair Work Act 2009 (Cth) s 125B (snapshot 2026-07-07).
+
+7. CHANGE OF EMPLOYMENT STATUS
+
+7.1 The Employee keeps the rights about a change to full-time or part-time employment that the Fair Work Act 2009 (Cth) and [MISSING: modern award name] give. This contract does not limit those rights.
+
+Based on: Fair Work Act 2009 (Cth) ss 15A(5), 66A, 66AAA (snapshot 2026-07-07).
+
+8. SPECIFIC CONDITIONS
+
+8.1 [MISSING: condition A]
+
+8.2 [MISSING: condition B]
+
+9. CONFIDENTIALITY
+
+9.1 The Employee must not use or disclose the Employer's confidential information, except to do the work or as the law requires.
+
+10. WORK HEALTH AND SAFETY
+
+10.1 The Employee must obey the Employer's work health and safety policies. The Employee must take reasonable care for their own safety and for the safety of other persons.
+
+11. TERMINATION
+
+11.1 Either party can end an engagement as the Fair Work Act 2009 (Cth) and [MISSING: modern award name] require. Notice period as instructed: [MISSING: notice period].
+
+11.2 This clause does not limit the Employee's rights under the Fair Work Act 2009 (Cth).
+
+12. ENTIRE AGREEMENT
+
+12.1 This document records the whole agreement between the parties about the employment. It replaces each earlier understanding about the employment.
+
+EXECUTION
+
+Signed for the Employer:
+Name: [MISSING: employer signatory name]
+Position: [MISSING: employer signatory position]
+Date: [MISSING: employer signature date]
+
+Signed by the Employee:
+Name: [MISSING: employee name]
+Date: [MISSING: employee signature date]
+
+OPEN ITEMS
+
+1. [MISSING: employer name] — "Company X" is a placeholder.
+2. [MISSING: employer ABN]
+3. [MISSING: employer address]
+4. [MISSING: employee name] — "Mr Y" is a placeholder.
+5. [MISSING: employee address]
+6. [MISSING: position title]
+7. [MISSING: commencement date]
+8. [MISSING: modern award name]
+9. [MISSING: classification level]
+10. [MISSING: work location]
+11. [MISSING: base hourly rate]
+12. [MISSING: casual loading percentage]
+13. [MISSING: loading attribution breakdown]
+14. [MISSING: superannuation fund]
+15. [MISSING: pay frequency]
+16. [MISSING: condition A] — "condition A" is a placeholder.
+17. [MISSING: condition B] — "condition B" is a placeholder.
+18. [MISSING: notice period]
+19. [MISSING: employer signatory name]
+20. [MISSING: employer signatory position]
+21. [MISSING: employer signature date]
+22. [MISSING: employee signature date]
+
+VERIFY BEFORE USE
+
+- Whether the Employee is a national-system employee.
+- Which Modern Award covers the work, and which classification level applies.
+- The award minimum rate and the casual loading percentage for that classification.
+- Whether the Employer is a small business employer, because s 125B(2) changes the Statement timing.
+- Whether the real substance of the arrangement matches clause 2.2, as s 15A(2) requires.
+- Whether this draft suits these parties and these facts. The clauses are based on the provisions cited. That is not a statement that any clause is compliant.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

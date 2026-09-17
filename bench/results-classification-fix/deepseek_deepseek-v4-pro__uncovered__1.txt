@@ -1,0 +1,81 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+The notification requirements for an eligible data breach are set out in Part IIIC of the Privacy Act 1988 (Cth). Here are the key obligations, in the order they arise.
+
+---
+
+## 1. Assessment of a suspected eligible data breach
+
+Where an entity is aware of reasonable grounds to *suspect* (but not yet *believe*) an eligible data breach, s 26WH applies:
+
+> "The entity must: (a) carry out a reasonable and expeditious assessment of whether there are reasonable grounds to believe that the relevant circumstances amount to an eligible data breach of the entity; and (b) take all reasonable steps to ensure that the assessment is completed within 30 days after the entity becomes aware as mentioned in paragraph (1)(a)."
+
+— Privacy Act 1988 (Cth) s 26WH(2) (snapshot 2026-06-04)
+
+---
+
+## 2. Statement to the Commissioner — s 26WK
+
+Once the entity is aware that there are reasonable grounds to *believe* an eligible data breach has occurred, s 26WK(2) requires it to:
+
+> "(a) both: (i) prepare a statement that complies with subsection (3); and (ii) give a copy of the statement to the Commissioner; and (b) do so as soon as practicable after the entity becomes so aware."
+
+— Privacy Act 1988 (Cth) s 26WK(2) (snapshot 2026-06-04)
+
+The statement must set out:
+
+- the identity and contact details of the entity (s 26WK(3)(a));
+- a description of the eligible data breach (s 26WK(3)(b));
+- the particular kind or kinds of information concerned (s 26WK(3)(c)); and
+- recommendations about the steps individuals should take in response (s 26WK(3)(d)).
+
+If the access, disclosure or loss also constitutes an eligible data breach of another entity, the statement *may* also set out that other entity's identity and contact details (s 26WK(4)).
+
+---
+
+## 3. Notification to individuals — s 26WL
+
+After preparing the statement, the entity must notify affected individuals. Section 26WL(2) sets out a cascading test:
+
+> "(a) if it is practicable for the entity to notify the contents of the statement to each of the individuals to whom the relevant information relates — take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals to whom the relevant information relates; or
+> (b) if it is practicable for the entity to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach — take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach; or
+> (c) if neither paragraph (a) nor (b) applies: (i) publish a copy of the statement on the entity's website (if any); and (ii) take reasonable steps to publicise the contents of the statement."
+
+— Privacy Act 1988 (Cth) s 26WL(2) (snapshot 2026-06-04)
+
+The notification must occur "as soon as practicable after the completion of the preparation of the statement" (s 26WL(3)).
+
+If the entity normally communicates with a particular individual using a particular method, it may use that method for notification (s 26WL(4)).
+
+---
+
+## 4. Commissioner-directed notification — s 26WR
+
+The Commissioner also has an independent power to direct an entity to notify. Under s 26WR(1), if the Commissioner is aware of reasonable grounds to believe that an eligible data breach has occurred, the Commissioner may direct the entity to:
+
+- prepare a statement complying with s 26WR(4) (materially the same content requirements as s 26WK(3)); and
+- give a copy of that statement to the Commissioner.
+
+The direction must also require the entity to notify individuals under the same cascading test as s 26WL(2) (see s 26WR(2)). The entity must comply "as soon as practicable after the direction is given" (s 26WR(10)).
+
+Before giving a direction, the Commissioner must invite the entity to make a submission (s 26WR(3)).
+
+---
+
+## 5. Interaction with other entities
+
+Where the same access, disclosure or loss constitutes an eligible data breach of multiple entities, and one entity complies with ss 26WK and 26WL, those sections do not apply to the other entities (s 26WM, and see the parallel provision for assessment at s 26WJ).
+
+---
+
+## 6. Exception — Commissioner may declare notification not required
+
+Under s 26WQ, the Commissioner may declare that ss 26WK and 26WL do not apply, or may extend the time for compliance with s 26WL(2) to a reasonable period. This may be done on the Commissioner's own initiative or on application by the entity.
+
+---
+
+OPEN ITEMS — None.
+
+VERIFY BEFORE USE — All citations are to the snapshot dated 2026-06-04. A more recent compilation may have been registered. Confirm the current text on the Federal Register of Legislation before relying on these provisions.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

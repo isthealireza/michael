@@ -1,0 +1,16 @@
+CLASSIFICATION: DRAFT - domain: employment
+
+I can draft a casual employment contract, but I need more information first. The [MISSING] rule prevents me from inventing essential terms.
+
+Please provide:
+
+1. **Company details**: Real company name, ABN (if applicable), and principal place of business address
+2. **Employee details**: Employee's full legal name and residential address
+3. **Conditions A and B**: What are the specific conditions? For example, are they about probation period, confidentiality, notice requirements, superannuation, or something else?
+4. **Pay rate**: How much does Mr Y earn per hour?
+5. **Modern Award**: Which Modern Award applies (if any)? For example, if this is retail, hospitality, community services, etc.
+6. **Hours/pattern**: Will the casual work be regular, ad hoc, or seasonal? Any pattern?
+7. **Start date**: When does employment begin?
+8. **Any other key terms**: Probation period, training requirements, uniform, vehicle, tools, etc.
+
+Once you provide these details, I will produce the draft contract from a matching template.

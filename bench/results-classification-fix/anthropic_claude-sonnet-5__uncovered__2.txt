@@ -1,0 +1,46 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+An eligible data breach is defined at Privacy Act 1988 (Cth) s 26WE (snapshot 2026-06-04). The section applies where an APP entity, credit reporting body, credit provider or file number recipient holds relevant information and is subject to the relevant privacy obligation. It sets out the test: "there is unauthorised access to, or unauthorised disclosure of, the information" and "a reasonable person would conclude that the access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates", or the information is lost in circumstances where such access or disclosure is likely to occur and would likely result in serious harm.
+
+Section 26WG (snapshot 2026-06-04) lists the matters relevant to the "serious harm" assessment: "the kind or kinds of information", "the sensitivity of the information", "whether the information is protected by one or more security measures", the likelihood any security measure could be overcome, "the persons, or the kinds of persons, who have obtained, or who could obtain, the information", "the nature of the harm", and "any other relevant matters".
+
+Assessment of a suspected breach
+
+Where an entity suspects, but is not yet satisfied, that an eligible data breach has happened, s 26WH (snapshot 2026-06-04) requires the entity to "carry out a reasonable and expeditious assessment of whether there are reasonable grounds to believe that the relevant circumstances amount to an eligible data breach of the entity" and to "take all reasonable steps to ensure that the assessment is completed within 30 days after the entity becomes aware" of the suspicion.
+
+Statement to the Commissioner
+
+Once the entity is aware there are reasonable grounds to believe an eligible data breach has happened, s 26WK(2) (snapshot 2026-06-04) requires the entity to "prepare a statement that complies with subsection (3)" and "give a copy of the statement to the Commissioner", and to "do so as soon as practicable after the entity becomes so aware". Under s 26WK(3), the statement must set out:
+- "the identity and contact details of the entity";
+- "a description of the eligible data breach that the entity has reasonable grounds to believe has happened";
+- "the particular kind or kinds of information concerned";
+- "recommendations about the steps that individuals should take in response to the eligible data breach".
+
+Notification of individuals
+
+Section 26WL(2) (snapshot 2026-06-04) requires the entity to notify the contents of the statement. The method depends on practicability:
+- if practicable, "take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals to whom the relevant information relates"; or
+- if that is not practicable but notifying at-risk individuals is, "take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach"; or
+- if neither is practicable, the entity must "publish a copy of the statement on the entity's website (if any)" and "take reasonable steps to publicise the contents of the statement".
+
+Section 26WL(3) requires the entity to "comply with subsection (2) as soon as practicable after the completion of the preparation of the statement". Section 26WL(4) permits the entity to use its normal communication method with a particular individual for the notification.
+
+Commissioner-directed notification
+
+Section 26WR (snapshot 2026-06-04) allows the Commissioner to direct an entity to prepare a statement and give a copy to the Commissioner, and to notify individuals, using the same practicability-based methods in s 26WR(2). Before directing, the Commissioner "must invite the entity to make a submission ... within the period specified in the invitation" (s 26WR(3)). The entity "must comply with a direction ... as soon as practicable after the direction is given" (s 26WR(10)).
+
+Exceptions
+
+- s 26WD: no notification obligation where the breach has been, or is required to be, notified under s 75 of the My Health Records Act 2012.
+- s 26WJ and s 26WM: where the entity that caused the breach complies with its own obligations (ss 26WH, or 26WK/26WL), those sections do not separately apply to other entities affected by the same access, disclosure or loss.
+- s 26WN: enforcement bodies are exempt from the recommendations requirement (s 26WK(3)(d)) and from s 26WL where the CEO believes compliance would prejudice enforcement-related activities.
+
+Contravention and penalty
+
+Section 13(4A) (snapshot 2026-06-04) provides that a contravention of s 26WH(2), 26WK(2), 26WL(3) or 26WR(10) "is taken to be an act that is an interference with the privacy of an individual." Section 13K(2) (snapshot 2026-06-04) separately makes it a civil penalty provision where "the entity prepares a statement under section 26WK ... and the statement does not comply with subsection 26WK(3)", capped at "200 penalty units" under s 13K(4).
+
+OPEN ITEMS — None.
+
+VERIFY BEFORE USE — Confirm the current penalty unit dollar value and check for any later amendments to Part IIIC after the snapshot date of 2026-06-04.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

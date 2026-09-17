@@ -1,0 +1,30 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+An eligible data breach occurs when an entity holds personal information and there is unauthorised access to, unauthorised disclosure of, or loss of that information, and a reasonable person would conclude that such access or disclosure would be likely to result in serious harm to any of the individuals to whom the information relates (Privacy Act 1988 (Cth) s 26WE, snapshot 2026-06-04).
+
+An entity must notify individuals about an eligible data breach if the entity has reasonable grounds to believe that an eligible data breach has happened (Privacy Act 1988 (Cth) s 26WL, snapshot 2026-06-04).
+
+The entity must prepare a statement that sets out:
+
+— the identity and contact details of the entity;
+— a description of the eligible data breach;
+— the particular kind or kinds of information concerned; and
+— recommendations about the steps that individuals should take in response to the breach (Privacy Act 1988 (Cth) s 26WK(3), snapshot 2026-06-04).
+
+The entity must give a copy of this statement to the Commissioner as soon as practicable after becoming aware that it has reasonable grounds to believe that an eligible data breach has happened (Privacy Act 1988 (Cth) s 26WK(2), snapshot 2026-06-04).
+
+The entity must then "take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals to whom the relevant information relates" or, if this is not practicable, "to each of the individuals who are at risk from the eligible data breach" (Privacy Act 1988 (Cth) s 26WL(2), snapshot 2026-06-04). Alternatively, if neither of these options is practicable, the entity may "publish a copy of the statement on the entity's website (if any)" and "take reasonable steps to publicise the contents of the statement" (Privacy Act 1988 (Cth) s 26WL(2), snapshot 2026-06-04).
+
+The entity must comply with these notification obligations "as soon as practicable after the completion of the preparation of the statement" (Privacy Act 1988 (Cth) s 26WL(3), snapshot 2026-06-04).
+
+If the entity normally communicates with an individual using a particular method, notification to that individual may use that method (Privacy Act 1988 (Cth) s 26WL(4), snapshot 2026-06-04).
+
+The Australian Information Commissioner may direct an entity to prepare and notify a statement about an eligible data breach if the Commissioner is aware that there are reasonable grounds to believe that an eligible data breach has happened (Privacy Act 1988 (Cth) s 26WR, snapshot 2026-06-04).
+
+An entity that contravenes its notification obligations under section 26WK, 26WL or 26WR commits an act that is an interference with the privacy of an individual (Privacy Act 1988 (Cth) s 13(4A), snapshot 2026-06-04).
+
+OPEN ITEMS — None.
+
+VERIFY BEFORE USE — The statement above draws only from retrieved provisions dated 4 June 2026. Verify that the Privacy Act 1988 (Cth) remains current and that no amending legislation has come into force since the snapshot date.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

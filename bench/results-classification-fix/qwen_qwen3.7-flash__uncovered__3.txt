@@ -1,0 +1,64 @@
+All relevant provisions have been retrieved. Here is the answer.
+
+---
+
+**Eligible data breach notification requirements under the Privacy Act 1988 (Cth)**
+
+The notification obligations are in Part IIIC of the Act. The following steps apply when an entity becomes aware of an actual or suspected eligible data breach.
+
+**1. Trigger: what constitutes an eligible data breach**
+
+An "eligible data breach" occurs if:
+
+- There is unauthorised access to, unauthorised disclosure of, or loss of personal information held by an APP entity; **and**
+- A reasonable person would conclude that the access, disclosure or loss would be likely to result in serious harm to any of the individuals to whom the information relates: *Privacy Act 1988 (Cth) s 26WE(2)* [snapshot 2026-06-04].
+
+**2. Assessment of a suspected breach**
+
+If an entity suspects a breach but does not yet have grounds to believe one occurred, it must:
+
+- Carry out a reasonable and expeditious assessment; and
+- Ensure the assessment is completed within 30 days: *Privacy Act 1988 (Cth) s 26WH(2)* [snapshot 2026-06-04].
+
+**3. Preparing and giving a statement to the Commissioner**
+
+Once the entity has reasonable grounds to believe an eligible data breach has happened, it must:
+
+- Prepare a statement setting out:
+  - (a) the identity and contact details of the entity;
+  - (b) a description of the eligible data breach;
+  - (c) the particular kind or kinds of information concerned;
+  - (d) recommendations about the steps that individuals should take in response to the eligible data breach: *Privacy Act 1988 (Cth) s 26WK(3)* [snapshot 2026-06-04].
+- Give a copy of the statement to the Commissioner as soon as practicable after becoming aware of the reasonable grounds: *Privacy Act 1988 (Cth) s 26WK(2)* [snapshot 2026-06-04].
+
+**4. Notifying affected individuals**
+
+After preparing the statement, the entity must notify those at risk. The method depends on practicability:
+
+- If it is practicable to notify each individual to whom the information relates — take such steps as are reasonable to notify them of the contents of the statement; or
+- If it is practicable to notify each individual who is at risk — take such steps as are reasonable to notify them; or
+- If neither of the above applies — publish a copy of the statement on the entity's website (if any), and take reasonable steps to publicise its contents: *Privacy Act 1988 (Cth) s 26WL(2)* [snapshot 2026-06-04].
+
+The notification must be given **as soon as practicable** after completion of the statement: *Privacy Act 1988 (Cth) s 26WL(3)* [snapshot 2026-06-04].
+
+Where the entity normally communicates with a particular individual using a particular method, it may use that method for the notification: *Privacy Act 1988 (Cth) s 26WL(4)* [snapshot 2026-06-04].
+
+**5. Exception for remedial action**
+
+Notification obligations are displaced if the entity takes remedial action before serious harm results. In those circumstances the breach is treated as never having occurred, or notification to specific individuals is not required where the remedial action eliminates likely harm to them: *Privacy Act 1988 (Cth) s 26WF* [snapshot 2026-06-04].
+
+**6. Commissioner's power to direct notification**
+
+If the Commissioner is aware of reasonable grounds to suspect an eligible data breach, the Commissioner may direct an entity to prepare and give a statement, and to notify affected individuals, using the same notification framework: *Privacy Act 1988 (Cth) s 26WR* [snapshot 2026-06-04].
+
+**7. Penalties for non-compliance**
+
+Preparing a statement that does not comply with section 26WK(3) is a civil penalty provision: *Privacy Act 1988 (Cth) s 13K(2)–(4)* [snapshot 2026-06-04]. Failure to comply with sections 26WK(2), 26WL(3), or 26WH(2) is treated as an interference with privacy: *Privacy Act 1988 (Cth) s 13(4A)* [snapshot 2026-06-04].
+
+---
+
+OPEN ITEMS — None.
+
+VERIFY BEFORE USE — The snapshot date for all cited provisions is 2026-06-04. Verify whether any subsequent amendments have been made to Part IIIC since that date. Confirm the entity's status (APP entity, credit reporting body, credit provider, or file number recipient) as notification obligations apply depending on which category the entity falls into under section 26WE(1).
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

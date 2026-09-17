@@ -1,0 +1,95 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+The notification requirements for an eligible data breach are in Part IIIC of the Privacy Act 1988 (Cth) (snapshot 2026-06-04). The scheme has four stages.
+
+---
+
+## 1. Assessment of suspected eligible data breach
+
+**Privacy Act 1988 (Cth) s 26WH**
+
+If an entity is aware of reasonable grounds to *suspect* there may have been an eligible data breach, but is not yet aware of reasonable grounds to *believe* one has occurred, the entity must:
+
+"(2) The entity must:
+(a) carry out a reasonable and expeditious assessment of whether there are reasonable grounds to believe that the relevant circumstances amount to an eligible data breach of the entity; and
+(b) take all reasonable steps to ensure that the assessment is completed within 30 days after the entity becomes aware as mentioned in paragraph (1)(a)."
+
+If the assessment concludes there are reasonable grounds to believe an eligible data breach has occurred, the entity moves to the notification obligations under s 26WK.
+
+---
+
+## 2. Statement to the Commissioner
+
+**Privacy Act 1988 (Cth) s 26WK**
+
+Once an entity is aware that there are reasonable grounds to *believe* an eligible data breach has occurred, it must:
+
+"(2) The entity must:
+(a) both:
+(i) prepare a statement that complies with subsection (3); and
+(ii) give a copy of the statement to the Commissioner; and
+(b) do so as soon as practicable after the entity becomes so aware."
+
+The statement must set out:
+
+"(3) The statement ... must set out:
+(a) the identity and contact details of the entity; and
+(b) a description of the eligible data breach that the entity has reasonable grounds to believe has happened; and
+(c) the particular kind or kinds of information concerned; and
+(d) recommendations about the steps that individuals should take in response to the eligible data breach that the entity has reasonable grounds to believe has happened."
+
+---
+
+## 3. Notification to individuals
+
+**Privacy Act 1988 (Cth) s 26WL**
+
+After the statement is prepared, the entity must notify affected individuals. The obligation is cascading:
+
+"(2) The entity must:
+(a) if it is practicable for the entity to notify the contents of the statement to each of the individuals to whom the relevant information relates—take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals to whom the relevant information relates; or
+(b) if it is practicable for the entity to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach—take such steps as are reasonable in the circumstances to notify the contents of the statement to each of the individuals who are at risk from the eligible data breach; or
+(c) if neither paragraph (a) nor (b) applies:
+(i) publish a copy of the statement on the entity's website (if any); and
+(ii) take reasonable steps to publicise the contents of the statement."
+
+The timing requirement is: "(3) The entity must comply with subsection (2) as soon as practicable after the completion of the preparation of the statement."
+
+For the method of notification: "(4) If the entity normally communicates with a particular individual using a particular method, the notification to the individual under paragraph (2)(a) or (b) may use that method."
+
+---
+
+## 4. Commissioner-directed notification
+
+**Privacy Act 1988 (Cth) s 26WR**
+
+If the Commissioner becomes aware of reasonable grounds to believe an eligible data breach has occurred, the Commissioner may direct the entity to notify, even if the entity has not acted. The Commissioner must first invite a submission from the entity (s 26WR(3)).
+
+Under s 26WR(1), the Commissioner may direct the entity to prepare a statement and give it to the Commissioner. Under s 26WR(2), the direction must also require the entity to notify individuals using the same cascading approach as s 26WL:
+
+"(a) if it is practicable ... to notify ... each of the individuals to whom the relevant information relates; or
+(b) if it is practicable ... to notify ... each of the individuals who are at risk from the eligible data breach; or
+(c) if neither paragraph (a) nor (b) applies: (i) publish a copy of the statement on the entity's website (if any); and (ii) take reasonable steps to publicise the contents of the statement."
+
+The entity must comply "(10) ... as soon as practicable after the direction is given."
+
+---
+
+## Exceptions to notification
+
+Several provisions may relieve an entity of the obligation to notify:
+
+- **Remedial action (s 26WF):** If the entity takes action that prevents serious harm before it occurs, the access, disclosure or loss may cease to be an eligible data breach, or the entity may not be required to notify particular individuals.
+- **My Health Records Act overlap (s 26WD):** If the matter has been or must be notified under s 75 of the My Health Records Act 2012, Part IIIC does not apply.
+- **Another entity has notified (s 26WJ):** If one entity complies with its assessment and notification obligations and the breach is also a breach of other entities, those other entities are relieved.
+- **Commissioner declaration (s 26WQ):** The Commissioner may declare that ss 26WK and 26WL do not apply, or may extend the time for compliance.
+
+---
+
+OPEN ITEMS
+None.
+
+VERIFY BEFORE USE
+The snapshot date is 2026-06-04. Amendments after that date are not reflected. Confirm the current compilation on the Federal Register of Legislation before relying on these provisions.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

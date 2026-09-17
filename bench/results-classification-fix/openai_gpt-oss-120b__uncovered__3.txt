@@ -1,0 +1,26 @@
+CLASSIFICATION: RESEARCH - domain: privacy
+
+An entity must give notice of an eligible data breach if it:
+
+* has reasonable grounds to believe an eligible breach has occurred, or is directed to do so by the Commissioner (Privacy Act 1988 (Cth) s 26WA (snapshot 2026‑06‑04)).  
+* prepares a statement that complies with s 26WK(3) (snapshot 2026‑06‑04):  
+  * identity and contact details of the entity;  
+  * description of the breach;  
+  * the particular kind(s) of information concerned;  
+  * recommendations about steps individuals should take.  
+
+The entity must then:
+
+* if it is practicable to notify each affected individual, take reasonable steps to give the statement to each individual (26WL(2)(a) (snapshot 2026‑06‑04));  
+* if it is practicable to notify each individual who is at risk, take reasonable steps to give the statement to each at‑risk individual (26WL(2)(b) (snapshot 2026‑06‑04));  
+* if neither (a) nor (b) applies, publish the statement on its website (if any) and take reasonable steps to publicise it (26WL(2)(c) (snapshot 2026‑06‑04)).  
+
+The entity must comply with the above as soon as practicable after the statement is prepared (26WL(3) (snapshot 2026‑06‑04)).  
+
+If the Commissioner believes a breach has occurred, the Commissioner may give a written direction requiring the entity to prepare a statement and to notify individuals on the same basis as s 26WL (26WR(1)–(2) (snapshot 2026‑06‑04)).  
+
+If the breach has already been notified under the My Health Records Act 2008, s 26WD excludes the Part from applying (26WD (snapshot 2026‑06‑04)).  
+
+OPEN ITEMS — None.  
+VERIFY BEFORE USE — No unverified statements.  
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.
