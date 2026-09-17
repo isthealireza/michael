@@ -65,19 +65,75 @@ CONTENTS_MIN_ENTRIES = 10
 PROSE_LOOKAHEAD = 3
 
 
-def _is_contents_entry(line: str) -> bool:
-    """True when a section-heading line ends with a page number.
+def _ends_in_bare_number(line: str) -> bool:
+    """True when a line's last whitespace-separated token is a run of digits.
 
-    A table of provisions prints the page each section starts on; an operative
-    heading has nothing after it. This is what separates
-    ``15A Meaning of casual employee 68`` from ``15A Meaning of casual employee``,
-    and it survives the wrapped entries that defeated a prose-lookahead alone.
+    On its own this says nothing about *why* the number is there - a page
+    reference and a cited Act's year both end a line this way. It is a building
+    block for :func:`_is_contents_entry`, not a verdict.
+    """
+    stripped = line.strip()
+    if not stripped:
+        return False
+    tail = stripped.rsplit(maxsplit=1)
+    return len(tail) == 2 and tail[1].isdigit()
+
+
+def _is_contents_entry(line: str, *, previous: str = "", following: str = "") -> bool:
+    """True when ``line`` is a row of a table of provisions, not an operative heading.
+
+    A trailing bare number is not, by itself, evidence of anything: a page
+    reference (``15A Meaning of casual employee 68``) and a cited Act's year
+    (``26WD Exception-notification under the My Health Records Act 2012``) are
+    both a heading-shaped line followed by a run of digits, and no rule about
+    the string alone - a digit count, a plausible year range - tells them apart,
+    because a plausible year and a plausible page number overlap completely.
+
+    What differs is what is *around* the number. A table of provisions paginates
+    every row - Part, Division and section headings alike - so its rows cluster:
+    each one ends in a bare number, and so does its neighbour. A cited year is
+    part of the heading's own text; it appears whether or not the row before or
+    after it does the same, because a compiled Act's body is not paginated
+    inline. So the number is only a page reference when a neighbouring row - the
+    line directly above or below ``line`` in the source document - carries one
+    too. ``previous`` and ``following`` are exactly that: real, adjacent lines,
+    not a guess about the number itself.
     """
     stripped = line.strip()
     if not SECTION_RE.match(stripped):
         return False
-    tail = stripped.rsplit(maxsplit=1)
-    return len(tail) == 2 and tail[1].isdigit()
+    if not _ends_in_bare_number(stripped):
+        return False
+    return _ends_in_bare_number(previous) or _ends_in_bare_number(following)
+
+
+def _adjacent_lines(text: str, position: int) -> tuple[str, str]:
+    """The raw lines immediately before and after the line starting at ``position``.
+
+    ``position`` must be the start of a line - true for any :data:`SECTION_RE`
+    match, since the pattern is anchored at ``^`` under ``re.MULTILINE``.
+    """
+    line_end = text.find("\n", position)
+    if line_end == -1:
+        line_end = len(text)
+
+    if position == 0:
+        previous = ""
+    else:
+        previous_end = position - 1
+        previous_start = text.rfind("\n", 0, previous_end) + 1
+        previous = text[previous_start:previous_end]
+
+    next_start = line_end + 1
+    if next_start > len(text):
+        following = ""
+    else:
+        next_end = text.find("\n", next_start)
+        if next_end == -1:
+            next_end = len(text)
+        following = text[next_start:next_end]
+
+    return previous, following
 
 
 def _is_structural(line: str) -> bool:
@@ -113,12 +169,14 @@ def find_body_start(text: str) -> int | None:
     for index, line in enumerate(lines):
         if not SECTION_RE.match(line.strip()):
             continue
+        previous_line = lines[index - 1] if index > 0 else ""
+        next_line = lines[index + 1] if index + 1 < len(lines) else ""
         # A wrapped contents line can look like prose, so an entry carrying a
         # page number is never treated as the start of the body.
-        if _is_contents_entry(line):
+        if _is_contents_entry(line, previous=previous_line, following=next_line):
             continue
         window = lines[index + 1 : index + 1 + PROSE_LOOKAHEAD]
-        if any(not _is_structural(following) for following in window):
+        if any(not _is_structural(candidate) for candidate in window):
             return offsets[index]
     return None
 
@@ -195,7 +253,8 @@ def split_sections(text: str) -> list[Provision]:
             continue
         # Belt and braces: a contents entry anywhere - a second contents table,
         # a per-Part list - is never stored as a provision.
-        if _is_contents_entry(match.group(0)):
+        previous_line, next_line = _adjacent_lines(text, start)
+        if _is_contents_entry(match.group(0), previous=previous_line, following=next_line):
             continue
         provisions.append(
             Provision(

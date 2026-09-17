@@ -290,6 +290,18 @@ does not support; on a bridge network the dashboard reports "Gateway Status:
 Stopped" and never opens a websocket, because its localhost is not the
 gateway's. `HERMES_DASHBOARD=1` has s6 supervise both in one container.
 
+**Docker Desktop can crash at startup and look like a config problem.** A hard
+kill of Docker Desktop leaves orphaned `AF_UNIX` socket reparse points behind in
+`AppData\Local\Docker\run` and `AppData\Local\docker-secrets-engine`; Windows
+reports "The file cannot be accessed by the system" for each and refuses to
+delete them individually, so the engine crashes on the next launch. The
+symptom points at the wrong thing: `com.docker.service` sits `Stopped`,
+`docker info` and `docker compose ps` fail to reach the engine pipe, and
+nothing listens on `127.0.0.1:5433` — none of it is a compose or configuration
+fault. Rotate (rename) both directories and Docker recreates them clean;
+starting `com.docker.service` again needs elevation. This recurs after any hard
+kill of Docker Desktop.
+
 **The dashboard requires auth.** A non-loopback bind is refused outright without
 an auth provider, and `--insecure` has been a no-op since the June 2026
 hardening — the process exits 0 and `restart: unless-stopped` loops it, which

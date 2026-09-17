@@ -244,12 +244,150 @@ def test_the_operative_section_is_the_one_kept() -> None:
 
 
 def test_a_contents_entry_is_recognised_by_its_page_number() -> None:
+    """A trailing bare number is a page reference only when a neighbouring row
+    - the real line before or after it - carries one too. These four lines and
+    their real neighbours all come from ``CONTENTS_THEN_BODY`` above.
+    """
     from michael.ingest import _is_contents_entry
 
-    assert _is_contents_entry("15A Meaning of casual employee 68")
-    assert _is_contents_entry("61 The National Employment Standards 164")
-    assert not _is_contents_entry("15A Meaning of casual employee")
-    assert not _is_contents_entry("This Act may be cited as the Fair Work Act 2009.")
+    lines = CONTENTS_THEN_BODY.splitlines()
+
+    def context(needle: str) -> tuple[str, str, str]:
+        index = lines.index(needle)
+        previous = lines[index - 1] if index > 0 else ""
+        following = lines[index + 1] if index + 1 < len(lines) else ""
+        return lines[index], previous, following
+
+    line, previous, following = context("15A Meaning of casual employee 68")
+    assert _is_contents_entry(line, previous=previous, following=following)
+
+    line, previous, following = context("61 The National Employment Standards 164")
+    assert _is_contents_entry(line, previous=previous, following=following)
+
+    line, previous, following = context("15A Meaning of casual employee")
+    assert not _is_contents_entry(line, previous=previous, following=following)
+
+    line, previous, following = context("This Act may be cited as the Fair Work Act 2009.")
+    assert not _is_contents_entry(line, previous=previous, following=following)
+
+
+def test_a_cited_act_year_is_not_a_contents_entry() -> None:
+    """The class of bug behind the Privacy Act 1988 (Cth) Part IIIC gap.
+
+    A trailing bare number is not, by itself, evidence of a page reference: a
+    cited Act's year ends a heading line exactly the same way a page number
+    does (``... Act 2012`` and ``... employee 68`` are the same shape), and no
+    digit-only rule - a length check, a plausible-year range - tells them
+    apart, because a plausible year and a plausible page number overlap
+    completely. What differs is the neighbouring rows: a table of provisions
+    paginates every row, so they cluster; an operative heading's neighbours
+    are prose or a Division line, and do not.
+
+    Every string and its real previous/next line below is taken verbatim from
+    the Privacy Act 1988 (Cth), Compilation No. 104 (in force 2026-06-04),
+    downloaded from legislation.gov.au and run through Michael's own
+    ``docx_to_text`` - not invented. The one exception is noted inline: two
+    headings the ORCHESTRATOR sourced separately could not be located in this
+    compilation (probably a different, older one - Commonwealth Acts get
+    renumbered as they are amended), so they are tested with the default
+    empty context rather than a fabricated neighbour.
+    """
+    from michael.ingest import _is_contents_entry
+
+    # 26WD, in the table of provisions: both neighbours end in a page number.
+    assert _is_contents_entry(
+        "26WD Exception—notification under the My Health Records Act 2012 204",
+        previous="26WC Deemed holding of information 203",
+        following="Division 2—Eligible data breach 205",
+    )
+
+    # 26WD, the operative heading: neither neighbour ends in a bare number.
+    # Both the em-dash form (as extracted) and a plain-hyphen form must agree.
+    for dash in ("—", "-"):
+        assert not _is_contents_entry(
+            f"26WD Exception{dash}notification under the My Health Records Act 2012",
+            previous="Note: See section 21NA.",
+            following="If:",
+        )
+
+    # 26WC: operative heading, no page number, no cited year either.
+    assert not _is_contents_entry(
+        "26WC Deemed holding of information",
+        previous="For the purposes of this Part, entity includes a person who is a "
+        "file number recipient.",
+        following="Overseas recipients",
+    )
+
+    # 26WL: operative heading; the previous line is a long subsection of prose.
+    assert not _is_contents_entry(
+        "26WL Entity must notify eligible data breach",
+        previous=(
+            "(4) If the entity has reasonable grounds to believe that the access, "
+            "disclosure or loss that constituted the eligible data breach of the "
+            "entity is an eligible data breach of one or more other entities, the "
+            "statement referred to in subparagraph (2)(a)(i) may also set out the "
+            "identity and contact details of those other entities."
+        ),
+        following="Scope",
+    )
+
+    # 26WK: operative heading, sitting directly under a Subdivision line.
+    assert not _is_contents_entry(
+        "26WK Statement about eligible data breach",
+        previous="Subdivision B—General notification obligations",
+        following="Scope",
+    )
+
+    # 6A: operative heading, previous line is the tail of a long definition.
+    assert not _is_contents_entry(
+        "6A Breach of an Australian Privacy Principle",
+        previous=(
+            "stepchild: without limiting who is a stepchild of an individual, "
+            "someone is a stepchild of an individual if he or she would be the "
+            "individual’s stepchild except that the individual is not legally "
+            "married to the individual’s de facto partner."
+        ),
+        following=(
+            "(1) For the purposes of this Act, an act or practice breaches an "
+            "Australian Privacy Principle if, and only if, it is contrary to, or "
+            "inconsistent with, that principle."
+        ),
+    )
+
+    # 13G: operative heading, previous line is plain prose ending in "84." not "84".
+    assert not _is_contents_entry(
+        "13G Civil penalty provision for serious interference with privacy of an "
+        "individual",
+        previous="An act or practice that is not covered by section 13 is not an "
+        "interference with the privacy of an individual.",
+        following="Civil penalty provision",
+    )
+
+    # Same bug class, real section 34 (an operative heading citing the Freedom
+    # of Information Act 1982), found independently of the two below.
+    assert not _is_contents_entry(
+        "34 Provisions relating to documents exempt under the Freedom of "
+        "Information Act 1982",
+        previous="Division 4—Miscellaneous",
+        following=(
+            "(1) The Commissioner shall not, in connection with the performance of "
+            "the Commissioner’s functions, give to a person information as to "
+            "the existence or nonexistence of a document..."
+        ),
+    )
+    assert _is_contents_entry(
+        "34 Provisions relating to documents exempt under the Freedom of "
+        "Information Act 1982 254",
+        previous="Division 4—Miscellaneous 254",
+        following="35 Direction where refusal or failure to amend exempt document 254",
+    )
+
+    # Sourced by the ORCHESTRATOR from the real function in the project venv,
+    # not reproducible in this session's copy of the Act (see docstring): no
+    # real neighbouring lines available, so the default empty context stands
+    # in for "no known contents cluster around this heading".
+    assert not _is_contents_entry("80P Disclosure under the Freedom of Information Act 1982")
+    assert not _is_contents_entry("7B Acts and practices of organisations 1988")
 
 
 def test_penalty_table_rows_are_not_mistaken_for_sections() -> None:
