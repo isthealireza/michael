@@ -186,3 +186,105 @@ page carrying the guarantee that matters most, and it works.
 - **TESTER round 1** — mid-run on fourteen CLI scenarios, then the page as a
   second surface. W-1 and M-1 declared known, so the round is spent on what
   lies beyond them.
+
+---
+
+# Round-1 notes — added after the QA round
+
+## QA-2 — CONFIRMED, FIXED (`7c01bc4`)
+
+`search()` now tries a direct section lookup before hybrid retrieval.
+Owner-verified: three section-number queries went `covered=False` to
+`covered=True`; two content queries scored **exactly** what they scored before;
+a nonexistent section and an out-of-scope question both stayed honestly
+`covered=False`. Labelled set still precision 1.000 / recall 1.000 at 0.60.
+221 tests, mypy clean on 46 files.
+
+**WORKER-2 chose correctly between the two candidates, and the reason
+generalises:** indexing `section_number` into the tsvector would have fed the
+ranking that `RETRIEVAL_MIN_SCORE` is calibrated against — **voiding the
+calibration for every query in order to fix one class.** The direct-lookup path
+leaves the ranking untouched, which is why the content queries score
+identically rather than approximately. `search_vector` is also a
+`GENERATED ALWAYS AS ... STORED` column, so the other option was a schema
+migration this project has no machinery for.
+
+## THE PATTERN THIS ROUND EXISTS TO CATCH
+
+**A fix that is correct on its own can make something else worse by making it
+REACHABLE.**
+
+QA-2's fix is right. It also surfaced the ambiguous-pinpoint defect instead of
+hiding it. `section 47` now returns **two provisions, both at 1.0000, both
+rendering the identical pinpoint**:
+
+    1.0000  s 47  Transitioning casual employees              Fair Work Act 2009 (Cth) s 47
+    1.0000  s 47  When a modern award applies to an employer  Fair Work Act 2009 (Cth) s 47
+
+Returning both is the right behaviour — the lookup does not silently pick one.
+But the reader cannot tell them apart, and the **Schedule clause sorts first**,
+so an answer built on `provisions[0]` leads with the wrong provision while
+citing a pinpoint that looks authoritative.
+
+**Before this fix that ambiguity was unreachable.** A section-number query
+returned NOT COVERED, so nobody ever saw it. Now readers reach it on the most
+natural question they can ask about a statute.
+
+This is distinct from a regression: nothing that worked stopped working, and
+nothing new was broken. A latent defect changed from unreachable to
+first-contact. **A fix's blast radius includes what it newly exposes, not only
+what it newly breaks** — and that is invisible to any test of the fix itself,
+because the fix is correct.
+
+Consequence: **WORKER-1's Schedule-1 labelling fix moves from queued to
+BLOCKING.** It is what makes one of those `Sch 1 cl 47` and ends the collision.
+
+## QA-3 — WITHDRAWN BY THE OWNER, and WORKER-3 was right
+
+Reported as the renderer failing on the inline block form
+(`OPEN ITEMS — None.` on one line). **The owner has withdrawn it.** WORKER-3's
+earlier fix already handles both shapes — its lookahead accepts a dash or
+end-of-line after the key. The failure was **predicted from reading the
+description of the fix rather than testing the fix.**
+
+Recorded in full rather than quietly deleted, because the correction is the
+useful part: a prediction about code, however well reasoned, is not a
+measurement of code. That is the same rule this project applies to workers and
+it applies upward too.
+
+Testing it did find a real, smaller defect, fixed in the same commit: the
+closing notice is plain in some outputs and wrapped in markdown emphasis in
+others, and the pattern matched only the sentence — leaving a stray `**` on
+screen at the end of a VERIFY BEFORE USE block.
+
+## QA-1 — FIXED by the owner (`0a464db`)
+`inline()` escaped the answer and then escaped each captured group again:
+`Smith &amp; Co Pty Ltd`, `rate &lt; $30 per hour`. Both shapes a real draft
+produces. Fixed by not re-escaping in the replacements — the captures are
+already escaped, and escaping first is what makes the regexes safe.
+
+## QA-5 — NOT A DEFECT
+Prompt injection, authority pressure, and a compound question with an uncovered
+third part all behaved correctly. The injection did not get a general-assistant
+answer; the compound question returned NOT COVERED for the uncovered part
+**rather than dropping it silently**, which was the failure most expected and
+not observed; the authority request did not bend. All three carried the closing
+blocks.
+
+## QA-4 — OPEN. Diagnosis first.
+The stutter is now at **three occurrences**, so it is a pattern rather than a
+fluke. Still requires the `message.delta` frame inspection — index, replace
+flag, changing message id — **before** anyone touches the prompt. If the stream
+marks it, the fix is in the page. If it does not, it is model behaviour and
+goes to the owner as a drafted diff.
+
+## BLOCKED — not by a worker
+WORKER-1's Schedule-1 fix is **ready and unmeasurable**. Local Postgres is
+down, evidenced three ways: `psycopg.errors.ConnectionTimeout` on the
+application path, `ConnectionRefusedError` on a raw TCP check of
+127.0.0.1:5433, and Docker Desktop's engine pipe absent. WORKER-1 stopped and
+reported rather than fighting it, and **refused to substitute its earlier
+`split_sections()`-level numbers for the database-level measurement it was
+asked for.** That was correct.
+
+This is the third session Docker has blocked work on this project.
