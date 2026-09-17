@@ -176,7 +176,11 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
  * provision from a section of the same number, and the corpus contains both. */
 const CITATION = /\b([A-Z][A-Za-z'’\-. ]+?(?:Act|Regulations|Code|Rules|Award)\s+\d{4}(?:\s*\((?:Cth|WA|NSW|Vic|Qld|SA|Tas|NT|ACT|Imp)\))?)\s+(ss?\s+[\w.()]+|Sch\s+\w+\s+cl\s+[\w.]+)(\s*\(snapshot\s+[\d-]+\))?/g;
 const MISSING = /\[MISSING:\s*([^\]]+)\]/g;
-const NOTICE = /Internal research only\.[\s\S]{0,220}?practitioner\./i;
+/* The closing notice, with any markdown emphasis wrapping it. Michael writes it
+ * plain in some outputs and as *…* or **…** in others. Matching only the
+ * sentence left the orphaned asterisks behind in the preceding block, so a
+ * VERIFY BEFORE USE block ended with a stray "**" on screen. */
+const NOTICE = /[*_]{0,2}\s*(Internal research only\.[\s\S]{0,220}?practitioner\.)\s*[*_]{0,2}/i;
 const BLOCK_KEYS = [
   { key: "OPEN ITEMS", cls: "" },
   { key: "VERIFY BEFORE USE", cls: "verify" },
@@ -298,7 +302,7 @@ function renderAnswer(raw, partial) {
   /* The closing notice is mandatory on every output. If it is absent, say so.
    * Supplying it here would fake a guarantee this page does not make. */
   html += notice
-    ? `<div class="notice">${esc(notice[0].trim())}</div>`
+    ? `<div class="notice">${esc((notice[1] || notice[0]).trim())}</div>`
     : `<div class="notice absent">The closing notice was not present in this
        output. Michael is required to end every reply with it — worth reporting.</div>`;
   return html;

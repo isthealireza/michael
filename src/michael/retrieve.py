@@ -11,6 +11,7 @@ Two rules shape this module:
 
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 from datetime import date
 
@@ -76,6 +77,143 @@ class RetrievalResult:
     def not_covered_message(self, topic: str) -> str:
         """The exact line MICHAEL.md requires when retrieval is empty."""
         return f"NOT COVERED - run ingestion for {topic}"
+
+
+# --- direct section-number lookup, tried before hybrid search --------------
+#
+# A section number is an identifier, not prose. Neither hybrid arm can match
+# it: `search_vector` never indexes `section_number` (it is an identifier
+# column, not a text one), and an embedding of "47" carries no semantic
+# content. The measured effect: "what does section 47 of the Fair Work Act
+# say?" scored 0.582 - below RETRIEVAL_MIN_SCORE - and was reported NOT
+# COVERED, while a paraphrase of that same section's content ("when a modern
+# award applies to an employer") scored 0.745 and found it. Section 47 was in
+# the corpus the whole time; Michael was denying a citation it could answer.
+#
+# This is a direct identifier lookup, not a third ranking arm: it does not
+# touch RETRIEVAL_MIN_SCORE, the fusion weights, or the tsvector, so the
+# calibrated threshold is untouched and does not need recalibrating for this
+# change.
+
+#: "section 47", "s 47", "s47", "s. 47", case-insensitively. Requires the
+#: marker word immediately before the number, so an ordinary sentence that
+#: merely contains a number - "47 hours per week" - never matches: there is no
+#: "section" or standalone "s" in front of it for either alternative to anchor
+#: on. `\bs\b` cannot fire inside a word ("is 47", "As 47"), only on a genuine
+#: standalone "s" token, which is common Australian pinpoint-citation style
+#: and essentially never plain English on its own.
+SECTION_REFERENCE = re.compile(
+    r"\bsection\s+(?P<num1>\d{1,4}[A-Za-z]{0,4})\b"
+    r"|\bs\.?\s?(?P<num2>\d{1,4}[A-Za-z]{0,4})\b",
+    re.IGNORECASE,
+)
+
+#: A Title Case phrase ending in "Act" - "Fair Work Act", "Land Tax Assessment
+#: Act" - so a lookup can be narrowed to the named statute when one is given.
+#: Deliberately simple: it need only match well enough to filter by
+#: `citation ILIKE`, not to parse a citation exactly.
+ACT_NAME_PHRASE = re.compile(r"\b(?:[A-Z][\w'-]*\s+){1,6}Act\b")
+
+
+def extract_section_number(query: str) -> str | None:
+    """The section/pinpoint identifier a query is asking about, if any.
+
+    Returns the number uppercased ("47a" -> "47A") so a lookup can match
+    ``section_number`` case-insensitively. Returns ``None`` for a query with
+    no explicit section marker, which is what keeps this from hijacking an
+    ordinary content query that happens to contain a number.
+    """
+    match = SECTION_REFERENCE.search(query)
+    if match is None:
+        return None
+    number = match.group("num1") or match.group("num2")
+    return number.upper()
+
+
+def extract_act_phrase(query: str) -> str | None:
+    """The named Act, if the query names one. ``None`` narrows nothing."""
+    match = ACT_NAME_PHRASE.search(query)
+    return match.group(0) if match else None
+
+
+SECTION_LOOKUP_SQL = """
+SELECT p.id AS provision_id, p.document_id, p.section_number, p.heading, p.text,
+       p.char_start, p.char_end, p.token_count,
+       d.jurisdiction, d.title, d.citation, d.source_url, d.snapshot_date,
+       d.sha256, d.doc_type
+  FROM provisions p
+  JOIN documents d ON d.id = p.document_id
+ WHERE upper(p.section_number) = upper(%(section)s)
+   AND (%(act_phrase)s::text IS NULL OR d.citation ILIKE '%%' || %(act_phrase)s || '%%')
+ ORDER BY d.citation, p.heading, p.id
+"""
+
+
+def _section_lookup(query: str, *, routing: Routing, top_k: int) -> RetrievalResult | None:
+    """Look a section number up directly, by identifier rather than ranking.
+
+    Returns ``None`` - not an empty, ``covered=False`` result - when nothing
+    matches, so the caller falls through to the ordinary hybrid search rather
+    than this path declaring NOT COVERED on the strength of, say, a
+    hand-written Act-name regex failing to match a citation it should have.
+    The hybrid path still applies its own threshold and can still say NOT
+    COVERED correctly if the section genuinely is not in the corpus.
+
+    A pinpoint that resolves to more than one provision (a known live defect:
+    two provisions currently share the citation "Fair Work Act 2009 (Cth) s
+    47", tracked and fixed separately) is returned as every matching row, not
+    the first - each carries its own heading and text, so the caller can tell
+    them apart. Silently returning one of them would be exactly the kind of
+    guess this project does not make.
+    """
+    section = extract_section_number(query)
+    if section is None:
+        return None
+    act_phrase = extract_act_phrase(query)
+
+    with readonly() as conn, conn.cursor() as cur:
+        cur.execute(SECTION_LOOKUP_SQL, {"section": section, "act_phrase": act_phrase})
+        rows = cur.fetchall()
+
+    if not rows:
+        return None
+
+    provisions = tuple(
+        RetrievedProvision(
+            provision_id=int(row["provision_id"]),
+            document_id=int(row["document_id"]),
+            jurisdiction=str(row["jurisdiction"]),
+            title=str(row["title"]),
+            citation=str(row["citation"]),
+            source_url=str(row["source_url"]),
+            snapshot_date=row["snapshot_date"],
+            sha256=str(row["sha256"]),
+            doc_type=str(row["doc_type"]),
+            section_number=str(row["section_number"]),
+            heading=str(row["heading"]),
+            text=str(row["text"]),
+            char_start=int(row["char_start"]),
+            char_end=int(row["char_end"]),
+            # An identifier match, not a relevance score. RETRIEVAL_MIN_SCORE
+            # calibrates the fused hybrid score; it has no meaning here, so
+            # this is not compared against it and does not need it moved.
+            lexical_score=1.0,
+            vector_score=1.0,
+            score=1.0,
+        )
+        for row in rows
+    )[:top_k]
+
+    return RetrievalResult(
+        query=query,
+        routing_domain=routing.name,
+        domain_recognised=routing.recognised,
+        provisions=provisions,
+        threshold=0.0,
+        best_score=1.0,
+        reason="",
+        filters={"jurisdictions": (), "doc_types": ()},
+    )
 
 
 LEXICAL_CANDIDATES_SQL = """
@@ -171,6 +309,15 @@ def search(
 
     if not query.strip():
         return empty("empty query")
+
+    # Tried first, and only on a query that names an explicit section marker:
+    # an identifier lookup, not a ranking arm. Returns None (not a result) when
+    # it finds nothing, so an ordinary content query, or a section reference
+    # this lookup could not resolve, still falls through to hybrid search
+    # below rather than this path deciding NOT COVERED on its own.
+    direct = _section_lookup(query, routing=routing, top_k=top_k)
+    if direct is not None:
+        return direct
 
     # Fails closed: no embeddings means no vector arm, and a lexical-only
     # answer would be a different, weaker guarantee than the one advertised.
