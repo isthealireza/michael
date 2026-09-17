@@ -176,12 +176,63 @@ const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
  * provision from a section of the same number, and the corpus contains both. */
 const CITATION = /\b([A-Z][A-Za-z'’\-. ]+?(?:Act|Regulations|Code|Rules|Award)\s+\d{4}(?:\s*\((?:Cth|WA|NSW|Vic|Qld|SA|Tas|NT|ACT|Imp)\))?)\s+(ss?\s+[\w.()]+|Sch\s+\w+\s+cl\s+[\w.]+)(\s*\(snapshot\s+[\d-]+\))?/g;
 const MISSING = /\[MISSING:\s*([^\]]+)\]/g;
-const NOT_COVERED = /^.*\bNOT COVERED\b.*$/mi;
 const NOTICE = /Internal research only\.[\s\S]{0,220}?practitioner\./i;
 const BLOCK_KEYS = [
   { key: "OPEN ITEMS", cls: "" },
   { key: "VERIFY BEFORE USE", cls: "verify" },
 ];
+
+/* A block heading is its own line, never a mention inside prose. A substring
+ * test cannot tell the two apart: Michael's refusal to drop the closing
+ * blocks says, in ordinary prose, "...asked to omit the OPEN ITEMS, VERIFY
+ * BEFORE USE, or closing notice" - the old body.indexOf(b.key) matched that
+ * mid-sentence occurrence and cut the sentence in half to manufacture a
+ * block that was never emitted. Anchoring to line start is what excludes it:
+ * "OPEN ITEMS" here is preceded by other words on the same line, not by a
+ * newline, so `^` never aligns with it.
+ *
+ * Optional wrapping is allowed because real output uses more than one style:
+ * a bare "OPEN ITEMS" line (most research answers), a markdown "## OPEN
+ * ITEMS" heading (drafted output - contract_text.py strips the identical
+ * "#{1,6}" marker on the ingestion side, so this is an established
+ * convention in this project, not a new one), or "**OPEN ITEMS**". What must
+ * follow the key is end of line or a heading separator (—, :, -) - never a
+ * continuing word or comma, which is what a sentence looks like instead of a
+ * heading. */
+function headingMatch(body, key) {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const re = new RegExp(
+    String.raw`^[ \t]*#{0,6}[ \t]*\*{0,2}${escaped}\*{0,2}(?=[ \t]*[—:-]|[ \t]*$)`,
+    "m",
+  );
+  return re.exec(body);
+}
+
+/* The NOT COVERED declaration is held to the same rule, with one allowance:
+ * a short bolded label observed in real output before it - "**Result:** NOT
+ * COVERED - run ingestion for ...". Anything longer than a short label
+ * before the phrase is prose discussing the rule, not the declaration
+ * itself, and must not be promoted to the banner. */
+const NOT_COVERED = new RegExp(
+  String.raw`^[ \t]*(?:\*{0,2}[A-Za-z][\w '-]{0,24}:\*{0,2}[ \t]*)?\*{0,2}NOT COVERED\b.*$`,
+  "m",
+);
+
+/* Plain language for the manager, never the internal tool name. A default
+ * that renders whatever is unrecognised is how "tool_describe" reached the
+ * reader in the first place - so anything not in this map is DROPPED, not
+ * shown raw. The "mcp__michael__" prefix is stripped when present, but not
+ * assumed: a bare name reaches this unchanged too. */
+const TOOL_LABELS = {
+  classify_request: "routed the question",
+  search_provisions: "searched the corpus",
+  draft_document: "drafted from a template",
+};
+
+function toolLabel(name) {
+  const bare = String(name || "").replace(/^mcp__michael__/, "");
+  return TOOL_LABELS[bare] || null;
+}
 
 function inline(text) {
   let html = esc(text);
@@ -209,8 +260,8 @@ function renderAnswer(raw, partial) {
   let body = text;
   const found = [];
   for (const b of BLOCK_KEYS) {
-    const at = body.indexOf(b.key);
-    if (at !== -1) found.push({ ...b, at });
+    const m = headingMatch(body, b.key);
+    if (m) found.push({ ...b, at: m.index, headingLen: m[0].length });
   }
   found.sort((a, b) => a.at - b.at);
 
@@ -227,7 +278,7 @@ function renderAnswer(raw, partial) {
 
   for (let i = 0; i < found.length; i++) {
     const base = found[0].at;
-    const from = found[i].at - base + found[i].key.length;
+    const from = found[i].at - base + found[i].headingLen;
     const to = i + 1 < found.length ? found[i + 1].at - base : tail.length;
     const content = tail.slice(from, to).replace(/^[\s—:\-]+/, "").trim();
     html += `<div class="block ${found[i].cls}"><div class="h">${found[i].key}</div>
@@ -299,7 +350,9 @@ async function submit() {
       question,
       (sofar) => { bodyEl.innerHTML = renderAnswer(sofar, true); scrollDown(); },
       (name) => {
-        if (!tools.includes(name)) tools.push(name);
+        const label = toolLabel(name);
+        if (!label) return; // unrecognised - dropped, never shown raw
+        if (!tools.includes(label)) tools.push(label);
         toolsEl.classList.remove("hidden");
         toolsEl.textContent = "consulted: " + tools.join(" · ");
       },
@@ -324,3 +377,10 @@ $("askBtn").onclick = submit;
 $("q").addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
 });
+
+/* Node-only export, for tests. `module` is undefined in the browser, so this
+ * is a no-op there and changes nothing about how the page behaves. Exports
+ * the real functions the tests exercise, not a reimplementation of them. */
+if (typeof module !== "undefined") {
+  module.exports = { renderAnswer, headingMatch, NOT_COVERED, toolLabel, inline, esc };
+}
