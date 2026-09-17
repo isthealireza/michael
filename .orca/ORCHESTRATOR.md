@@ -243,31 +243,41 @@ report what it changed and what it verified, with the test result, not a claim.
 
 ## 8. Known open items — do not start these without his go-ahead
 
-1. Case citations are document-level, not paragraph-level. Recorded as a
-   README limitation.
-2. Privacy Act 1988 (Cth) Part IIIC is not in the corpus. It must come from
-   the DOCX volumes on the Federal Register, not from the `/latest` HTML page,
-   which is headings only.
-3. The spec-versus-brief conflict that allowed the write-access incident is
+**Shipped and closed.** The corpus rebuild is done and live. Production and
+local are identical: 205 documents, 8,982 provisions, 84 recovered, 213 removed
+and every removal verified inside an endnote block. Duplicate pinpoint groups
+618 -> 151. 957 schedule clauses labelled `Sch N cl M`. Zero null embeddings,
+zero orphan provisions. `ingestion_log` restored to 205 rows. Threshold
+recalibrated and unchanged at 0.60, precision 1.000, recall 1.000 at 21 of 21,
+highest known-absent 0.579. Commits `bac667e`, `6c9089a`, `3264af9` pushed.
+
+Closed by that work: the Privacy Act coverage gap; the cited-year predicate
+bug; the endnote junk; the ingestion file-log inversion; the stale README
+claims. **The ingestion_log backfill question is MOOT** — the dump restored all
+205 rows. Do not raise it again.
+
+Still open:
+
+1. **151 duplicate pinpoint groups survive.** Down from 618, but not zero, and
+   **nobody yet knows what they are.** This wants the same document-by-document
+   treatment that found the five dropped Privacy Act sections — enumerate the
+   groups, read them, classify them — BEFORE anyone proposes a rule. Do not let
+   a worker jump to a fix; the last two splitter regressions both came from
+   fixing a class nobody had read in full.
+2. **`corpus_stats` goes stale on a dump-and-restore.** A restore bypasses the
+   ingest path that maintains it; it read 9,111 against an actual 8,982 and was
+   refreshed by hand. This is the second time this project has been bitten by a
+   stale N — BM25 once read 7,071 against 8,756. A restore is now a known write
+   path that does not call `refresh_corpus_stats()`.
+3. Case citations are document-level, not paragraph-level. Recorded as a README
+   limitation.
+4. The spec-versus-brief wording conflict on the write-access incident is
    closed in code and covered by
    `tests/test_runtime_config.py::test_the_agent_profile_grants_no_write_tool`,
    but the two documents still disagree in wording.
-4. **Endnote and amendment-history tables are ingested as provisions.** The
-   compilation endnotes at the end of a Federal Register Act split into junk
-   rows with section numbers like `1`, `24`, `21` and headings like
-   `Jan 1989 (s 2 and gaz 1988, No S399)`. Same class of trap as the contents
-   table, different shape, and it affects the whole corpus rather than one
-   Act. Found by WORKER-1 during Privacy Act recon; deliberately kept out of
-   that stage. Needs its own scoped task.
-5. **The corpus is incomplete by an unmeasured amount.** `_is_contents_entry`
-   treated any heading ending in a bare number as a contents entry, so every
-   section whose heading ends in a cited Act year was silently dropped — e.g.
-   `26WD ... My Health Records Act 2012`, `80P ... Freedom of Information Act
-   1982`, `7B Acts and practices of organisations 1988`. The existing 8,756
-   provisions were built with that predicate. The fix and the damage count are
-   in flight. **Whether the 204 existing documents are re-ingested is the
-   owner's decision alone**, and it gates the Stage 2 recalibration: do not
-   recalibrate against a corpus known to be missing sections.
+
+**WORKER-2 is released from hold.** Recalibration is done and the number is
+unchanged.
 
 ## 9. First thing to do
 

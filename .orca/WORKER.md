@@ -42,11 +42,26 @@ it. It lists the files you own and the traps specific to your ground.
 
 ## Working on Railway
 
-Read `.orca/RAILWAY.md`. Operations run on Railway now, not on local Docker:
+Read `.orca/RAILWAY.md`. Operations run on Railway now, not on local Docker,
+and you reach it through **one path only**:
 
 ```
-railway ssh --service michael-hermes --environment production <command>
+.orca/ro.sh cli search "some query"          # the michael CLI, read-only
+.orca/ro.sh python analysis.py               # a local Python file, read-only
 ```
+
+That helper points both database URLs at the `michael_ro` role, whose session
+carries `default_transaction_read_only = on`. Postgres then refuses every
+write, so production cannot be mutated through it - verified: a production
+`michael ingest` through the helper dies with
+`ReadOnlySqlTransaction: cannot execute INSERT in a read-only transaction`,
+and leaves no row behind.
+
+**Do not call `railway ssh` directly.** It reaches the read/write role, and
+the only thing stopping you writing to production there is this sentence -
+which is exactly the kind of guarantee this project replaces with a mechanism
+wherever it can. If you need a production write, you do not have one: it is an
+operator action. Escalate to the ORCHESTRATOR and stop.
 
 Michael's operator CLI is at `/opt/michael/.venv/bin/michael` in the container,
 reached over Railway's private network. Never open the public Postgres proxy.

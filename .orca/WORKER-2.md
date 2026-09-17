@@ -39,6 +39,22 @@ right one.
    failures. Anchor to Title Case and prove the anchor works before you trust
    a single number it prints.
 
+## Calibration is the only thing that catches a mislabelled pinpoint
+
+Run the calibration after a SPLITTER change, not only after a corpus change.
+
+A splitter bug once labelled Fair Work **s 47A as `Sch 2 cl 47A`** — a citation
+to a provision that does not exist. The provision count did not move. The
+provision was still returned at rank 1. Nothing in the corpus totals showed it.
+
+**Recall fell to 0.952** because the labelled query naming s 47A stopped
+matching its target. That was the only signal anywhere in the project.
+
+So your labelled set is not merely a threshold instrument; it is the only
+regression test that sees identity as against retrieval. When the ORCHESTRATOR
+tells you a change touched how a provision is identified, treat a recall drop
+as a labelling suspect first and a retrieval suspect second.
+
 ## The `section_number` format changed — this affects your labelled set
 
 Schedule clauses are now stored as **`Sch N cl M`**, not as a bare number. A

@@ -86,6 +86,53 @@ Do not re-add the floor. The collision it targeted is handled instead by
 `find_body_end`, `schedule_spans` with `Sch N cl M` labelling, and
 `apparatus_spans`.
 
+### A count is not enough. Diff the removals and READ them.
+
+A before-and-after total tells you how many provisions moved. It does not tell
+you WHICH, and the difference is the whole job.
+
+A character-range suppression capped at 4,000 characters overran the end of its
+own section and dropped five real Privacy Act sections — **16B, 21J, 38, 38A,
+38B** — because 16A's permitted-situations table runs right up against 16B.
+On the totals this read as **"-8 on the Privacy Act"**, which looks exactly like
+successful endnote cleanup. It was five sections of operative law.
+
+It was found only by diffing the rebuilt corpus against production **document
+by document and reading what had gone.** So:
+
+1. Produce the per-document delta, not just the total.
+2. For every document that LOST provisions, read the removed rows.
+3. State, per removal class, why it was junk — with the text quoted.
+
+"Every removal verified to sit inside an endnote block" is the standard. A
+number alone is not evidence.
+
+The working rule that replaced the cap follows **the table's own 1, 2, 3
+numbering** and stops at the first heading that does not continue the
+sequence — so a real section can never be absorbed however closely it sits.
+That is the shape to aim for: a bound the structure itself provides, not a
+character budget you chose.
+
+### A mislabelled pinpoint is invisible to a count and visible only to a query
+
+`schedule_spans` matched the line `Schedule 2 commencement day means the day on
+which Schedule 2 to the amending Act commences` — a DEFINITION inside Schedule
+1, not a heading. Every section after it was labelled a clause of Schedule 2,
+so Fair Work **s 47A became `Sch 2 cl 47A`**: a citation to a provision that
+does not exist.
+
+The provision count was unchanged. Every provision was still there, still
+retrievable, still returned at rank 1. Nothing in the totals moved.
+
+**It was caught by CALIBRATION, not by any test:** recall fell to 0.952,
+because the labelled query naming s 47A stopped matching its target.
+
+So: **anything that changes `section_number` invalidates the labelled set
+silently. Run calibration after a splitter change, not only after a corpus
+change.** Tell the ORCHESTRATOR when your change touches how a provision is
+identified, so WORKER-2 is sequenced behind you. Two regression tests now
+guard this specific case.
+
 ### Two further lessons from the same episode
 
 - **A Schedule clause is law. Keep it, and number it as what it is** —

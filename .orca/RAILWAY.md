@@ -33,6 +33,24 @@ MCP profile, which still holds exactly three tools and no write access. Running
 an operator command by hand does **not** put write tools back in the agent's
 hands, and nothing here may change that.
 
+## Two paths, and who gets which
+
+**Workers get `.orca/ro.sh`.** It points both `MICHAEL_DATABASE_URL` and
+`MICHAEL_RO_DATABASE_URL` at the `michael_ro` role, so every statement runs in
+a session with `default_transaction_read_only = on`. A write is refused by
+Postgres, not by a promise: `michael ingest` through the helper fails with
+`ReadOnlySqlTransaction: cannot execute INSERT in a read-only transaction`.
+
+**The operator gets `railway ssh` directly.** That reaches the read/write role
+and is how ingestion, restores and schema work are done.
+
+The boundary is real but not complete, and it is worth being honest about the
+limit: the Railway CLI session is machine-wide, so a worker that ignores the
+protocol and calls `railway ssh` itself still reaches the write role. The only
+full boundary is a separate environment with its own database. Until then,
+`ro.sh` is the documented path and using anything else is a protocol breach to
+be escalated, not a shortcut.
+
 ## What runs where
 
 | Activity | Where | Why |
