@@ -27,3 +27,6 @@ deploy/.dashboard_hash
 # Operator backups: pg_dump output and pre-change snapshots. Never committed -
 # they carry the whole corpus and are large.
 backups/
+
+# Orchestrator transient inbox dumps
+.orca/*.json
