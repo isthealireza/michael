@@ -235,11 +235,21 @@ function toolLabel(name) {
 }
 
 function inline(text) {
+  /* Escape ONCE, here, then match on the escaped text. The captured groups are
+   * already escaped, so the replacements must not escape them again: doing so
+   * turned "[MISSING: Smith & Co Pty Ltd]" into a flag reading
+   * "Smith &amp; Co Pty Ltd" on screen, and "rate < $30 per hour" into
+   * "rate &lt; $30". Both are shapes a real draft produces - a company name and
+   * a pay rate - so the corruption would reach a reader.
+   *
+   * Escaping first is what keeps this safe: every regex below runs over text
+   * in which < > & " are already entities, so no markup can be reconstructed
+   * out of a capture. */
   let html = esc(text);
   html = html.replace(MISSING, (_m, item) =>
-    `<span class="missing">MISSING: ${esc(item.trim())}</span>`);
+    `<span class="missing">MISSING: ${item.trim()}</span>`);
   html = html.replace(CITATION, (_m, act, pin, snap) =>
-    `<span class="cite">${esc(act)} ${esc(pin)}${snap ? esc(snap) : ""}</span>`);
+    `<span class="cite">${act} ${pin}${snap || ""}</span>`);
   return html;
 }
 
