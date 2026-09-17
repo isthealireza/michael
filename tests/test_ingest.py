@@ -19,6 +19,7 @@ from michael.config import settings
 from michael.ingest import (
     schedule_spans,
     IngestionError,
+    _opening_schedule,
     _validate,
     normalise_corpus_records,
     snapshot_date_of,
@@ -1100,3 +1101,170 @@ def test_a_section_after_a_schedule_definition_keeps_its_own_number() -> None:
     assert "Sch 2 cl 47A" not in provisions
     assert "Sch 1 cl 47A" in provisions
     assert provisions["Sch 1 cl 47A"].heading == "Casual employees of small business employers"
+
+
+# Fair Work Act 2009 (Cth) volume 04, excerpted, real and verbatim -
+# sourced from sources/Fair Work Act 2009/C2026C00355VOL04.docx. The real
+# defect: this volume's own table of provisions runs long enough that
+# find_body_start correctly cuts everything before the real body, but the
+# real "Schedule 1" heading sits 220 characters INSIDE that cut - so
+# schedule_spans, which only ever sees the text after the cut, found
+# Schedules 2-5 and never 1. Every Schedule 1 clause fell through with a
+# plain numeric id, colliding with the Act's own section of the same
+# number: real s 47 ("When a modern award applies to an employer...", in
+# volume 01) and Sch 1 cl 47 ("Transitioning casual employees", in this
+# volume) were BOTH stored as section_number "47".
+#
+# Two Schedule 1 headings appear below, both real, both verbatim: the
+# contents-block row (trailing page number "1", the shape that must NOT
+# seed the opener) and the real body heading further down (no trailing
+# number, preceded by a blank line, followed by "Note: See section
+# 795A." - the shape that must).
+FAIR_WORK_VOLUME_04_SCHEDULE_1_OPENING = """Contents
+Schedule 1—Application, saving and transitional provisions relating to amendments of this Act 1
+Part 1—Amendments made by the Fair Work Amendment (Textile, Clothing and Footwear Industry) Act 2012 1
+1 Definitions 1
+2 Section 789BB of amended Act applies to contracts entered into after commencement 1
+3 Effect on TCF contract outworker’s entitlements 2
+4 Fair work instruments etc. made before commencement 2
+5 Application of Division 3 of Part 64A of amended Act 3
+6 Application of subsection 203(2A) of amended Act 3
+7 Regulations dealing with various matters 3
+Part 2—Amendments made by the Superannuation Legislation Amendment (Further MySuper and Transparency Measures) Act 2012 5
+8 Definitions 5
+9 Application of sections 149A and 155A of amended Act 5
+10 FWC to vary certain modern awards 5
+11 FWC to update text of certain modern awards 6
+12 Application of paragraph 194(h) of amended Act 6
+
+Schedule 1—Application, saving and transitional provisions relating to amendments of this Act
+Note: See section 795A.
+Part 1—Amendments made by the Fair Work Amendment (Textile, Clothing and Footwear Industry) Act 2012
+
+1 Definitions
+In this Part:
+amended Act means this Act as amended by the amending Act.
+amending Act means the Fair Work Amendment (Textile, Clothing and Footwear Industry) Act 2012.
+commencement means the commencement of this Part.
+
+47 Transitioning casual employees
+(1) This clause applies if, before the commencement, a person was a regular casual employee.
+"""
+
+
+def test_a_volume_that_opens_mid_schedule_labels_its_clauses_accordingly() -> None:
+    """The owner's measured defect, reproduced from the real document.
+
+    section_number "47" must not exist here at all - both real occurrences
+    (the Schedule's own clause 1's near-namesake, and clause 47) are inside
+    Schedule 1, because this whole excerpt's operative body opens inside it.
+    A lookup for "Fair Work Act 2009 (Cth) s 47" against the real corpus
+    would otherwise silently resolve to this Schedule clause instead of the
+    real section 47 in volume 01, with no way for the reader to tell.
+    """
+    provisions = {p.section_number: p for p in split_sections(FAIR_WORK_VOLUME_04_SCHEDULE_1_OPENING)}
+    assert "47" not in provisions
+    assert "Sch 1 cl 47" in provisions
+    assert provisions["Sch 1 cl 47"].heading == "Transitioning casual employees"
+    assert "Sch 1 cl 1" in provisions
+    assert provisions["Sch 1 cl 1"].heading == "Definitions"
+
+
+def test_the_schedule_1_seed_ignores_the_contents_rows_own_heading() -> None:
+    """Both Schedule 1 headings in the fixture carry a dash; only one seeds.
+
+    SCHEDULE_HEADING alone cannot tell "Schedule 1—Application, saving and
+    transitional provisions relating to amendments of this Act 1" (a
+    contents row, trailing page number "1") from the real heading with no
+    trailing number - both carry the dash the pattern requires. This is
+    exactly the reasoning _is_contents_entry already applies to section
+    headings, reused here rather than re-derived.
+    """
+    body_start = FAIR_WORK_VOLUME_04_SCHEDULE_1_OPENING.index("\n\nSchedule 1—") + 2
+    assert _opening_schedule(FAIR_WORK_VOLUME_04_SCHEDULE_1_OPENING, body_start) == "1"
+
+
+# Noise Abatement (Noise Labelling of Equipment) Regulations (No. 2) 1985
+# (WA), real and verbatim, in full - only 9 section-like lines precede its
+# real body, one short of CONTENTS_MIN_ENTRIES, so split_sections never cuts
+# this document and _opening_schedule is never reached through it today.
+# Tested directly anyway: found during a sweep of the same 200-document
+# corpus that caught the Bank of Western Australia regression above, and it
+# is exactly the same shape of risk - a document whose Schedules are listed
+# bare, three in a row, each with its title wrapped onto its own line
+# ("Schedule 2\nImplementation dates\nSchedule 3\n..."), which without
+# skipping every one of them made the lookahead see real prose one line too
+# early. A larger contents block - a future amendment, a different
+# compilation - would reach this same path for real.
+NOISE_ABATEMENT_REGULATIONS_1985 = """Western Australia
+Environmental Protection Act 1986 2
+Noise Abatement (Noise Labelling of Equipment) Regulations (No. 2) 1985
+Western Australia
+Noise Abatement (Noise Labelling of Equipment) Regulations (No. 2) 1985
+Contents
+1. Citation 1
+2. Interpretation 1
+3. Equipment to be labelled 1
+4. Label to be correct 2
+5. Equipment not to be altered 2
+6. Inspection of equipment 2
+Schedule 1
+Equipment
+Schedule 2
+Implementation dates
+Schedule 3
+Acoustic output descriptors and labels
+1. Mobile Air Compressor — 5
+2. Pavement Breaker — 6
+3. Air‑conditioner — 7
+Notes
+Compilation table 8
+Defined terms
+Western Australia
+Environmental Protection Act 1986 2
+Noise Abatement (Noise Labelling of Equipment) Regulations (No. 2) 1985
+
+1. Citation
+These regulations may be cited as the Noise Abatement (Noise Labelling of Equipment) Regulations (No. 2) 1985 1.
+
+2. Interpretation
+In these regulations unless the contrary intention appears —
+acoustic output descriptor means the quantity obtained when the test procedure specified in paragraph (b) of the appropriate item in Schedule 3 is used.
+"""
+
+
+def test_a_run_of_bare_schedule_headings_each_with_a_wrapped_title_is_not_a_seed() -> None:
+    """Three Schedules listed bare, back to back, each title on its own line.
+
+    Skipping only the title of the Schedule heading being tested is not
+    enough: Schedule 2's own lookahead runs straight into Schedule 3's bare
+    heading and then ITS wrapped title, "Acoustic output descriptors and
+    labels", which is not itself a Schedule heading and was read as the real
+    prose that makes a heading genuine. None of the three is real - this
+    whole excerpt is still inside the contents block - so none should seed.
+    """
+    body_start = NOISE_ABATEMENT_REGULATIONS_1985.index("\n\n1. Citation") + 2
+    assert _opening_schedule(NOISE_ABATEMENT_REGULATIONS_1985, body_start) is None
+
+
+TICKET_SCALPING_HAS_NO_SCHEDULE_HEADING = "Schedule" not in TICKET_SCALPING_ACT_2021
+
+
+def test_a_document_with_no_schedule_before_the_body_keeps_plain_ids() -> None:
+    """The regression this fix must not cause: no Schedule, no relabelling.
+
+    Defaulting to a Schedule context whenever the contents block simply
+    happens to be long enough would relabel every ordinary section of a
+    single-volume Act as a clause - the same shape of error as the
+    monotonic floor, wrong in the direction that corrupts citations. The
+    Ticket Scalping Act 2021 (WA) fixture above has no Schedule at all: its
+    18 real sections must all keep plain numeric ids.
+    """
+    assert TICKET_SCALPING_HAS_NO_SCHEDULE_HEADING
+    body_start_of_ticket_scalping = TICKET_SCALPING_ACT_2021.index("\n\nPart 1")
+    assert _opening_schedule(TICKET_SCALPING_ACT_2021, body_start_of_ticket_scalping) is None
+
+    provisions = split_sections(TICKET_SCALPING_ACT_2021)
+    assert len(provisions) == 18
+    assert all(not p.section_number.startswith("Sch") for p in provisions)
+    assert [p.section_number for p in provisions] == [str(n) for n in range(1, 19)]

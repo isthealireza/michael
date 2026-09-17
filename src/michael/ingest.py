@@ -63,6 +63,21 @@ STRUCTURAL_PREFIXES = (
     "notes",
     "compilation table",
     "defined terms",
+    # A compilation reprint repeats "Western Australia" as a running header -
+    # once at the top of the document, again just past the table of
+    # provisions. It is boilerplate, never the first word of an operative
+    # sentence, but nothing else here recognises it: found only when
+    # extending the prose lookahead in find_body_start to Schedule headings
+    # too (_opening_schedule), where an untitled reprint's contents block
+    # ends "Schedule 1 - <title>", "Notes", "Compilation table N", "Western
+    # Australia" - and that last line, unrecognised, looked like the real
+    # prose that tells the lookahead a heading is genuine.
+    "western australia",
+    # The same reprint boilerplate, a different sentence: "Reprinted under
+    # the Reprints Act 1984 as at <date>" appears, sometimes indented, in
+    # the same spot "Western Australia" does - between the contents block's
+    # tail and the repeated document title.
+    "reprinted under the reprints act",
 )
 
 #: How many section-like lines must precede the body before we believe we have
@@ -89,8 +104,8 @@ def _ends_in_bare_number(line: str) -> bool:
     return len(tail) == 2 and tail[1].isdigit()
 
 
-def _is_contents_entry(line: str, *, previous: str = "", following: str = "") -> bool:
-    """True when ``line`` is a row of a table of provisions, not an operative heading.
+def _is_paginated_row(stripped: str, *, previous: str = "", following: str = "") -> bool:
+    """True when a trailing bare number on ``stripped`` is a page reference.
 
     A trailing bare number is not, by itself, evidence of anything: a page
     reference (``15A Meaning of casual employee 68``) and a cited Act's year
@@ -100,21 +115,30 @@ def _is_contents_entry(line: str, *, previous: str = "", following: str = "") ->
     because a plausible year and a plausible page number overlap completely.
 
     What differs is what is *around* the number. A table of provisions paginates
-    every row - Part, Division and section headings alike - so its rows cluster:
-    each one ends in a bare number, and so does its neighbour. A cited year is
-    part of the heading's own text; it appears whether or not the row before or
-    after it does the same, because a compiled Act's body is not paginated
-    inline. So the number is only a page reference when a neighbouring row - the
-    line directly above or below ``line`` in the source document - carries one
-    too. ``previous`` and ``following`` are exactly that: real, adjacent lines,
-    not a guess about the number itself.
+    every row - Part, Division, section and Schedule headings alike - so its
+    rows cluster: each one ends in a bare number, and so does its neighbour. A
+    cited year is part of the heading's own text; it appears whether or not the
+    row before or after it does the same, because a compiled Act's body is not
+    paginated inline. So the number is only a page reference when a
+    neighbouring row - the line directly above or below it in the source
+    document - carries one too. ``previous`` and ``following`` are exactly
+    that: real, adjacent lines, not a guess about the number itself.
+
+    This is the shared reasoning behind :func:`_is_contents_entry` (section
+    headings) and the Schedule-heading check in :func:`_opening_schedule`
+    below - one claim about pagination, applied to two shapes of heading.
     """
-    stripped = line.strip()
-    if not SECTION_RE.match(stripped):
-        return False
     if not _ends_in_bare_number(stripped):
         return False
     return _ends_in_bare_number(previous) or _ends_in_bare_number(following)
+
+
+def _is_contents_entry(line: str, *, previous: str = "", following: str = "") -> bool:
+    """True when ``line`` is a row of a table of provisions, not an operative heading."""
+    stripped = line.strip()
+    if not SECTION_RE.match(stripped):
+        return False
+    return _is_paginated_row(stripped, previous=previous, following=following)
 
 
 def _adjacent_lines(text: str, position: int) -> tuple[str, str]:
@@ -375,6 +399,104 @@ def schedule_spans(text: str) -> list[tuple[int, str]]:
     return [(m.start(), m.group(1).upper()) for m in SCHEDULE_HEADING.finditer(text)]
 
 
+def _opening_schedule(text: str, body_start: int) -> str | None:
+    """The Schedule a document's operative body starts *inside*, if any.
+
+    A compilation volume is not always the whole Act. Fair Work Act volume 04
+    begins mid-Schedule 1: its own table of provisions runs long enough that
+    ``find_body_start`` correctly cuts everything before the real body - but
+    the real "Schedule 1" heading sits inside that cut, at char 20,902,
+    900 characters before ``body_start`` at 21,122. ``schedule_spans`` only
+    ever sees the text *after* the cut, so it finds Schedules 2 to 5 and never
+    1: every Schedule 1 clause falls through with a plain numeric id,
+    colliding with the Act's own section of the same number - Fair Work
+    s 47 and Sch 1 cl 47 both stored as "47".
+
+    So: look for a Schedule heading in the ORIGINAL, uncut text, at or before
+    ``body_start``, and use the last one found - the Schedule the cut text
+    opens inside. Two things matter for this to be safe, and both were needed
+    - a version checked only against Fair Work volume 04 passed while the
+    first still misfired on a second, unrelated real Act:
+
+    - **It must be a real heading, not a contents row - checked two ways, not
+      one.** The table of provisions being cut away lists "Schedule 1-...
+      relating to amendments of this Act 1" with a trailing page number; the
+      real heading, further on, has none. :data:`SCHEDULE_HEADING` cannot
+      tell them apart on its own - both carry a dash after the number - so
+      this first tries :func:`_is_paginated_row`, the pagination-clustering
+      check :func:`_is_contents_entry` already makes for section headings.
+      That alone is not enough: the real Bank of Western Australia Act 1995
+      (WA)'s own contents block has a Schedule row with NO trailing page
+      number at all - a rendering gap in that document, not evidence of a
+      real heading - and pagination-only wrongly seeded "Sch 2" from the very
+      start of that Act's body, mislabelling its own real section 1. So this
+      also asks the same question :func:`find_body_start` asks of a
+      candidate: is it followed, within a line or two, by something that is
+      not itself another heading - real prose? A contents-row Schedule
+      heading is followed by more contents rows; a real one is followed by
+      the Schedule's own text. Both checks must agree.
+    - **A bare "Schedule N", with no title on the same line, has its title
+      on the next one** - "Schedule I\nSingle sideband installations",
+      "Schedule 3\nAcoustic output descriptors and labels" - and that title
+      is not operative prose either, however little it resembles a heading
+      itself. Not skipping it made the lookahead see real text one line too
+      early and wrongly call several WA regulations' own contents rows
+      real headings - and it recurs: three Schedules listed back to back,
+      each bare with its title wrapped ("Schedule 1\nEquipment\nSchedule
+      2\nImplementation dates\nSchedule 3\n..."), needs the same skip
+      applied to every one of them met while looking ahead, not only the
+      one being tested - so the lookahead walks forward line by line
+      rather than taking a fixed slice, treating each further bare
+      "Schedule N" it meets, and the wrapped title after it, as structural
+      too.
+    - **Finding nothing means nothing.** A single-volume Act with no Schedule
+      heading before its body starts must keep plain section ids - the same
+      shape of error as the monotonic floor, wrong in the direction that
+      corrupts citations, so this returns ``None`` rather than guessing.
+    """
+    lines, offsets = _line_index(text)
+    last_real: str | None = None
+    for match in SCHEDULE_HEADING.finditer(text):
+        if match.start() > body_start:
+            break
+        line_end = text.find("\n", match.start())
+        line = text[match.start() : line_end if line_end != -1 else len(text)]
+        previous, following = _adjacent_lines(text, match.start())
+        if _is_paginated_row(line.strip(), previous=previous, following=following):
+            continue
+        index = bisect.bisect_right(offsets, match.start()) - 1
+        lookahead_start = index + 1
+        if re.fullmatch(r"schedule\s+\S+", line.strip(), re.IGNORECASE):
+            lookahead_start += 1  # this heading's own title wraps onto the next line
+        if _has_prose_ahead(lines, lookahead_start):
+            last_real = match.group(1).upper()
+    return last_real
+
+
+def _has_prose_ahead(lines: list[str], start: int) -> bool:
+    """Does real prose appear within :data:`PROSE_LOOKAHEAD` lines of ``start``?
+
+    Walked rather than sliced: a bare "Schedule N" met while looking ahead is
+    itself structural, and so - not operative prose, however little it
+    resembles a heading - is the line right after it, that Schedule's own
+    title wrapped onto its own line. Skipping both lets a run of several such
+    headings, back to back, be walked through without any of their wrapped
+    titles being mistaken for the real prose this is looking for.
+    """
+    found = 0
+    index = start
+    while index < len(lines) and found < PROSE_LOOKAHEAD:
+        line = lines[index]
+        if re.fullmatch(r"schedule\s+\S+", line.strip(), re.IGNORECASE):
+            index += 2  # the heading, and its wrapped title
+            continue
+        if not _is_structural(line):
+            return True
+        found += 1
+        index += 1
+    return False
+
+
 def find_body_start(text: str) -> int | None:
     """Character offset where the operative text begins, or None if not found.
 
@@ -448,10 +570,15 @@ def split_sections(text: str) -> list[Provision]:
     # produce duplicate citations and, being short, outrank the real sections
     # under BM25 length normalisation.
     offset = 0
+    opening_schedule: str | None = None
     body_start = find_body_start(text)
     if body_start is not None:
         preceding = sum(1 for _ in SECTION_RE.finditer(text[:body_start]))
         if preceding >= CONTENTS_MIN_ENTRIES:
+            # A compilation volume can begin mid-Schedule: find the real
+            # Schedule heading, if any, that the cut text opens inside -
+            # before the cut, so it still sees what the cut removes.
+            opening_schedule = _opening_schedule(text, body_start)
             offset = body_start
             text = text[body_start:]
 
@@ -480,6 +607,13 @@ def split_sections(text: str) -> list[Provision]:
     provisions: list[Provision] = []
     lines, offsets = _line_index(text)
     schedules = schedule_spans(text)
+    if opening_schedule is not None:
+        # The body (post-cut) opens inside this Schedule, before any Schedule
+        # heading schedule_spans can see within it - so it applies from the
+        # very first character until a real in-body heading takes over.
+        # Position -1, not 0: a clause can itself start at char 0 of the cut
+        # text, and "enclosing" below is a strict "<" on position.
+        schedules = [(-1, opening_schedule), *schedules]
     apparatus = apparatus_rows(text, matches)
     for index, match in enumerate(matches):
         start = match.start()
