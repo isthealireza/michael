@@ -339,7 +339,16 @@ def find_body_end(text: str, body_start: int) -> int | None:
 #: "Column 1" heads a formal table, the commencement table in section 2 above
 #: all. "Notes for this section:" heads an explanatory note list.
 APPARATUS_OPENERS = re.compile(
-    r"^(?:column\s+1\b|notes?\b[^\n]*for this section\s*:)",
+    # A "Note:" line opens a note block just as the longer "Notes for this
+    # section:" does. Offshore Minerals Act 2003 (WA) carries 31 of them, each
+    # followed by items numbered from 1, so each became another section 1
+    # competing with the real Short title provision - 32 provisions under one
+    # pinpoint. The colon is required and is the whole difference between a
+    # note block and a front-matter heading: Chattel Securities Regulations
+    # 1988 (WA) lists a bare "Notes" line in its contents immediately before
+    # the body, and matching that suppressed the entire document, all eight
+    # provisions of it.
+    r"^(?:column\s+1\b|notes?\b[^\n]*for this section\s*:|notes?[ \t]*:[ \t]*$)",
     re.IGNORECASE | re.MULTILINE,
 )
 

@@ -1268,3 +1268,54 @@ def test_a_document_with_no_schedule_before_the_body_keeps_plain_ids() -> None:
     assert len(provisions) == 18
     assert all(not p.section_number.startswith("Sch") for p in provisions)
     assert [p.section_number for p in provisions] == [str(n) for n in range(1, 19)]
+
+
+def test_a_note_block_after_a_section_is_not_a_second_section_one() -> None:
+    """Reduced from Offshore Minerals Act 2003 (WA) around char 47,564.
+
+    The Act carries 31 "Note:" blocks. Each numbers its items from 1, and each
+    produced a provision citing s 1 - 32 provisions under one pinpoint - so a
+    search for section 1 could return "For 'petroleum' see section 5" cited as
+    the Short title section.
+    """
+    text = (
+        '1. Short title\n'
+        'This Act may be cited as the Offshore Minerals Act 2003.\n'
+        '\n'
+        '35. Act does not apply to exploration for or recovery of petroleum\n'
+        'This Act does not apply to the exploration for or recovery of petroleum.\n'
+        'Note:\n'
+        '1. For "petroleum" see section 5.\n'
+        '2. Offshore petroleum exploration and mining are regulated by the '
+        'Petroleum (Submerged Lands) Act 1967 of the Commonwealth.\n'
+        '\n'
+        '36. Section number not used\n'
+        'See note 2 to section 3(1).\n'
+    )
+    numbers = [p.section_number for p in ingest.split_sections(text)]
+    assert numbers.count('1') == 1, numbers
+    assert '35' in numbers and '36' in numbers
+
+
+def test_a_bare_notes_line_does_not_suppress_the_document() -> None:
+    """Reduced from Chattel Securities Regulations 1988 (WA).
+
+    Its contents list ends with a bare "Notes" line immediately before the
+    body. Treating that as a note opener suppressed every provision in the
+    document - all eight of them. The colon is what separates the two, so
+    this is the case that keeps the pattern honest.
+    """
+    text = (
+        'Notes\n'
+        'Compilation table 9\n'
+        '\n'
+        '1. Citation\n'
+        'These regulations may be cited as the Chattel Securities '
+        'Regulations 1988.\n'
+        '\n'
+        '2. Commencement\n'
+        'These regulations come into operation on the day on which the Act '
+        'comes into operation.\n'
+    )
+    numbers = [p.section_number for p in ingest.split_sections(text)]
+    assert numbers == ['1', '2'], numbers
