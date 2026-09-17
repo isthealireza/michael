@@ -75,6 +75,44 @@ base64-encoded, because your local shell parses `railway ssh` arguments first;
 and run `railway ssh` from bash, because PowerShell 5.1 swallows a native
 command's stderr and a real failure then looks like empty output.
 
+## A test that cannot fail on the documents the feature is for is not evidence
+
+This has now arrived three times in one week, at three different layers. Read
+it as a property of tests, not a fact about splitters.
+
+1. **The monotonic section floor.** Five hand-cut fixtures passed. The
+   mechanism cut 1,199 provisions, 13% of the corpus.
+2. **The clause splitter.** The plan asserted "Expected: 7 passed" for a
+   reference implementation nobody had run. Six passed: `CAPS_CLAUSE` ate the
+   document's own title.
+3. **The comparison layer.** A test named
+   `test_identical_documents_report_no_changes` passed on a six-line fixture,
+   while the implementation it guarded violated the feature's central invariant
+   on any real contract — `compare()` keyed a dict on `clause_id`, and clause
+   ids are not unique, so 16 of fixture 2's 153 clauses were discarded before
+   the comparison began. Editing a word in a discarded clause reported **zero
+   changes**.
+
+The common shape: **the fixture was small enough, and regular enough, that the
+defect had nowhere to show.** Unique ids in every fixture meant no collision.
+Six lines meant no table of contents, no annex, no renumbering.
+
+So:
+
+- **Every layer needs its own real-document gate, not only the splitter.** A
+  gate at one layer does not protect the layer above it. Task 3 proved the
+  splitter on real contracts; the comparison layer built on top of it inherited
+  none of that assurance and had to be caught separately.
+- **Ask of any invariant: what document would violate this, and is that
+  document in my fixtures?** If the answer is no, the test is decoration.
+- **A guarantee at one layer is not inherited by the next.** The splitter
+  guarantees nothing is dropped. The comparison layer silently did not. If a
+  layer depends on an upstream guarantee, assert it at your own boundary.
+
+When you are given a plan, this applies to the plan's tests too. Implementing
+them faithfully is correct — and saying "these fixtures cannot express the
+failure this invariant is about" is also correct, and is wanted.
+
 ## The rules that will bite you most often
 
 1. Stop and ask before any step that deletes data or changes `MICHAEL.md`.
