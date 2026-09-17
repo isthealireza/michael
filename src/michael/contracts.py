@@ -136,10 +136,16 @@ def normalise(text: str) -> str:
 
 
 #: Above this ratio, two clauses with different ids are taken to be the same
-#: clause, edited. A GUESS. Task 10 measures it against a labelled set of real
-#: before/after pairs, the way RETRIEVAL_MIN_SCORE was measured. Until then it
-#: is not described as calibrated.
-SIMILARITY_THRESHOLD = 0.6
+#: clause, edited. MEASURED 2026-09-17 against calibration/labelled_clause_pairs.json
+#: (18 same-clause, 11 different-clause real pairs from tests/fixtures/contracts/):
+#: 0.74 is the highest threshold that maximises correct pairings (28/29, 0 wrong
+#: pairings, 1 missed pairing), tied with every value from 0.55 through 0.74 and
+#: resolved toward the higher one, per calibration/calibrate_similarity.py. This
+#: is a readability parameter, not a safety parameter: unlike RETRIEVAL_MIN_SCORE,
+#: neither a threshold set too low (a wrong pairing, printed as a false CHANGED)
+#: nor too high (a missed pairing, printed as true but verbose ADDED+REMOVED) is
+#: silent, so the target is maximising correct pairings, not zero false positives.
+SIMILARITY_THRESHOLD = 0.74
 
 #: Above this many unpaired clauses on either side, stage 3 is skipped and the
 #: remainder reported as ADDED/REMOVED. Bounds an O(u^2) scan.

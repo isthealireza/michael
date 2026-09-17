@@ -1,0 +1,174 @@
+{
+  "note": "Real clause text drawn from tests/fixtures/contracts/. same_clause is one real clause's text (\"before\") with one small, realistic edit applied by hand (\"after\") - a number, a day count, a must/may swap, or an added qualifier, the same edit style the design doc's own worked example uses (V1.replace('within 30 days', 'within 60 days')). different_clause is two genuinely different clauses on a similar or identical topic, drawn verbatim from the fixtures with no editing at all - this is the set that tests for a false CHANGED, where a threshold set too low pairs two clauses that merely share a subject. Every entry names its fixture file and the clause heading or id it came from, so it can be checked against the source.",
+  "same_clause": [
+    {
+      "source": "01_inhouse_casual_employment_contract.md clause 8.1 (Confidentiality)",
+      "before": "The Employee must not use or disclose the Employer's confidential information except as required to perform the work or as required by law.",
+      "after": "The Employee must not use or disclose the Employer's confidential information except as required to perform the work, as required by law, or as agreed in writing by the Employer."
+    },
+    {
+      "source": "01_inhouse_casual_employment_contract.md clause 9.1 (WHS)",
+      "before": "The Employee must comply with the Employer's work health and safety policies and take reasonable care for their own health and safety and that of others.",
+      "after": "The Employee must comply with the Employer's work health and safety policies and take all reasonable care for their own health and safety and that of others."
+    },
+    {
+      "source": "01_inhouse_casual_employment_contract.md clause 10.2 (Termination - misconduct)",
+      "before": "Nothing in this clause limits the Employer's right to terminate without notice for serious misconduct, or the Employee's rights under the Fair Work Act 2009 (Cth).",
+      "after": "Nothing in this clause limits the Employer's right to terminate without notice for serious misconduct or repeated minor misconduct, or the Employee's rights under the Fair Work Act 2009 (Cth)."
+    },
+    {
+      "source": "01_inhouse_casual_employment_contract.md clause 11.1 (Entire agreement)",
+      "before": "This document records the whole agreement between the parties about the employment and replaces any earlier understanding about it.",
+      "after": "This document records the whole agreement between the parties about the employment and replaces and supersedes any earlier understanding about it."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, DISPUTE RESOLUTION",
+      "before": "Within 10 Business Days after service of a notice of dispute, the parties must confer at least once to resolve the dispute. If the dispute has not been resolved within 20 Business Days of service of the notice of dispute, either party may commence legal proceedings.",
+      "after": "Within 15 Business Days after service of a notice of dispute, the parties must confer at least once to resolve the dispute. If the dispute has not been resolved within 30 Business Days of service of the notice of dispute, either party may commence legal proceedings."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, Termination of Contract for convenience (clause 18.3)",
+      "before": "The Principal may terminate this Contract for any reason, and at its complete discretion, by serving a notice on the Consultant requiring that this Contract terminate on a date specified in the notice being not less than 30 days from the date of the notice.",
+      "after": "The Principal may terminate this Contract for any reason, and at its complete discretion, by serving a notice on the Consultant requiring that this Contract terminate on a date specified in the notice being not less than 60 days from the date of the notice."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, INSURANCE (Continuing Obligation)",
+      "before": "The professional indemnity insurance (if any) required under clause 13.2 is to be maintained throughout the Term and for a period of 6 years after the expiration or termination of the Contract.",
+      "after": "The professional indemnity insurance (if any) required under clause 13.2 is to be maintained throughout the Term and for a period of 3 years after the expiration or termination of the Contract."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, CONFIDENTIALITY",
+      "before": "The Consultant's obligations under this clause 10 are a continuing obligation and will survive the expiration or earlier termination of this Contract.",
+      "after": "The Consultant's obligations under this clause 10 are a continuing obligation and will survive the expiration or earlier termination of this Contract for a period of 5 years."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, CONFLICT OF INTEREST",
+      "before": "If an actual, potential or perceived conflict of interest arises the Consultant must: promptly notify the Principal and any relevant parties that the conflict has arisen and provide full details; and take reasonable steps in consultation with the Principal and any relevant parties to resolve the conflict.",
+      "after": "If an actual, potential or perceived conflict of interest arises the Consultant must: promptly notify the Principal and any relevant parties that the conflict has arisen and provide full details; and take all reasonable steps, at its own cost, in consultation with the Principal and any relevant parties to resolve the conflict."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, NO ASSIGNMENT",
+      "before": "The Consultant must not sell, assign, novate, transfer, mortgage, charge or otherwise dispose of or deal with any of its rights or obligations under this Contract or Head Agreement without the written consent of the Principal, which consent will not be unreasonably withheld.",
+      "after": "The Consultant must not sell, assign, novate, transfer, mortgage, charge or otherwise dispose of or deal with any of its rights or obligations under this Contract or Head Agreement without the written consent of the Principal, which consent may be withheld in the Principal's absolute discretion."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, RELATIONSHIP",
+      "before": "The Contract or Head Agreement as the case may be, does not create a relationship of employment, trust, agency, partnership or joint venture between the parties.",
+      "after": "The Contract or Head Agreement as the case may be, does not create a relationship of employment, trust, agency, partnership, joint venture or fiduciary duty between the parties."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, GOVERNMENT POLICY",
+      "before": "The Consultant must comply with obligations under Government procurement policies specified in the Contract Details and the Head Agreement Details, if any.",
+      "after": "The Consultant must comply with obligations under Government procurement policies and Aboriginal procurement policies specified in the Contract Details and the Head Agreement Details, if any."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, Annexure A Deed of Novation, GOVERNING CLAUSES (Governing law and jurisdiction)",
+      "before": "The law of Western Australia governs this deed.",
+      "after": "The law of Western Australia governs this deed and any dispute arising from it."
+    },
+    {
+      "source": "02_wa_gov_general_conditions_consultancy_agreement.docx, Annexure A Deed of Novation, NOTICES (Delivery)",
+      "before": "A party must send a notice to the other party at the address listed on page 1.",
+      "after": "A party must send a notice to the other party at the address listed on page 1, or by email if agreed in writing."
+    },
+    {
+      "source": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part B, PETS",
+      "before": "The tenant must ask the lessor for consent to keep the pet and the lessor must respond within 14 days.",
+      "after": "The tenant must ask the lessor for consent to keep the pet and the lessor must respond within 7 days."
+    },
+    {
+      "source": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part A, SECURITY BOND",
+      "before": "Unless the rent for the premises exceeds $1,200 per week, the security bond must not exceed the sum of 4 weeks' rent plus a pet bond not exceeding $350.",
+      "after": "Unless the rent for the premises exceeds $1,500 per week, the security bond must not exceed the sum of 6 weeks' rent plus a pet bond not exceeding $350."
+    },
+    {
+      "source": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part B, RENT",
+      "before": "The lessor or property manager must not: require the tenant to pay more than 2 weeks rent in advance.",
+      "after": "The lessor or property manager must not: require the tenant to pay more than 4 weeks rent in advance."
+    },
+    {
+      "source": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part B, NOTICES",
+      "before": "A notice under this agreement may be given to a person: by giving it to the person directly.",
+      "after": "A notice under this agreement must be given to a person: by giving it to the person directly."
+    }
+  ],
+  "different_clause": [
+    {
+      "topic": "liability",
+      "source_a": "02_wa_gov_general_conditions_consultancy_agreement.docx, clause 14.1 Indemnity",
+      "a": "To the extent permitted by law, the Consultant irrevocably and continually indemnifies the Principal in respect of any and all actions, claims, proceedings, losses, costs, expenses and damage that may be made, brought against, suffered or incurred by the Principal directly or indirectly in connection with any Indemnified Event and for any Indemnified Payments.",
+      "source_b": "02_wa_gov_general_conditions_consultancy_agreement.docx, clause 14.2 Limitation of Liability",
+      "b": "To the extent permitted by law, the liability of the Consultant to the Principal arising under or in connection with this Contract or Head Agreement is limited in the aggregate to the amount expressly specified in the Request (if any), except with respect to: personal injury (including psychological injury) or death; infringement of IP Rights; fraudulent, malicious or criminal conduct; wilful default; or conduct with reckless disregard for the consequences, of or by the Consultant or the Consultant's Personnel."
+    },
+    {
+      "topic": "termination, different triggers",
+      "source_a": "02_wa_gov_general_conditions_consultancy_agreement.docx, Termination of Contract for cause (clause 18.2)",
+      "a": "Without limitation to clause 18.3, the Principal may terminate a Contract with immediate effect by notice to the Consultant if: An Event of Default occurs except to the extent that the right is stayed by operation of section 41; in the reasonable opinion of the Principal the Services will not be completed by the Consultant in accordance with this Contract due to any event or circumstances; or the Consultant fails, refuses or neglects to comply with any instruction or direction lawfully given to it by the Principal pursuant to this Contract.",
+      "source_b": "02_wa_gov_general_conditions_consultancy_agreement.docx, Termination of Contract for convenience (clause 18.3)",
+      "b": "The Principal may terminate this Contract for any reason, and at its complete discretion, by serving a notice on the Consultant requiring that this Contract terminate on a date specified in the notice being not less than 30 days from the date of the notice."
+    },
+    {
+      "topic": "termination, different triggers, second contract",
+      "source_a": "01_inhouse_casual_employment_contract.md, clause 10.1 (ordinary termination)",
+      "a": "Either party may end an engagement in accordance with the notice requirements in the Fair Work Act 2009 (Cth) and {{MODERN_AWARD_NAME}}. Notice period as instructed: {{NOTICE_PERIOD}}.",
+      "source_b": "01_inhouse_casual_employment_contract.md, clause 10.2 (termination for serious misconduct)",
+      "b": "Nothing in this clause limits the Employer's right to terminate without notice for serious misconduct, or the Employee's rights under the Fair Work Act 2009 (Cth)."
+    },
+    {
+      "topic": "confidentiality, two different contracts",
+      "source_a": "02_wa_gov_general_conditions_consultancy_agreement.docx, CONFIDENTIALITY",
+      "a": "The Consultant must keep the Confidential Information confidential. The Consultant must not use or disclose to any person the Confidential Information except: where necessary for the purpose of supplying the Services; as authorised in writing by the Principal; to the extent that the Confidential Information is public knowledge (other than because of a breach of this clause by the Consultant); as required by any law, judicial or parliamentary body or governmental agency.",
+      "source_b": "01_inhouse_casual_employment_contract.md, clause 8.1",
+      "b": "The Employee must not use or disclose the Employer's confidential information except as required to perform the work or as required by law."
+    },
+    {
+      "topic": "pets, same contract, Part A summary vs Part B full clause",
+      "source_a": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part A, PETS",
+      "a": "The pets listed may be kept at the premises [please specify]: Type: Number: Type: Number: The following conditions apply to the keeping of pets at the premises: Cleaning, maintenance or fumigation: [please specify] Other conditions: [please specify] Note: A tenant must have the consent of the lessor to keep a pet at the premises. A lessor can only refuse consent in certain circumstances. Any conditions on the keeping of a pet must be reasonable. Consent is not required to keep an assistance animal.",
+      "source_b": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part B, PETS",
+      "b": "The tenant may keep a pet at the premises with the consent of the lessor. The tenant must ask the lessor for consent to keep the pet and the lessor must respond within 14 days. The lessor can only refuse consent in limited circumstances, including where a written law, local law or scheme by-law does not permit the pet. If the lessor wants to refuse for another reason, they must get the approval of the Commissioner for Consumer Protection."
+    },
+    {
+      "topic": "security bond, same contract, amount clause vs release-procedure clause",
+      "source_a": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part A, SECURITY BOND",
+      "a": "A security bond of [insert amount] $____________and a pet bond of [insert amount] $____________must be paid by the tenant on signing this agreement. Note: Unless the rent for the premises exceeds $1,200 per week, the security bond must not exceed the sum of 4 weeks' rent plus a pet bond not exceeding $350 (if a pet is permitted to be kept at the premises).",
+      "source_b": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part B, SECURITY BOND",
+      "b": "The security bond is held by the Bond Administrator. One, some or all the parties to the residential tenancy agreement may apply to the Bond Administrator for the release of the security bond (\"security bond release application\"). The lessor agrees that if the lessor or the property manager makes a security bond release application for all or part of the security bond to be released to the lessor, the lessor or property manager will provide the tenant with evidence to support the amount that the lessor is claiming."
+    },
+    {
+      "topic": "rent, same contract, payment-method clause vs obligations clause",
+      "source_a": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part A, RENT",
+      "a": "The rent is [insert amount] $_____________ per week/calculated by reference to tenants income [insert calculation] ______________________ Payable weekly/fortnightly* in advance starting on _____/_______/_______.",
+      "source_b": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part B, RENT",
+      "b": "The tenant must pay rent on time or the lessor may issue a notice of termination and, if the rent is still not paid in full, the lessor may take action through the court to evict the tenant. The tenant must not withhold rent because the tenant is of the view that the lessor is in breach of the agreement. The lessor or property manager must not: require the tenant to pay more than 2 weeks rent in advance; or require the tenant to pay rent by post-dated cheque; or use rent paid by the tenant for the purpose of any amount payable by the tenant other than rent; or require the tenant to pay any monetary amount other than rent, security bond and pet bond."
+    },
+    {
+      "topic": "governing law, two contracts in the same file",
+      "source_a": "02_wa_gov_general_conditions_consultancy_agreement.docx, GENERAL PROVISIONS, Applicable Law",
+      "a": "The Contract and the Head Agreement as the case may be, is governed by the law of Western Australia and each party irrevocably and unconditionally submits to the non-exclusive jurisdiction of the courts of Western Australia.",
+      "source_b": "02_wa_gov_general_conditions_consultancy_agreement.docx, Annexure A Deed of Novation, GOVERNING CLAUSES, Governing law and jurisdiction",
+      "b": "The law of Western Australia governs this deed. The parties submit to the exclusive jurisdiction of the courts of Western Australia, the Federal Circuit Court and the Federal Court of Australia."
+    },
+    {
+      "topic": "entire agreement, two contracts in the same file",
+      "source_a": "02_wa_gov_general_conditions_consultancy_agreement.docx, GENERAL PROVISIONS, Entire Agreement",
+      "a": "The Contract and the Head Agreement as the case may be, constitutes the entire agreement between the parties in connection with its subject matter and supersedes all previous agreements or understandings between the parties in connection with its subject matter.",
+      "source_b": "02_wa_gov_general_conditions_consultancy_agreement.docx, Annexure A Deed of Novation, GOVERNING CLAUSES, Entire agreement",
+      "b": "This deed constitutes the entire agreement in respect of its subject matter between the parties and supersedes all previous discussions, undertakings and agreements."
+    },
+    {
+      "topic": "severability, two contracts in the same file",
+      "source_a": "02_wa_gov_general_conditions_consultancy_agreement.docx, GENERAL PROVISIONS, Severability",
+      "a": "The parties agree that a construction of this Contract or Head Agreement which results in all provisions being enforceable is to be preferred to a construction that does not so result. If a provision of this Contract is illegal or unenforceable, only that portion of the provision that is void, illegal or unenforceable may be severed, and the remainder of the provision and this Contract will otherwise continue in full force and effect.",
+      "source_b": "02_wa_gov_general_conditions_consultancy_agreement.docx, Annexure A Deed of Novation, GOVERNING CLAUSES, Severance",
+      "b": "If a provision of this deed is invalid, illegal or unenforceable, then to the extent of the invalidity, illegality or unenforceability, that provision must be ignored in the interpretation of this deed. The remaining provisions of this deed remain in full force and effect."
+    },
+    {
+      "topic": "notices, two different contracts",
+      "source_a": "02_wa_gov_general_conditions_consultancy_agreement.docx, Annexure A Deed of Novation, NOTICES, Delivery",
+      "a": "Subject to a written agreement, which expressly states that the parties may communicate in a different way, the parties must communicate by written notice. A party must send a notice to the other party at the address listed on page 1.",
+      "source_b": "03_wa_gov_form1aa_residential_tenancy_agreement.docx, Part B, NOTICES",
+      "b": "A notice under this agreement must be given: in the prescribed form; or if there is no prescribed form but there is an approved form — in the approved form; or if there is no prescribed form or approved form — in writing. A notice from the tenant to the lessor may be given to the property manager or the lessor's agent."
+    }
+  ]
+}
