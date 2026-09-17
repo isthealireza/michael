@@ -181,6 +181,14 @@ const MISSING = /\[MISSING:\s*([^\]]+)\]/g;
  * sentence left the orphaned asterisks behind in the preceding block, so a
  * VERIFY BEFORE USE block ended with a stray "**" on screen. */
 const NOTICE = /[*_]{0,2}\s*(Internal research only\.[\s\S]{0,220}?practitioner\.)\s*[*_]{0,2}/i;
+/* The classification line. Held to the same standard as a block heading,
+ * and for the same reason: "Internal research only" in the closing notice
+ * and "I'll draft the contract" in prose each carry a classification word,
+ * so a substring test reports a declaration that was never made. Measured
+ * on 42 real outputs, a substring test passes 41 and this passes 23.
+ * Mirrors src/michael/output_check.py - one definition, two runtimes. */
+const CLASSIFICATION = /^[ 	]*#{0,6}[ 	]*\*{0,2}CLASSIFICATION\*{0,2}[ 	]*:.*$/im;
+
 const BLOCK_KEYS = [
   { key: "OPEN ITEMS", cls: "" },
   { key: "VERIFY BEFORE USE", cls: "verify" },
@@ -271,7 +279,20 @@ function renderAnswer(raw, partial) {
       <div class="b">${inline(nc[0].trim())}</div></div>`;
   }
 
-  let body = text;
+  /* The classification is the first thing Michael must write, so it is the
+   * first thing shown - lifted out of the body and labelled. When it is
+   * absent the page says so. It is never supplied: writing one here would
+   * assert a routing decision the page did not make and cannot check. */
+  const cls = text.match(CLASSIFICATION);
+  const clsFirst = cls && !text.slice(0, cls.index).trim();
+  html += cls
+    ? `<div class="classline${clsFirst ? "" : " late"}">${inline(cls[0].trim())}` +
+      (clsFirst ? "" : `<span class="flag">not the first line</span>`) + `</div>`
+    : `<div class="classline absent">Michael did not state whether this is
+       RESEARCH, DRAFT or BOTH. Every output is required to open with that
+       line — worth reporting.</div>`;
+
+  let body = cls ? text.replace(CLASSIFICATION, "") : text;
   const found = [];
   for (const b of BLOCK_KEYS) {
     const m = headingMatch(body, b.key);

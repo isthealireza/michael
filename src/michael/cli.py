@@ -70,6 +70,13 @@ def build_parser() -> argparse.ArgumentParser:
     sub.add_parser("hosts", help="print the ingestion host allowlist")
     sub.add_parser("prompt", help="print MICHAEL.md")
 
+    check = sub.add_parser(
+        "check", help="check one Michael output against the rules in MICHAEL.md"
+    )
+    check.add_argument(
+        "path", nargs="?", help="file holding the output; omit to read stdin"
+    )
+
     classify = sub.add_parser("classify", help="classify and route a request")
     classify.add_argument("request")
 
@@ -160,6 +167,25 @@ def _run(args: argparse.Namespace) -> int:
             _print(tools.allowed_hosts())
         case "prompt":
             _print(tools.load_system_prompt())
+        case "check":
+            from michael.output_check import check as check_output
+
+            text = (
+                Path(args.path).read_text(encoding="utf-8")
+                if args.path
+                else sys.stdin.read()
+            )
+            findings = check_output(text)
+            _print(
+                {
+                    "clean": not findings,
+                    "findings": [
+                        {"rule": f.rule, "detail": f.detail} for f in findings
+                    ],
+                }
+            )
+            # A broken output is a non-zero exit, so a script can gate on it.
+            return 1 if findings else 0
         case "classify":
             _print(tools.classify_request(args.request))
         case "search":
