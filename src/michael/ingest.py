@@ -265,8 +265,16 @@ ENDNOTES_FOLLOWERS = (
 
 #: A Schedule's own heading. Schedules are law, but they number their clauses
 #: locally from 1, so their numbers collide with the body's section numbers.
+#: A Schedule's heading stands alone on its line, or is followed by a dash and
+#: the Schedule's title - "Schedule 2", "Schedule 1-Application, saving and
+#: transitional provisions". The separator is what makes it a heading rather
+#: than a sentence: "Schedule 2 commencement day means the day on which
+#: Schedule 2 to the amending Act commences" is a *definition* inside a
+#: Schedule, and matching it labelled the Fair Work Act's s 47A as
+#: "Sch 2 cl 47A" - a citation to a provision that does not exist.
 SCHEDULE_HEADING = re.compile(
-    r"^schedule\s+(\d+[A-Z]*|[IVXLC]+)\b", re.IGNORECASE | re.MULTILINE
+    r"^schedule\s+(\d+[A-Z]*|[IVXLC]+)[ \t]*(?:[—–-]|$)",
+    re.IGNORECASE | re.MULTILINE,
 )
 
 

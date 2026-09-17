@@ -17,6 +17,7 @@ import pytest
 from michael import ingest, schema
 from michael.config import settings
 from michael.ingest import (
+    schedule_spans,
     IngestionError,
     _validate,
     normalise_corpus_records,
@@ -1063,3 +1064,39 @@ def test_a_refused_file_ingest_still_writes_the_file_log(
         line["outcome"] == "refused" and line["url"] == "https://example.com/not-allowlisted"
         for line in lines
     ), f"a refused file ingest never reached the file log: {lines}"
+
+
+# A definition line inside a Schedule, verbatim from Fair Work Act 2009 (Cth)
+# compilation 73 volume 04. It opens with the words "Schedule 2" and is not a
+# Schedule heading: matching it labelled the real s 47A as "Sch 2 cl 47A", a
+# citation to a provision that does not exist.
+SCHEDULE_DEFINITION_NOT_A_HEADING = """Schedule 1—Application, saving and transitional provisions
+
+1 Definitions
+In this Schedule:
+Schedule 2 commencement day means the day on which Schedule 2 to the amending Act commences.
+Schedule 1 commencement day means the day on which Schedule 1 to the amending Act commences.
+
+47A Casual employees of small business employers
+(1) This section applies to an employee of a small business employer.
+(2) The employee may give the employer written notification.
+
+Schedule 2—Amendments made by the Fair Work Amendment Act 2012
+
+3 Transitional provision
+(1) This item applies to a transfer of business.
+"""
+
+
+def test_a_definition_beginning_schedule_2_is_not_a_schedule_heading() -> None:
+    """Only a heading separator makes "Schedule N" a heading, not a sentence."""
+    headings = schedule_spans(SCHEDULE_DEFINITION_NOT_A_HEADING)
+    assert [number for _, number in headings] == ["1", "2"]
+
+
+def test_a_section_after_a_schedule_definition_keeps_its_own_number() -> None:
+    """s 47A sits in Schedule 1, so it is Sch 1 cl 47A - never Sch 2 cl 47A."""
+    provisions = {p.section_number: p for p in split_sections(SCHEDULE_DEFINITION_NOT_A_HEADING)}
+    assert "Sch 2 cl 47A" not in provisions
+    assert "Sch 1 cl 47A" in provisions
+    assert provisions["Sch 1 cl 47A"].heading == "Casual employees of small business employers"
