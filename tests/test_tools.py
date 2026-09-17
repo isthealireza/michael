@@ -95,7 +95,13 @@ def test_system_prompt_still_carries_its_non_negotiable_rules() -> None:
     prompt = " ".join(tools.load_system_prompt().split())
     for required in (
         "You are not a lawyer",
+        # Measured on the 42 benchmark outputs: 19 of 42 (45%) never declared
+        # a classification, the production model 3 of 6. The rule was one
+        # subordinate clause with no format and no position - unlike the
+        # closing blocks, which have both and are almost never dropped.
         "RESEARCH, DRAFT, or BOTH",
+        "Begin every output with that classification on its own first line",
+        "CLASSIFICATION: <RESEARCH | DRAFT | BOTH> - domain: <domain>",
         "NOT COVERED",
         "[MISSING:",
         "OPEN ITEMS",
