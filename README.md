@@ -158,49 +158,56 @@ The fix needs a decision on whether cases are chunked by paragraph and cited as
 `[2]`, or handled by a separate splitter. The section splitter is correct for
 legislation, which is what the acceptance test exercises.
 
-**The calibrated threshold is stale.** `RETRIEVAL_MIN_SCORE = 0.65` was derived
-against a WA-only corpus. The Fair Work Act 2009 (Cth) has since been ingested,
-and at 0.65 the most apposite provisions for a casual-employment draft fall just
-below the line:
+**The calibrated threshold trails the corpus.** `RETRIEVAL_MIN_SCORE = 0.60`
+was calibrated twice against `calibration/labelled_queries.json` — 15
+known-good and 10 known-absent queries, scored unfiltered, precision and recall
+1.000 both times. The second run used corrected corpus statistics.
 
-```
-KEPT   0.6551  s 359C  [operative   93w]  Misrepresentation to engage as casual employee
-cut    0.6338  s 47A   [operative  198w]  Casual employees of small business employers
-cut    0.6243  s 125B  [operative  200w]  Giving employees the Casual Employment Info Statement
-cut    0.6194  s 15A   [operative  924w]  Meaning of casual employee
-```
+It has not been re-derived since the Privacy Act 1988 (Cth) was ingested.
+Corpus statistics move BM25, so **a threshold is only valid for the corpus it
+was measured against**. Re-run `calibration/calibrate.py` and add Privacy Act
+queries to the labelled set before relying on the current value; the
+known-absent entries need re-checking too, because queries that were genuinely
+absent may now be covered.
 
-Re-run `calibration/calibrate.py` with Commonwealth cases added to
-`calibration/labelled_queries.json` before relying on the current value. A
-threshold is only valid for the corpus it was measured against.
+An earlier value of 0.65, derived against a WA-only corpus, is superseded.
 
-The same listing shows the contents-entry problem biting: the 12-word contents
-line for s 125B scores 0.6298, *above* the 200-word operative section at 0.6243.
+**Tables of provisions were ingested as provisions — fixed, with a residue.**
+Each Act repeats its section numbers and headings in a contents table at the
+front. `_is_contents_entry()` now separates those rows from operative headings
+by looking at the *neighbouring* lines rather than at the trailing number: a
+table of provisions paginates every row, so its entries cluster, whereas a
+cited Act's year stands alone in a body that is not paginated inline.
 
-**Tables of provisions are ingested as provisions.** Each Act repeats its
-section numbers and headings in a contents table at the front, and
-`split_sections()` cannot tell those lines from the real sections. On the
-current seed, 11,366 provisions cover only 6,387 distinct (document, section)
-pairs — roughly 44% are contents entries. They are short and carry no operative
-text:
+The first version of that rule tested the trailing number alone, which made it
+drop every heading ending in a cited year — `26WD Exception—notification under
+the My Health Records Act 2012`, `80P … Freedom of Information Act 1982`,
+`7B … organisations 1988` — in every document, silently.
 
-```
-section | char_start | tokens | text
-8       |        380 |     13 | 8. Duty to minimise risk from dangerous goods 1
-8       |      10952 |    113 | 8. Duty to minimise risk from dangerous goods (1) A person who i...
-```
+**The residue:** the corpus predates the fix, so it is still missing every such
+heading. The extent has not been measured, and whether to re-ingest the
+existing documents is an open decision. A re-ingest changes the corpus and
+therefore voids the calibrated threshold.
 
-The effect is duplicate pinpoints in results and a diluted index. Raising
-`MIN_PROVISION_CHARS`, or detecting the contents table and skipping it, would
-fix it — but changing the splitter changes the corpus, so
-`calibration/calibrate.py` must be re-run afterwards and the threshold
-re-derived.
-
-**The Federal Register's authorised text cannot be fetched programmatically.**
+**The Federal Register's authorised text needs the right URL, not a browser.**
 `/latest/text` is a client-rendered page whose HTML carries only the table of
-provisions; every download path returns the same SPA shell; the OData API
-exposes metadata but not file content; and AustLII returns 403 to non-browser
-clients. Download the Word volumes by hand and ingest them with provenance
+provisions, and the OData API exposes metadata but not file content — so a
+naive fetch of an Act returns headings and looks like a successful ingest. That
+mistake put a headings-only Privacy Act page into the corpus once.
+
+The dated Word original *is* fetchable, and `michael ingest` handles it end to
+end — fetch, sha256 over the original bytes, DOCX to text, section split,
+ingestion log:
+
+```bash
+uv run michael ingest   "https://www.legislation.gov.au/C2004A03712/2026-06-04/2026-06-04/text/original/word"   --jurisdiction commonwealth --doc-type act --snapshot-date 2026-06-04   --title "Privacy Act 1988" --citation "Privacy Act 1988 (Cth)"
+```
+
+That path produced 355 provisions, 29 of them in Part IIIC, with `26WD`
+carrying operative subsections rather than a heading alone.
+
+AustLII still returns 403 to non-browser clients. For anything that genuinely
+cannot be fetched, download the volumes by hand and ingest them with provenance
 intact:
 
 ```bash
@@ -362,6 +369,46 @@ route back to execution — installing a package, scheduling a job, or spawning 
 subagent with its own tools. `--safe-mode` is **not** the mechanism for this: it
 is a troubleshooting flag that disables all customisation *including MCP
 servers*, which would switch Michael off.
+
+## Operating on Railway
+
+Michael is deployed on Railway and is reachable at
+`michael-hermes-production.up.railway.app`. Operations run there rather than
+against local Docker.
+
+```
+railway ssh --service michael-hermes --environment production <command>
+```
+
+That reaches the running container over Railway's private network. It does not
+open the public Postgres proxy, and nothing here should: the database is
+private by design. Michael's operator CLI lives at
+`/opt/michael/.venv/bin/michael` inside the container and carries every
+subcommand the local CLI does.
+
+The CLI uses the read/write database URL. That is a different surface from the
+agent's MCP profile, which holds `classify_request`, `search_provisions` and
+`draft_document` and no write tool. Operating by hand does not return write
+access to the agent, and must not.
+
+**What runs where.** Code, the test suite and `mypy` stay local, because tests
+touch the schema and production data is not a fixture. Corpus inspection,
+schema work and production ingests run on Railway.
+
+**The first ingest of any new source runs locally first.** That gate caught
+`_is_contents_entry` dropping every section heading that ended in a cited Act's
+year; a production-first ingest would have landed 355 provisions with a section
+missing and no symptom beyond an occasional wrong `NOT COVERED`.
+
+**Deploy before ingesting on Railway.** The container runs the code in its
+image, not the working tree, so a parser change that has not been pushed and
+built means the production ingest runs the old parser.
+
+Two shell traps. `railway ssh` arguments are parsed by the local shell first,
+so pass a Python payload base64-encoded rather than as a quoted multi-line
+string. And Windows PowerShell 5.1 swallows a native command's stderr, so a
+remote failure appears as empty output — run `railway ssh` from bash when a
+command fails for no visible reason.
 
 ## Layout
 

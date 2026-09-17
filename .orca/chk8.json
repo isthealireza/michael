@@ -1,0 +1,38 @@
+{
+  "id": "af947754-1493-4576-b40d-ce32752647d3",
+  "ok": true,
+  "result": {
+    "runId": "run_e277b76c620b",
+    "deliveryId": "delivery_89a1434132a6",
+    "messages": [
+      {
+        "id": "msg_d19aa4c9147a",
+        "run_id": "run_e277b76c620b",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_ff633e5b-ff7e-4e64-8ddd-f12147be2d22",
+        "to_handle": "run:run_e277b76c620b",
+        "subject": "Both defects scoped in one proposal; repo cleaned up",
+        "body": "Cleaned up all six scratch files from the repo root (git status now shows only the two accepted files, ingest.py and test_ingest.py, plus your untracked .orca/), and wrote a single proposal covering both remaining splitter defects with no code changed. I found the two defects are NOT one shared rule: the Privacy Act's endnote table and a real cross-reference table inside Legal Profession Uniform Law Application Act 2022 (WA) are both dense, tightly-packed runs of heading-shaped lines (median gap ~144 chars vs ~1,406 for real Part IIIC sections) that a generalised, already-validated density check (extending CONTENTS_MIN_ENTRIES beyond just the document preamble) would catch cleanly and non-regressively -- but case-law footnote/exhibit lines (Hill v Van Erp, ACCC v George Weston Foods) are isolated, non-clustering lookalikes that this density rule can't catch, and I argue that one needs a document-type-level decision (does case law get provisions at all) rather than another splitter tweak. The proposal gives both defects real sourced fixtures with explicit non-regression cases, states the blast radius and that the density fix should land before any re-ingest, and leaves the case-law scope decision and the re-ingest go/no-go to the owner.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_487bf9f55f75\",\"dispatchId\":\"ctx_34ceaf53ed50\",\"outcome\":\"succeeded\",\"reportPath\":\"C:\\\\Users\\\\Alpha\\\\AppData\\\\Local\\\\Temp\\\\privacy_recon\\\\DEFECTS_A_B_SCOPING_PROPOSAL.md\"}",
+        "created_at": "2026-09-16T05:30:11Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 1,
+    "replayed": false,
+    "acknowledged": null,
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "339b51ac-e926-43f8-b331-90c8f007ddcd",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c4856e94-9fc9-40d4-816d-ee403b0992d5"
+  }
+}

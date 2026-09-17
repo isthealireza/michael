@@ -1,0 +1,56 @@
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":15001,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":30002,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":45003,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":60005,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":75004,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":90004,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":105004,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":120005,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":135007,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":150008,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":165011,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":180012,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":195013,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":210014,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":225014,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":240015,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":255015,"deadlineMs":1800000}
+{"_keepalive":true,"_heartbeat":true,"elapsedMs":270015,"deadlineMs":1800000}
+{
+  "id": "cd14e1ba-17b4-4942-98ff-67599278907b",
+  "ok": true,
+  "result": {
+    "runId": "run_e277b76c620b",
+    "deliveryId": "delivery_5a476b890fe5",
+    "messages": [
+      {
+        "id": "msg_8f048fdda5a6",
+        "run_id": "run_e277b76c620b",
+        "delivery_contract": "current_delivery",
+        "from_handle": "term_ff633e5b-ff7e-4e64-8ddd-f12147be2d22",
+        "to_handle": "run:run_e277b76c620b",
+        "subject": "Predicate fixed and tested; damage quantified with a new side-issue flagged",
+        "body": "Fixed _is_contents_entry in src/michael/ingest.py by making it context-aware: a trailing bare number is only a contents-table page reference when a real neighbouring line (threaded in via a new _adjacent_lines helper) also ends in one, since a cited Act year and a page number are the same shape and no string-only or year-range rule can tell them apart; all 9 required fixture cases pass in a new test, the existing suite is 150/150 green (149 before plus the new test), mypy is clean, and running split_sections on the real Privacy Act confirms 26WD is recovered with zero regressions. Step 2 (read-only, no DB write) found local Postgres unreachable this session so I measured against the same public wa+commonwealth corpus seed_from_corpus draws from instead of the exact 204-document set: a 27,700-document partial scan found 14,128 newly-kept headings and zero newly-lost ones, and a complete 3,000-document scan found 1,923 newly-kept headings (963 Act/Regulation, 960 case) across 1,107 affected documents with zero regressions, but also surfaced a new out-of-scope finding -- numbered footnote/citation lists in case-law judgments and a definitions cross-reference table in at least one Act get the same 'not a contents entry' treatment, which inflates the gain count with non-Part-IIIC-class rows I did not touch. Full diff, rule rationale, sourcing notes for every fixture string, and the complete per-document/per-heading breakdown are in the attached report; re-ingestion of the 204 documents and any fix for the footnote-list side effect are left for your and the owner's decision.",
+        "type": "worker_done",
+        "priority": "normal",
+        "thread_id": null,
+        "payload": "{\"taskId\":\"task_83c9dded4f1e\",\"dispatchId\":\"ctx_a0c894177907\",\"outcome\":\"succeeded\",\"filesModified\":[\"src/michael/ingest.py\",\"tests/test_ingest.py\"],\"reportPath\":\"C:\\\\Users\\\\Alpha\\\\AppData\\\\Local\\\\Temp\\\\privacy_recon\\\\STEP1_2_REPORT.md\"}",
+        "created_at": "2026-09-16T05:05:49Z",
+        "delivered_at": null
+      }
+    ],
+    "count": 1,
+    "replayed": false,
+    "acknowledged": null,
+    "timedOut": false,
+    "cancelled": false,
+    "connectionLost": false,
+    "mutation": {
+      "requestId": "f480d475-5ab5-449f-a8d3-049f9ed81bfe",
+      "replayed": false
+    }
+  },
+  "_meta": {
+    "runtimeId": "c4856e94-9fc9-40d4-816d-ee403b0992d5"
+  }
+}
