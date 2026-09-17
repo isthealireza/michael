@@ -78,3 +78,38 @@ def test_a_document_with_no_clause_headings_returns_one_clause() -> None:
     clauses = split_clauses("Just some prose with no headings at all in it.")
     assert len(clauses) == 1
     assert clauses[0].clause_id == PREAMBLE_ID
+
+
+import pytest
+
+from michael.contracts import normalise
+
+
+@pytest.mark.parametrize(
+    "before, after",
+    [
+        ("The Employer must pay.", "The Employer may pay."),
+        ("A fee of $5,000 applies.", "A fee of $5000 applies."),
+        ("Notice of 30 days.", "Notice of 3 days."),
+        ("Governed by WA law.", "Governed by NSW law."),
+    ],
+)
+def test_a_material_edit_never_normalises_to_the_same_text(before: str, after: str) -> None:
+    """The invariant: never report UNCHANGED for a clause that changed.
+
+    A false CHANGED is noise a reader discards. A false UNCHANGED is a
+    negotiation term that slipped through silently.
+    """
+    assert normalise(before) != normalise(after)
+
+
+@pytest.mark.parametrize(
+    "before, after",
+    [
+        ("The  Employer   must pay.", "The Employer must pay."),
+        ("The Employer must pay.\n", "The Employer must pay."),
+        ("The Employer\tmust pay.", "The Employer must pay."),
+    ],
+)
+def test_whitespace_only_differences_normalise_away(before: str, after: str) -> None:
+    assert normalise(before) == normalise(after)

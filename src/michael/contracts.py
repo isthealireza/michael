@@ -119,3 +119,15 @@ def split_clauses(text: str) -> tuple[Clause, ...]:
             )
         )
     return tuple(clauses)
+
+
+def normalise(text: str) -> str:
+    """Collapse whitespace, and nothing else.
+
+    Deliberately timid. Lowercasing would make "Employer" and "employer" the
+    same word, and stripping punctuation would make "$5,000" and "$5000" the
+    same amount - both are edits a reader is negotiating over. The cost of
+    timidity is a few reported changes that are cosmetic; the cost of
+    aggression is a changed term reported as unchanged.
+    """
+    return " ".join(text.split())
