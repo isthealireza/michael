@@ -1,11 +1,16 @@
-/* Michael's presentable surface.
+/* MICHAEL — the surface a non-technical reader is given.
  *
  * A CLIENT of the existing answering path, never a second one. It calls
- * prompt.submit on /api/ws - the same server-side choke point every dashboard
- * submit passes through - so Hermes runs the model with MICHAEL.md, calls the
- * three MCP tools, and produces the three closing blocks exactly as it always
- * has. This file only renders what comes back. It generates no legal content,
- * so it cannot weaken a guarantee: if Michael emits no citation, none is shown.
+ * prompt.submit on /api/ws, which by its own comment is the single
+ * server-side choke point every dashboard submit passes through. Hermes runs
+ * the model with MICHAEL.md, calls the three MCP tools, and emits the three
+ * closing blocks exactly as before. This file renders; it never answers, so it
+ * cannot weaken a guarantee: if Michael emits no citation, none is shown.
+ *
+ * Every conversation gets its OWN titled session, so it is findable in the
+ * Hermes dashboard's session list. Reusing sessions[0] - the first version of
+ * this page - mixed a reader's questions into whatever session happened to be
+ * most recent, which during testing was the scenario tester's.
  */
 "use strict";
 
@@ -13,9 +18,14 @@ const $ = (id) => document.getElementById(id);
 const GATEWAY_PROTOCOL = "hermes-gateway-v1";
 
 /* Only message.delta is the answer. reasoning.delta and thinking.delta are the
- * model's private working and must never reach the page - concatenating all
- * three renders the reasoning trace as if it were the advice. */
+ * model's private working; rendering them shows the reasoning trace as though
+ * it were the advice. */
 const ANSWER_FRAME = "message.delta";
+const TERMINAL_FRAMES = new Set(["message.complete", "turn.end", "turn.complete"]);
+
+const state = { live: null, stored: null, busy: false };
+
+/* ------------------------------- transport ------------------------------- */
 
 async function api(path, body) {
   const res = await fetch(path, {
@@ -26,145 +36,152 @@ async function api(path, body) {
   });
   const text = await res.text();
   let parsed = null;
-  try { parsed = text ? JSON.parse(text) : null; } catch { /* non-json */ }
+  try { parsed = text ? JSON.parse(text) : null; } catch { /* not json */ }
   if (!res.ok) throw new Error((parsed && parsed.detail) || `HTTP ${res.status}`);
   return parsed;
 }
 
-$("loginBtn").onclick = async () => {
-  const btn = $("loginBtn");
-  btn.disabled = true;
-  $("loginStatus").textContent = "signing in…";
-  try {
-    await api("/auth/password-login", {
-      provider: "basic", username: "michael", password: $("pw").value,
-    });
-    $("loginCard").classList.add("hidden");
-    $("askCard").classList.remove("hidden");
-    $("q").focus();
-  } catch (err) {
-    $("loginStatus").textContent = String(err.message || err);
-    btn.disabled = false;
-  }
-};
+function sessionTitle() {
+  const when = new Date().toLocaleString("en-AU",
+    { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
+  return `MICHAEL web — ${when}`;
+}
 
-$("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
-
-$("askBtn").onclick = async () => {
-  const question = $("q").value.trim();
-  if (!question) return;
-  $("askBtn").disabled = true;
-  $("out").innerHTML = "";
-  $("tools").classList.add("hidden");
-  $("tools").textContent = "";
-  $("status").textContent = "connecting…";
-  try {
-    const answer = await ask(question);
-    render(answer);
-    $("status").textContent = "";
-  } catch (err) {
-    $("status").textContent = "failed: " + String(err.message || err);
-  } finally {
-    $("askBtn").disabled = false;
-  }
-};
-
-async function ask(question) {
+/* One socket per turn. Michael's turns are long but discrete, and a socket
+ * held open across idle minutes is a reconnect problem for no benefit. */
+async function connect() {
   const { ticket } = await api("/api/auth/ws-ticket", {});
   const scheme = location.protocol === "https:" ? "wss:" : "ws:";
   const ws = new WebSocket(
     `${scheme}//${location.host}/api/ws?ticket=${encodeURIComponent(ticket)}`,
     [GATEWAY_PROTOCOL],
   );
-
   const pending = new Map();
-  let answer = "";
-  let settle, fail;
-  const done = new Promise((res, rej) => { settle = res; fail = rej; });
-
-  const call = (method, params, id) =>
-    new Promise((res) => {
-      pending.set(id, res);
+  ws.addEventListener("message", (event) => {
+    let frame;
+    try { frame = JSON.parse(event.data); } catch { return; }
+    if (frame.id && pending.has(frame.id)) {
+      const settle = pending.get(frame.id);
+      pending.delete(frame.id);
+      settle(frame);
+    }
+  });
+  ws.call = (method, params, id) =>
+    new Promise((resolve, reject) => {
+      pending.set(id, resolve);
+      setTimeout(() => {
+        if (pending.delete(id)) reject(new Error(`${method} timed out`));
+      }, 90000);
       ws.send(JSON.stringify({ id, method, params }));
     });
 
-  ws.onerror = () => fail(new Error("connection failed"));
-  ws.onclose = () => { if (!answer) fail(new Error("connection closed before an answer")); };
-
-  ws.onmessage = (event) => {
-    let frame;
-    try { frame = JSON.parse(event.data); } catch { return; }
-
-    if (frame.id && pending.has(frame.id)) {
-      const res = pending.get(frame.id);
-      pending.delete(frame.id);
-      res(frame);
-      return;
-    }
-
-    const params = frame.params || {};
-    const kind = params.type || frame.method;
-    const payload = params.payload && typeof params.payload === "object" ? params.payload : params;
-
-    if (kind === ANSWER_FRAME) {
-      const piece = payload.delta ?? payload.text ?? payload.content ?? "";
-      if (typeof piece === "string") answer += piece;
-      $("status").textContent = `receiving… ${answer.length} characters`;
-    } else if (kind === "tool.start") {
-      const name = payload.name || payload.tool || "tool";
-      $("tools").classList.remove("hidden");
-      $("tools").textContent += (($("tools").textContent && " · ") || "") + name;
-    } else if (kind === "message.complete" || kind === "turn.end") {
-      settle();
-    }
-  };
-
-  await new Promise((res, rej) => {
-    ws.onopen = res;
-    setTimeout(() => rej(new Error("timed out opening the connection")), 20000);
+  await new Promise((resolve, reject) => {
+    ws.addEventListener("open", resolve, { once: true });
+    ws.addEventListener("error", () => reject(new Error("could not connect")), { once: true });
+    setTimeout(() => reject(new Error("connection timed out")), 20000);
   });
-
-  $("status").textContent = "opening a session…";
-  const listed = await call("session.list", {}, "list");
-  const sessions = ((listed.result || {}).sessions) || [];
-  if (!sessions.length) throw new Error("no session available to resume");
-
-  const resumed = await call("session.resume", { session_id: sessions[0].id }, "resume");
-  const live = (resumed.result || {}).session_id;
-  if (!live) throw new Error("could not open a live session");
-
-  $("status").textContent = "Michael is working…";
-  ws.send(JSON.stringify({
-    id: "submit", method: "prompt.submit",
-    params: { session_id: live, text: question },
-  }));
-
-  await done;
-  ws.close();
-  return answer;
+  return ws;
 }
 
-/* ---------------- rendering Michael's output as what it is ---------------- */
+function unwrap(frame, what) {
+  if (frame.error) throw new Error(`${what}: ${frame.error.message || "failed"}`);
+  return frame.result || {};
+}
 
-const esc = (s) => s.replace(/[&<>"]/g, (c) =>
+/* --------------------------------- asking -------------------------------- */
+
+async function ask(question, onDelta, onTool, onPhase) {
+  const ws = await connect();
+  try {
+    if (!state.live) {
+      onPhase("opening a session");
+      const created = unwrap(
+        await ws.call("session.create", { title: sessionTitle() }, "create"),
+        "session.create",
+      );
+      state.live = created.session_id;
+      state.stored = created.stored_session_id || null;
+      showSession();
+    } else {
+      /* A live session lives in the dashboard process, not the browser. If it
+       * was reclaimed between turns, resume the stored record rather than
+       * silently starting a new conversation the reader cannot see. */
+      const status = await ws.call("session.status", { session_id: state.live }, "status")
+        .catch(() => null);
+      const alive = status && !status.error;
+      if (!alive && state.stored) {
+        onPhase("reopening the session");
+        const again = unwrap(
+          await ws.call("session.resume", { session_id: state.stored }, "resume"),
+          "session.resume",
+        );
+        state.live = again.session_id;
+      }
+    }
+
+    let answer = "";
+    const finished = new Promise((resolve, reject) => {
+      ws.addEventListener("message", (event) => {
+        let frame;
+        try { frame = JSON.parse(event.data); } catch { return; }
+        if (frame.id === "submit" && frame.error) {
+          reject(new Error(frame.error.message || "Michael could not answer"));
+          return;
+        }
+        const params = frame.params || {};
+        const kind = params.type || frame.method;
+        const payload =
+          params.payload && typeof params.payload === "object" ? params.payload : params;
+
+        if (kind === ANSWER_FRAME) {
+          const piece = payload.delta ?? payload.text ?? payload.content ?? "";
+          if (typeof piece === "string" && piece) {
+            answer += piece;
+            onDelta(answer);
+          }
+        } else if (kind === "tool.start") {
+          onTool(payload.name || payload.tool || "tool");
+        } else if (TERMINAL_FRAMES.has(kind)) {
+          resolve();
+        }
+      });
+      ws.addEventListener("close", () => {
+        if (answer) resolve();
+        else reject(new Error("the connection closed before Michael answered"));
+      });
+      setTimeout(() => reject(new Error("Michael did not finish in time")), 300000);
+    });
+
+    onPhase("Michael is working");
+    ws.send(JSON.stringify({
+      id: "submit", method: "prompt.submit",
+      params: { session_id: state.live, text: question },
+    }));
+
+    await finished;
+    if (!answer.trim()) throw new Error("Michael returned nothing — that is a failed run");
+    return answer;
+  } finally {
+    try { ws.close(); } catch { /* already closed */ }
+  }
+}
+
+/* ------------------------------- rendering ------------------------------- */
+
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
   ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 /* A pinpoint as Michael emits it: "Privacy Act 1988 (Cth) s 26WL (snapshot
- * 2026-06-04)". Also matches "Sch 1 cl 11" for a Schedule clause, which is a
- * different provision from a section of the same number. */
-const CITATION = /\b([A-Z][A-Za-z'’\- ]+?(?:Act|Regulations|Code|Rules)\s+\d{4}(?:\s*\((?:Cth|WA|NSW|Vic|Qld|SA|Tas|NT|ACT|Imp)\))?)\s+(s\s+[\w.]+|Sch\s+\w+\s+cl\s+[\w.]+)(\s*\(snapshot\s+[\d-]+\))?/g;
-
+ * 2026-06-04)". "Sch 1 cl 11" is matched too: a Schedule clause is a different
+ * provision from a section of the same number, and the corpus contains both. */
+const CITATION = /\b([A-Z][A-Za-z'’\-. ]+?(?:Act|Regulations|Code|Rules|Award)\s+\d{4}(?:\s*\((?:Cth|WA|NSW|Vic|Qld|SA|Tas|NT|ACT|Imp)\))?)\s+(ss?\s+[\w.()]+|Sch\s+\w+\s+cl\s+[\w.]+)(\s*\(snapshot\s+[\d-]+\))?/g;
 const MISSING = /\[MISSING:\s*([^\]]+)\]/g;
-
-/* The three closing blocks, and the NOT COVERED line. Michael is required to
- * end every output with all three - an answer, a refusal and a NOT COVERED
- * reply alike - so their absence is itself worth showing rather than hiding. */
-const BLOCKS = [
+const NOT_COVERED = /^.*\bNOT COVERED\b.*$/mi;
+const NOTICE = /Internal research only\.[\s\S]{0,220}?practitioner\./i;
+const BLOCK_KEYS = [
   { key: "OPEN ITEMS", cls: "" },
   { key: "VERIFY BEFORE USE", cls: "verify" },
 ];
-const NOT_COVERED = /^.*NOT COVERED\b.*$/mi;
-const NOTICE = /Internal research only\.[\s\S]*?practitioner\./i;
 
 function inline(text) {
   let html = esc(text);
@@ -175,35 +192,27 @@ function inline(text) {
   return html;
 }
 
-function render(raw) {
-  const out = $("out");
+/* Render one answer. `partial` suppresses the structural parsing while text is
+ * still streaming: splitting on "OPEN ITEMS" before the block has arrived
+ * flickers sections in and out, and a half-parsed answer reads as a broken one. */
+function renderAnswer(raw, partial) {
   const text = (raw || "").trim();
-  if (!text) {
-    out.innerHTML = `<div class="card"><h2>No answer</h2>
-      <div class="answer">Michael returned nothing. That is a failed run, not an
-      empty answer — try again rather than treating this as a result.</div></div>`;
-    return;
-  }
+  if (partial) return `<div class="answer">${inline(text)}</div>`;
 
   let html = "";
-
-  /* NOT COVERED first, and unmissable. Michael returning "not covered" is a
-   * real answer - the corpus does not cover the question - and a reader must
-   * never mistake it for a partial one. */
   const nc = text.match(NOT_COVERED);
   if (nc) {
     html += `<div class="banner"><div class="h">NOT COVERED</div>
       <div class="b">${inline(nc[0].trim())}</div></div>`;
   }
 
-  /* Split the body from the closing blocks. */
   let body = text;
   const found = [];
-  for (const b of BLOCKS) {
+  for (const b of BLOCK_KEYS) {
     const at = body.indexOf(b.key);
     if (at !== -1) found.push({ ...b, at });
   }
-  found.sort((x, y) => x.at - y.at);
+  found.sort((a, b) => a.at - b.at);
 
   let tail = "";
   if (found.length) {
@@ -212,25 +221,106 @@ function render(raw) {
   }
 
   const notice = tail.match(NOTICE) || body.match(NOTICE);
-  if (notice) tail = tail.replace(NOTICE, "");
+  if (notice) { tail = tail.replace(NOTICE, ""); body = body.replace(NOTICE, ""); }
 
-  html += `<div class="card"><h2>Answer</h2>
-    <div class="answer">${inline(body.trim())}</div>`;
+  html += `<div class="answer">${inline(body.trim())}</div>`;
 
   for (let i = 0; i < found.length; i++) {
-    const start = found[i].at - found[0].at + found[i].key.length;
-    const end = i + 1 < found.length ? found[i + 1].at - found[0].at : tail.length;
-    const content = tail.slice(start, end).replace(/^[\s—:-]+/, "").trim();
+    const base = found[0].at;
+    const from = found[i].at - base + found[i].key.length;
+    const to = i + 1 < found.length ? found[i + 1].at - base : tail.length;
+    const content = tail.slice(from, to).replace(/^[\s—:\-]+/, "").trim();
     html += `<div class="block ${found[i].cls}"><div class="h">${found[i].key}</div>
       <div class="answer">${inline(content)}</div></div>`;
   }
 
-  /* The closing notice is mandatory. If Michael did not emit it, say so -
-   * silently supplying it here would fake a guarantee this page does not make. */
+  /* The closing notice is mandatory on every output. If it is absent, say so.
+   * Supplying it here would fake a guarantee this page does not make. */
   html += notice
     ? `<div class="notice">${esc(notice[0].trim())}</div>`
-    : `<div class="notice" style="color:#7f1d1d">The closing notice was not
-       present in this output. That is a rule violation worth reporting.</div>`;
-
-  out.innerHTML = html + `</div>`;
+    : `<div class="notice absent">The closing notice was not present in this
+       output. Michael is required to end every reply with it — worth reporting.</div>`;
+  return html;
 }
+
+function showSession() {
+  $("sess").textContent = state.stored ? `session ${state.stored}` : "";
+}
+
+/* --------------------------------- wiring -------------------------------- */
+
+$("loginBtn").onclick = async () => {
+  const btn = $("loginBtn");
+  btn.disabled = true;
+  $("loginStatus").textContent = "signing in…";
+  try {
+    await api("/auth/password-login",
+      { provider: "basic", username: "michael", password: $("pw").value });
+    $("loginCard").classList.add("hidden");
+    $("thread").classList.remove("hidden");
+    $("askArea").classList.remove("hidden");
+    $("q").focus();
+  } catch (err) {
+    $("loginStatus").textContent = String(err.message || err);
+    btn.disabled = false;
+  }
+};
+$("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
+
+function scrollDown() {
+  const main = document.querySelector("main");
+  main.scrollTop = main.scrollHeight;
+}
+
+async function submit() {
+  const question = $("q").value.trim();
+  if (!question || state.busy) return;
+  state.busy = true;
+  $("askBtn").disabled = true;
+  $("q").value = "";
+  $("empty")?.remove();
+
+  const turn = document.createElement("div");
+  turn.className = "turn";
+  turn.innerHTML =
+    `<div class="asked"><div class="who">Question</div>${esc(question)}</div>
+     <div class="card" style="margin-top:12px">
+       <h2>Michael</h2><div class="body"><span class="working"></span></div>
+       <div class="tools hidden"></div></div>`;
+  $("thread").appendChild(turn);
+  scrollDown();
+
+  const bodyEl = turn.querySelector(".body");
+  const toolsEl = turn.querySelector(".tools");
+  const tools = [];
+
+  try {
+    const answer = await ask(
+      question,
+      (sofar) => { bodyEl.innerHTML = renderAnswer(sofar, true); scrollDown(); },
+      (name) => {
+        if (!tools.includes(name)) tools.push(name);
+        toolsEl.classList.remove("hidden");
+        toolsEl.textContent = "consulted: " + tools.join(" · ");
+      },
+      (phase) => { $("status").textContent = phase + "…"; },
+    );
+    bodyEl.innerHTML = renderAnswer(answer, false);
+    $("status").textContent = "";
+  } catch (err) {
+    bodyEl.innerHTML =
+      `<div class="banner"><div class="h">NO ANSWER</div><div class="b">${
+        esc(err.message || err)}</div></div>`;
+    $("status").textContent = "";
+  } finally {
+    state.busy = false;
+    $("askBtn").disabled = false;
+    scrollDown();
+    $("q").focus();
+  }
+}
+
+$("askBtn").onclick = submit;
+$("q").addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
+});

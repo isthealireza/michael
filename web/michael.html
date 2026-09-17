@@ -6,61 +6,89 @@
 <title>MICHAEL — Legal Research</title>
 <style>
   :root{
-    --ink:#11161d; --ink-soft:#4a5568; --line:#dfe3e8; --bg:#f7f8fa;
-    --card:#ffffff; --accent:#1f3a5f; --cite:#0b4f6c; --cite-bg:#eef6f9;
-    --miss:#8a4b00; --miss-bg:#fff5e6; --miss-line:#e0a355;
-    --alarm:#7f1d1d; --alarm-bg:#fdeaea; --alarm-line:#c04545;
+    --ink:#0f151c; --soft:#5a6673; --line:#e2e6ea; --bg:#f6f7f9; --card:#fff;
+    --navy:#1b3557; --navy-dk:#132743;
+    --cite:#0a4a63; --cite-bg:#ecf5f9; --cite-line:#b3d6e3;
+    --miss:#8a4b00; --miss-bg:#fff6e8; --miss-line:#e0a355;
+    --alarm:#7a1c1c; --alarm-bg:#fdeceb; --alarm-line:#c8504c;
+    --ask-bg:#eef1f5;
   }
   *{box-sizing:border-box}
+  html,body{height:100%}
   body{margin:0;background:var(--bg);color:var(--ink);
-       font:16px/1.6 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-  header{background:var(--accent);color:#fff;padding:22px 24px 18px}
-  .wrap{max-width:860px;margin:0 auto}
-  h1{margin:0;font-size:30px;letter-spacing:.14em;font-weight:600}
-  .tag{margin-top:4px;font-size:13px;opacity:.82;letter-spacing:.02em}
-  main{padding:26px 24px 64px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;
-        padding:18px;margin-bottom:18px}
-  label{display:block;font-size:13px;color:var(--ink-soft);margin-bottom:7px}
-  textarea,input{width:100%;font:inherit;padding:11px 12px;border:1px solid var(--line);
-                 border-radius:7px;background:#fff;color:var(--ink)}
-  textarea{min-height:82px;resize:vertical}
-  .row{display:flex;gap:10px;align-items:center;margin-top:12px}
-  button{font:inherit;font-weight:600;padding:11px 20px;border:0;border-radius:7px;
-         background:var(--accent);color:#fff;cursor:pointer}
-  button[disabled]{opacity:.5;cursor:default}
-  .status{font-size:13px;color:var(--ink-soft)}
-  h2{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);
-     margin:0 0 10px;font-weight:700}
+    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex;flex-direction:column}
+  header{background:var(--navy);color:#fff;padding:18px 20px 15px;flex:0 0 auto;
+    box-shadow:0 1px 3px rgba(0,0,0,.14)}
+  .bar{max-width:880px;margin:0 auto;display:flex;align-items:baseline;
+    justify-content:space-between;gap:14px;flex-wrap:wrap}
+  h1{margin:0;font-size:27px;letter-spacing:.16em;font-weight:600}
+  .sub{font-size:12.5px;opacity:.8;margin-top:3px;letter-spacing:.01em}
+  .sess{font-size:11.5px;opacity:.72;font-variant-numeric:tabular-nums}
+  main{flex:1 1 auto;overflow-y:auto;padding:22px 20px 8px}
+  .wrap{max-width:880px;margin:0 auto}
+  footer{flex:0 0 auto;background:var(--bg);border-top:1px solid var(--line);
+    padding:14px 20px 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:11px;
+    padding:17px 19px;margin-bottom:16px}
+  label{display:block;font-size:13px;color:var(--soft);margin-bottom:7px}
+  textarea,input{width:100%;font:inherit;padding:11px 13px;border:1px solid var(--line);
+    border-radius:8px;background:#fff;color:var(--ink)}
+  textarea{min-height:58px;max-height:190px;resize:vertical}
+  textarea:focus,input:focus{outline:2px solid #b9cbe2;outline-offset:-1px;border-color:#9db4d0}
+  .row{display:flex;gap:10px;align-items:center;margin-top:10px}
+  button{font:inherit;font-weight:600;padding:11px 22px;border:0;border-radius:8px;
+    background:var(--navy);color:#fff;cursor:pointer}
+  button:hover:not([disabled]){background:var(--navy-dk)}
+  button[disabled]{opacity:.45;cursor:default}
+  .status{font-size:13px;color:var(--soft);flex:1}
+  .hint{font-size:11.5px;color:var(--soft);margin-top:7px}
+
+  .turn{margin-bottom:20px}
+  .asked{background:var(--ask-bg);border-radius:10px;padding:12px 15px;
+    font-weight:500;white-space:pre-wrap;word-wrap:break-word}
+  .asked .who{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--soft);font-weight:700;margin-bottom:4px}
+  h2{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--soft);
+    margin:0 0 9px;font-weight:700}
   .answer{white-space:pre-wrap;word-wrap:break-word}
   .cite{display:inline-block;background:var(--cite-bg);color:var(--cite);
-        border:1px solid #bcd9e3;border-radius:5px;padding:1px 7px;
-        font-weight:600;font-size:14px;white-space:nowrap}
+    border:1px solid var(--cite-line);border-radius:5px;padding:1px 7px;
+    font-weight:600;font-size:14.5px;white-space:nowrap}
   .missing{display:inline-block;background:var(--miss-bg);color:var(--miss);
-           border:1px solid var(--miss-line);border-radius:5px;padding:1px 8px;
-           font-weight:700;font-size:13px;letter-spacing:.02em}
+    border:1px solid var(--miss-line);border-radius:5px;padding:1px 8px;
+    font-weight:700;font-size:13px}
   .banner{background:var(--alarm-bg);border:2px solid var(--alarm-line);
-          border-radius:9px;padding:15px 17px;margin-bottom:18px}
-  .banner .h{color:var(--alarm);font-weight:800;letter-spacing:.09em;font-size:14px}
-  .banner .b{margin-top:5px;color:#5c1b1b;font-size:15px}
-  .block{border-left:3px solid var(--line);padding:2px 0 2px 14px;margin:16px 0}
-  .block .h{font-size:11px;letter-spacing:.1em;text-transform:uppercase;
-            color:var(--ink-soft);font-weight:700}
+    border-radius:10px;padding:14px 17px;margin-bottom:15px}
+  .banner .h{color:var(--alarm);font-weight:800;letter-spacing:.1em;font-size:13.5px}
+  .banner .b{margin-top:5px;color:#5e1717}
+  .block{border-left:3px solid var(--line);padding:1px 0 1px 14px;margin:15px 0}
+  .block .h{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
+    color:var(--soft);font-weight:700;margin-bottom:3px}
   .block.verify{border-left-color:var(--miss-line)}
-  .notice{margin-top:20px;padding-top:14px;border-top:1px solid var(--line);
-          font-size:13px;color:var(--ink-soft);font-style:italic}
-  .tools{font-size:12px;color:var(--ink-soft);margin-top:10px}
+  .notice{margin-top:17px;padding-top:12px;border-top:1px solid var(--line);
+    font-size:12.5px;color:var(--soft);font-style:italic}
+  .notice.absent{color:var(--alarm);font-style:normal;font-weight:600}
+  .tools{font-size:11.5px;color:var(--soft);margin-top:9px;letter-spacing:.02em}
+  .working{display:inline-block;width:8px;height:8px;border-radius:50%;
+    background:var(--navy);margin-right:7px;animation:p 1.1s ease-in-out infinite}
+  @keyframes p{0%,100%{opacity:.25}50%{opacity:1}}
   .hidden{display:none}
-  footer{max-width:860px;margin:0 auto;padding:0 24px 40px;font-size:12px;color:var(--ink-soft)}
+  .empty{color:var(--soft);text-align:center;padding:34px 10px}
+  .empty .big{font-size:17px;color:var(--ink);margin-bottom:7px}
+  @media (max-width:560px){h1{font-size:23px}.card{padding:14px 15px}}
 </style>
 </head>
 <body>
-<header><div class="wrap">
-  <h1>MICHAEL</h1>
-  <div class="tag">Legal research and drafting — Western Australia and Commonwealth</div>
+<header><div class="bar">
+  <div>
+    <h1>MICHAEL</h1>
+    <div class="sub">Legal research and drafting — Western Australia and Commonwealth</div>
+  </div>
+  <div class="sess" id="sess"></div>
 </div></header>
 
-<main class="wrap">
+<main><div class="wrap">
   <div class="card" id="loginCard">
     <label for="pw">Sign in to continue</label>
     <input id="pw" type="password" autocomplete="current-password" placeholder="Password">
@@ -68,21 +96,25 @@
       <span class="status" id="loginStatus"></span></div>
   </div>
 
-  <div class="card hidden" id="askCard">
-    <label for="q">Your question</label>
-    <textarea id="q" placeholder="What must an entity do when it becomes aware of an eligible data breach?"></textarea>
-    <div class="row"><button id="askBtn">Ask Michael</button>
-      <span class="status" id="status"></span></div>
-    <div class="tools hidden" id="tools"></div>
+  <div id="thread" class="hidden">
+    <div class="empty" id="empty">
+      <div class="big">Ask Michael a question about Australian law.</div>
+      <div>Answers are grounded in 205 legislative documents. Where the corpus
+        does not cover a question, Michael says so rather than guessing.</div>
+    </div>
   </div>
+</div></main>
 
-  <div id="out"></div>
-</main>
-
-<footer>
-  Internal research only. Not legal advice. Requires review by an admitted
-  Australian legal practitioner.
-</footer>
+<footer><div class="wrap hidden" id="askArea">
+  <label for="q">Your question</label>
+  <textarea id="q" placeholder="What must an entity do when it becomes aware of an eligible data breach?"></textarea>
+  <div class="row">
+    <button id="askBtn">Ask Michael</button>
+    <span class="status" id="status"></span>
+  </div>
+  <div class="hint">Enter to send · Shift+Enter for a new line ·
+    Internal research only. Not legal advice.</div>
+</div></footer>
 <script src="michael.js"></script>
 </body>
 </html>
