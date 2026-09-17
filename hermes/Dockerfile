@@ -44,7 +44,14 @@ RUN chmod +x /usr/local/bin/railway-entrypoint.sh
 # choke point every dashboard submit passes through - so Hermes still runs the
 # model with MICHAEL.md and still calls the three MCP tools. The page renders;
 # it never answers.
-COPY web/michael.html web/michael.js /opt/hermes/hermes_cli/web_dist/
+# Served from /assets/, which the dashboard's auth gate treats as public
+# (_GATE_PUBLIC_PREFIXES). That matters for presentation, not for secrecy: an
+# unauthenticated visitor gets MICHAEL's own branded page with its own sign-in
+# instead of Hermes' "Nous Research" console screen. Only the page SHELL is
+# public - markup and script. Every data endpoint it calls stays gated:
+# /api/auth/ws-ticket and /api/ws both require the session, so nothing from
+# the corpus is reachable without signing in.
+COPY web/michael.html web/michael.js /opt/hermes/hermes_cli/web_dist/assets/
 
 WORKDIR /opt/data
 
