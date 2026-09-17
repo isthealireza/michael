@@ -423,7 +423,35 @@ def split_clauses(text: str) -> tuple[Clause, ...]:
 - [ ] **Step 4: Run the tests to verify they pass**
 
 Run: `.venv/Scripts/python.exe -m pytest tests/test_contracts.py -v`
-Expected: 7 passed
+
+Expected: 6 of 7 pass. `test_text_before_the_first_clause_is_kept_as_preamble`
+FAILS, with `assert 'SERVICES AGREEMENT' == '(preamble)'`.
+
+That failure is real and the implementation above is wrong, not the test:
+`CAPS_CLAUSE` matches the fixture's own title line, because nothing in the
+pattern distinguishes a document title from any other line in capitals.
+
+- [ ] **Step 4a: Fix it in `_headings()`**
+
+A caps-style match at offset 0 has no preceding text to be a boundary between,
+so it is the document's title rather than a clause heading. Skip it, and let
+the title fold into the preamble:
+
+```python
+    for match in CAPS_CLAUSE.finditer(text):
+        if match.start() == 0:
+            # A caps-style line with nothing before it has no boundary to mark:
+            # it is the document's title, not a clause heading, and folds into
+            # the preamble rather than manufacturing a spurious clause. A
+            # numbered "1." at offset 0 is unambiguous and is not touched.
+            continue
+        found[match.start()] = (match.group("number").strip(), "")
+```
+
+Do not fix this by changing the test to expect a `SERVICES AGREEMENT` clause.
+That would enshrine the bug as intended behaviour.
+
+Re-run: all 7 pass.
 
 - [ ] **Step 5: Run the full suite and mypy**
 
