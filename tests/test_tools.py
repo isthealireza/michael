@@ -110,6 +110,12 @@ def test_system_prompt_still_carries_its_non_negotiable_rules() -> None:
         "None of them is permission to end the output there.",
         "A refusal still ends with the three closing blocks below",
         "Do not invite the reader to reissue or reword the request.",
+        # W-4, the stutter: three deployed outputs repeated a refusal, left a
+        # sentence unfinished, or narrated the tool plan ("Let me try a more").
+        # The stream carries no marker for a superseded partial, so the client
+        # cannot drop it - the model must not emit it.
+        "Your output is the answer, not an account of producing it.",
+        "Say a thing once.",
         # Web search locates documents for ingestion; it is never a source.
         "Web search locates documents. It never answers questions.",
         "Never cite a web page, a search result, a snippet or a summary.",
