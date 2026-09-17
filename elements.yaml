@@ -41,7 +41,10 @@ universal:
   - id: dispute_resolution
     label: Dispute resolution
     placeholder: DISPUTE_RESOLUTION_FORUM
-    synonyms: [dispute resolution, arbitration, mediation, jurisdiction of courts]
+    # "dispute" added 2026-09-17 after Task 7's real-document audit: the WA
+    # Form 1AA fixture has a clause literally headed "IF A DISPUTE CANNOT BE
+    # RESOLVED", which the phrase "dispute resolution" alone does not match.
+    synonyms: [dispute resolution, dispute, arbitration, mediation, jurisdiction of courts]
     basis: drafting convention
   - id: liability
     label: Limitation of liability
