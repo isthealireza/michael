@@ -276,6 +276,39 @@ Still open:
    `tests/test_runtime_config.py::test_the_agent_profile_grants_no_write_tool`,
    but the two documents still disagree in wording.
 
+### Carried forward from the contract-comparison work (Task 3 evidence)
+
+**C1. The contract splitter has no `_is_contents_entry` equivalent.**
+A Word-generated Table of Contents mints spurious clauses. Fixture 2 line 63
+reads `13. INSURANCE 25` — a heading-shaped line whose trailing bare number is
+a PAGE reference. **This is the same defect class the legislation splitter
+already solves**, and which this project built and debugged twice in one week:
+identify it by whether a NEIGHBOURING row also carries a trailing bare number.
+The reasoning transfers directly; do not re-derive it.
+→ WORKER-3, queued AFTER Task 5. Not before: Task 4 does not depend on it, and
+interleaving would put two changes in `contracts.py` at once.
+
+**C2. `docx_text.py` drops Word auto-numbering (`<w:numPr>`).**
+Verified by the owner in the raw `document.xml` of fixture 2: **148 `w:numPr`
+auto-numbered items, and not one of those numbers reaches the extracted text.**
+Line 534 is a bare `INSURANCE` — the real body heading with its number gone —
+while line 537 says `under this clause 13.1`, so the numbering exists in the
+prose and nowhere else.
+→ **WORKER-1's ground, not WORKER-3's. WORKER-3 must not fix it.** It does not
+run until the contract work is finished: `docx_text.py` is on the INGESTION
+path too, so a change there touches the corpus and needs a full rebuild to
+prove (see section 5a and `.orca/WORKER-1.md`). Not a thing to start
+mid-feature.
+
+**C3. A limitation the feature must state, not hold in someone's head.**
+On a Word contract using auto-numbering, comparison aligns on `INSURANCE`
+rather than `13`. Sub-clause granularity is lost in the body — `13.1` and
+`13.2` do not exist as separate clauses — so **a renumbering is invisible**.
+The feature still works and still reports what changed; it cannot see a change
+that is ONLY a change of number.
+→ Goes in the README when **Task 9** lands. Better stated as a known
+limitation than discovered by the reader.
+
 **WORKER-2 is released from hold.** Recalibration is done and the number is
 unchanged.
 
