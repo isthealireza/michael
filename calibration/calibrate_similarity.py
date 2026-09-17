@@ -76,12 +76,18 @@ def choose(rows: list[SweepRow]) -> SweepRow:
 def main() -> int:
     data = json.loads((ROOT / "calibration" / "labelled_clause_pairs.json").read_text(encoding="utf-8"))
 
+    # autojunk=False, matching src/michael/contracts.py. Left at the default
+    # True, SequenceMatcher marks any character recurring often enough in a
+    # 200+-character sequence as "popular" and refuses to anchor a match on
+    # it - which collapsed a real edited-clause pair (two numbers changed in
+    # 266 characters of ordinary prose) from 0.9925 to 0.1692. A calibration
+    # script measuring the wrong ratio would calibrate the wrong threshold.
     same_ratios = [
-        difflib.SequenceMatcher(None, normalise(p["before"]), normalise(p["after"])).ratio()
+        difflib.SequenceMatcher(None, normalise(p["before"]), normalise(p["after"]), autojunk=False).ratio()
         for p in data["same_clause"]
     ]
     different_ratios = [
-        difflib.SequenceMatcher(None, normalise(p["a"]), normalise(p["b"])).ratio()
+        difflib.SequenceMatcher(None, normalise(p["a"]), normalise(p["b"]), autojunk=False).ratio()
         for p in data["different_clause"]
     ]
 

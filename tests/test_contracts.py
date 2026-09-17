@@ -292,3 +292,51 @@ def test_no_clause_vanishes_between_splitting_and_reporting() -> None:
     )
     assert accounted_before == before_count
     assert accounted_after == after_count
+
+
+# --- autojunk: a 266-character real pair that scored 0.1692 while 99% ------
+# identical ------------------------------------------------------------------
+#
+# From the WA Government consultancy agreement fixture's DISPUTE RESOLUTION
+# clause (calibration/labelled_clause_pairs.json). Edited in exactly two
+# numbers - "10 Business Days" to "15", "20" to "30" - nothing else. With
+# difflib.SequenceMatcher's default autojunk=True, this pair scored 0.1692:
+# below SIMILARITY_THRESHOLD, so a real two-number edit would have been
+# reported ADDED plus REMOVED rather than CHANGED with a word diff. WORKER-2
+# found this during Task 10 and escalated rather than fixing it in this file.
+
+DISPUTE_CLAUSE_BEFORE = (
+    "Within 10 Business Days after service of a notice of dispute, the parties "
+    "must confer at least once to resolve the dispute. If the dispute has not "
+    "been resolved within 20 Business Days of service of the notice of "
+    "dispute, either party may commence legal proceedings."
+)
+DISPUTE_CLAUSE_AFTER = (
+    "Within 15 Business Days after service of a notice of dispute, the parties "
+    "must confer at least once to resolve the dispute. If the dispute has not "
+    "been resolved within 30 Business Days of service of the notice of "
+    "dispute, either party may commence legal proceedings."
+)
+
+
+def test_a_clause_edited_in_two_numbers_clears_the_similarity_threshold() -> None:
+    """The autojunk regression, pinned to the exact pair that exposed it.
+
+    A pair 99.25% identical by SequenceMatcher(autojunk=False).ratio() must
+    not fall below SIMILARITY_THRESHOLD because autojunk marked the common
+    letters of ordinary legal prose as too "popular" to anchor a match on
+    once the clause passed 200 characters.
+    """
+    assert len(DISPUTE_CLAUSE_BEFORE) == 266
+    report = compare(
+        f"1. DISPUTE RESOLUTION\n{DISPUTE_CLAUSE_BEFORE}\n",
+        f"1. DISPUTE RESOLUTION\n{DISPUTE_CLAUSE_AFTER}\n",
+    )
+    changed = [c for c in report.changes if c.status == "CHANGED"]
+    assert len(changed) == 1, (
+        "the edited clause was not paired as CHANGED - it fell below "
+        "SIMILARITY_THRESHOLD and was reported ADDED plus REMOVED instead"
+    )
+    rendered = " ".join(changed[0].diff)
+    assert "10" in rendered and "15" in rendered
+    assert "20" in rendered and "30" in rendered

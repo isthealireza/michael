@@ -172,11 +172,22 @@ class ComparisonReport:
 
 
 def _word_diff(before: str, after: str) -> tuple[str, ...]:
-    """A compact word-level rendering of what changed. Facts, not opinions."""
+    """A compact word-level rendering of what changed. Facts, not opinions.
+
+    ``autojunk=False``, always. `SequenceMatcher`'s default `autojunk=True`
+    marks any element recurring often enough in a 200+-token sequence as
+    "popular" and refuses to anchor a match on it - which is most of the
+    common words in a paragraph of ordinary legal prose. Left at the default,
+    a clause edited in only two numbers renders opcodes with large "replace"
+    blocks instead of small ones around the numbers, so the diff looks like a
+    whole-clause rewrite rather than the two-word edit it actually is. See
+    `SIMILARITY_THRESHOLD`'s docstring below for the same defect's effect on
+    the ratio used to pair clauses in the first place.
+    """
     old = normalise(before).split()
     new = normalise(after).split()
     lines: list[str] = []
-    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, old, new).get_opcodes():
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, old, new, autojunk=False).get_opcodes():
         if tag == "equal":
             continue
         if old[i1:i2]:
@@ -310,10 +321,20 @@ def compare(text_a: str, text_b: str) -> ComparisonReport:
         del right[match_key]
 
     # Stage 3 - similarity, bounded.
+    #
+    # autojunk=False, always - see _word_diff's docstring for why. Left at
+    # the default, a real edited-clause pair (two numbers changed in 266
+    # characters of ordinary prose, otherwise identical) scored 0.1692
+    # instead of 0.9925: autojunk marks the common letters of that prose as
+    # "popular" once the sequence passes 200 characters and refuses to anchor
+    # on them. At the default, that pair fell below SIMILARITY_THRESHOLD and
+    # was reported ADDED plus REMOVED - not silent, but it defeats the
+    # feature on exactly the case it exists for: a notice-period or
+    # dollar-amount edit.
     if len(left) <= MAX_UNPAIRED_FOR_SIMILARITY and len(right) <= MAX_UNPAIRED_FOR_SIMILARITY:
         scored = sorted(
             (
-                difflib.SequenceMatcher(None, normalise(a.text), normalise(b.text)).ratio(),
+                difflib.SequenceMatcher(None, normalise(a.text), normalise(b.text), autojunk=False).ratio(),
                 a_key,
                 b_key,
             )
