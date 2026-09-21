@@ -51,9 +51,7 @@ def test_the_classification_word_in_prose_is_not_a_declaration() -> None:
 
 
 def test_a_declaration_that_is_not_the_first_line_is_reported() -> None:
-    assert [f.rule for f in check("Here you go.\n\n" + CLEAN)] == [
-        "classification_position"
-    ]
+    assert [f.rule for f in check("Here you go.\n\n" + CLEAN)] == ["classification_position"]
 
 
 def test_a_heading_marker_or_bold_wrapping_is_accepted() -> None:
@@ -89,8 +87,9 @@ def test_certifying_a_clause_is_reported_in_either_direction() -> None:
         "The clause is not compliant with the NES.",
         "That clause does not comply with s 117.",
     ):
-        body = CLEAN.replace("Under the Fair Work Act 2009 (Cth) s 117 an "
-                             "employer must give written notice.", claim)
+        body = CLEAN.replace(
+            "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.", claim
+        )
         assert [f.rule for f in check(body)] == ["certification"], claim
 
 
@@ -104,14 +103,12 @@ def test_the_required_disclaimer_is_not_reported_as_a_certification() -> None:
         "statement that the clause is compliant.",
         "Its clauses are based on the provisions cited; that is not a "
         "statement that any clause is compliant.",
-        "Nothing in this document is a statement that the clause is "
-        "compliant.",
+        "Nothing in this document is a statement that the clause is compliant.",
         "This is not a certification that the clause is compliant.",
         "Michael does not certify that the clause is compliant.",
     ):
         body = CLEAN.replace(
-            "Under the Fair Work Act 2009 (Cth) s 117 an employer must give "
-            "written notice.",
+            "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.",
             disclaimer,
         )
         assert check(body) == [], disclaimer
@@ -120,8 +117,7 @@ def test_the_required_disclaimer_is_not_reported_as_a_certification() -> None:
 def test_a_statement_about_the_law_is_not_a_certification() -> None:
     """Michael must still be able to say what the law requires."""
     body = CLEAN.replace(
-        "Under the Fair Work Act 2009 (Cth) s 117 an employer must give "
-        "written notice.",
+        "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.",
         "An employer complies with s 117 by giving written notice.",
     )
     assert check(body) == []

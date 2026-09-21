@@ -43,9 +43,9 @@ THRESHOLDS = [round(0.30 + 0.01 * i, 2) for i in range(66)]  # 0.30 .. 0.95
 @dataclass(frozen=True, slots=True)
 class SweepRow:
     threshold: float
-    wrong_pairings: int   # different-clause pairs scoring >= threshold
+    wrong_pairings: int  # different-clause pairs scoring >= threshold
     missed_pairings: int  # same-clause pairs scoring < threshold
-    correct: int          # everything else: correctly paired or correctly kept apart
+    correct: int  # everything else: correctly paired or correctly kept apart
 
 
 def sweep(same_ratios: list[float], different_ratios: list[float]) -> list[SweepRow]:
@@ -55,7 +55,9 @@ def sweep(same_ratios: list[float], different_ratios: list[float]) -> list[Sweep
         wrong = sum(1 for r in different_ratios if r >= t)
         missed = sum(1 for r in same_ratios if r < t)
         correct = total - wrong - missed
-        rows.append(SweepRow(threshold=t, wrong_pairings=wrong, missed_pairings=missed, correct=correct))
+        rows.append(
+            SweepRow(threshold=t, wrong_pairings=wrong, missed_pairings=missed, correct=correct)
+        )
     return rows
 
 
@@ -74,7 +76,9 @@ def choose(rows: list[SweepRow]) -> SweepRow:
 
 
 def main() -> int:
-    data = json.loads((ROOT / "calibration" / "labelled_clause_pairs.json").read_text(encoding="utf-8"))
+    data = json.loads(
+        (ROOT / "calibration" / "labelled_clause_pairs.json").read_text(encoding="utf-8")
+    )
 
     # autojunk=False, matching src/michael/contracts.py. Left at the default
     # True, SequenceMatcher marks any character recurring often enough in a
@@ -83,7 +87,9 @@ def main() -> int:
     # 266 characters of ordinary prose) from 0.9925 to 0.1692. A calibration
     # script measuring the wrong ratio would calibrate the wrong threshold.
     same_ratios = [
-        difflib.SequenceMatcher(None, normalise(p["before"]), normalise(p["after"]), autojunk=False).ratio()
+        difflib.SequenceMatcher(
+            None, normalise(p["before"]), normalise(p["after"]), autojunk=False
+        ).ratio()
         for p in data["same_clause"]
     ]
     different_ratios = [
@@ -101,7 +107,9 @@ def main() -> int:
     print("=" * 92)
     print("DIFFERENT-CLAUSE PAIRS (should score LOW -- a wrong pairing here is a false CHANGED)")
     print("=" * 92)
-    for p, r in sorted(zip(data["different_clause"], different_ratios, strict=True), key=lambda x: -x[1]):
+    for p, r in sorted(
+        zip(data["different_clause"], different_ratios, strict=True), key=lambda x: -x[1]
+    ):
         print(f"  {r:.4f}  {p['topic']}")
 
     print()

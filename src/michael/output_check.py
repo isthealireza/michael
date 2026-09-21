@@ -40,9 +40,7 @@ def _block(key: str) -> re.Pattern[str]:
     counts a refusal to write a block as the block itself.
     """
     return re.compile(
-        r"^[ \t]*#{0,6}[ \t]*\*{0,2}"
-        + re.escape(key)
-        + r"\*{0,2}(?=[ \t]*[—:-]|[ \t]*$)",
+        r"^[ \t]*#{0,6}[ \t]*\*{0,2}" + re.escape(key) + r"\*{0,2}(?=[ \t]*[—:-]|[ \t]*$)",
         re.MULTILINE,
     )
 
@@ -123,9 +121,7 @@ def check(text: str) -> list[Finding]:
         preceding = out[max(0, certified.start() - 100) : certified.start()]
         if DISCLAIMS.search(preceding):
             continue
-        findings.append(
-            Finding("certification", f"certifies a clause: {certified.group(0)!r}")
-        )
+        findings.append(Finding("certification", f"certifies a clause: {certified.group(0)!r}"))
         break
 
     return findings

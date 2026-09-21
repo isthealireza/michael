@@ -21,11 +21,7 @@ from michael.output_check import check  # noqa: E402
 
 
 def score(directory: pathlib.Path) -> None:
-    files = [
-        f
-        for f in sorted(directory.glob("*__*.txt"))
-        if not f.name.endswith(".err.txt")
-    ]
+    files = [f for f in sorted(directory.glob("*__*.txt")) if not f.name.endswith(".err.txt")]
     counts: collections.Counter[str] = collections.Counter()
     per_model: dict[str, list[int]] = collections.defaultdict(lambda: [0, 0])
     clean = 0

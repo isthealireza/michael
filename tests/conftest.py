@@ -15,6 +15,7 @@ import pytest
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
+
 # W4-5 (.orca/reports/2026-09-20-worker4-production-qa.md): all 5 integration
 # tests skipped on a password mismatch between this file's hardcoded default
 # and the local michael-postgres container. Fixing only the password would

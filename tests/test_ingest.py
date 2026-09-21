@@ -17,13 +17,13 @@ import pytest
 from michael import ingest, schema
 from michael.config import settings
 from michael.ingest import (
-    schedule_spans,
     IngestionError,
     Provision,
     _opening_schedule,
     _validate,
     detect_headings_only,
     normalise_corpus_records,
+    schedule_spans,
     snapshot_date_of,
     split_sections,
 )
@@ -371,8 +371,7 @@ def test_a_cited_act_year_is_not_a_contents_entry() -> None:
 
     # 13G: operative heading, previous line is plain prose ending in "84." not "84".
     assert not _is_contents_entry(
-        "13G Civil penalty provision for serious interference with privacy of an "
-        "individual",
+        "13G Civil penalty provision for serious interference with privacy of an individual",
         previous="An act or practice that is not covered by section 13 is not an "
         "interference with the privacy of an individual.",
         following="Civil penalty provision",
@@ -381,8 +380,7 @@ def test_a_cited_act_year_is_not_a_contents_entry() -> None:
     # Same bug class, real section 34 (an operative heading citing the Freedom
     # of Information Act 1982), found independently of the two below.
     assert not _is_contents_entry(
-        "34 Provisions relating to documents exempt under the Freedom of "
-        "Information Act 1982",
+        "34 Provisions relating to documents exempt under the Freedom of Information Act 1982",
         previous="Division 4—Miscellaneous",
         following=(
             "(1) The Commissioner shall not, in connection with the performance of "
@@ -391,8 +389,7 @@ def test_a_cited_act_year_is_not_a_contents_entry() -> None:
         ),
     )
     assert _is_contents_entry(
-        "34 Provisions relating to documents exempt under the Freedom of "
-        "Information Act 1982 254",
+        "34 Provisions relating to documents exempt under the Freedom of Information Act 1982 254",
         previous="Division 4—Miscellaneous 254",
         following="35 Direction where refusal or failure to amend exempt document 254",
     )
@@ -595,7 +592,7 @@ supplier 9(1)
 supply 3
 ticket resale advertisement 3
 ticket scalping 3
-"""
+"""  # noqa: E501 - verbatim quoted statutory/reprint text; do not reflow
 
 
 def test_the_endnote_fix_recovers_every_real_section_of_a_full_real_act() -> None:
@@ -649,7 +646,9 @@ def test_must_survive_application_of_fair_trading_act_2010() -> None:
     provisions = {p.section_number: p for p in split_sections(TICKET_SCALPING_ACT_2021)}
     assert "14" in provisions
     assert provisions["14"].heading == "Application of Fair Trading Act 2010"
-    assert "(1) The following provisions of the Fair Trading Act 2010 apply" in provisions["14"].text
+    assert (
+        "(1) The following provisions of the Fair Trading Act 2010 apply" in provisions["14"].text
+    )
     # The in-body note's own "1." and "2." must not have become sections 1
     # and 2 again - those numbers are already used, by the real sections 1
     # and 2 much earlier in the Act.
@@ -742,7 +741,7 @@ Bank of Western Australia Act 1995  4 of 1995  1 Mar 1995  1 Jul 1995 (see s. 2 
 Other notes
 1 The provisions in this Act amending the Bank of Western Australia Act 1990 and other Acts have been omitted under the Reprints Act 1984 s. 7(4)(e).
 2 The Bank of Western Australia Act 1990 (originally enacted as the R&I Bank Act 1990), the short title of which was changed to the R & I Holdings Act 1990 by this Act Sch. 1 cl. 2, was repealed by the Financial Legislation Amendment Act 1996.
-"""
+"""  # noqa: E501 - verbatim quoted statutory/reprint text; do not reflow
 
 
 def test_schedule_local_numbering_does_not_duplicate_the_real_section() -> None:
@@ -769,17 +768,13 @@ def test_schedule_local_numbering_does_not_duplicate_the_real_section() -> None:
     # exactly as the real Act's genuine main-body section 11 (referenced
     # directly in section 2: "Part 2 (except section 11)") is not shadowed
     # by a same-numbered Schedule clause about something else entirely.
-    assert not any(
-        p.section_number == "11" and p.heading == "Terms used" for p in provisions
-    )
+    assert not any(p.section_number == "11" and p.heading == "Terms used" for p in provisions)
 
 
 def test_the_endnotes_own_amendment_history_is_not_a_provision() -> None:
     """The "Other notes" tail - the class of row Phase A first found."""
     provisions = split_sections(BANK_OF_WA_SCHEDULE_COLLISION_EXCERPT)
-    assert not any(
-        "have been omitted under the Reprints Act 1984" in p.text for p in provisions
-    )
+    assert not any("have been omitted under the Reprints Act 1984" in p.text for p in provisions)
 
 
 # Small Business Development Corporation Act 1983 (WA), excerpted, real and
@@ -807,7 +802,7 @@ An Act to establish the Small Business Development Corporation.
 11A. Delegation by Corporation
 (1) The Corporation may, by instrument in writing, delegate the performance of any of its functions, except this power of delegation.
 (2) A delegation under subsection (1) may be made to the Commissioner.
-"""
+"""  # noqa: E501 - verbatim quoted statutory/reprint text; do not reflow
 
 
 def test_a_later_double_letter_insertion_does_not_reject_an_earlier_single_letter_one() -> None:
@@ -819,7 +814,9 @@ def test_a_later_double_letter_insertion_does_not_reject_an_earlier_single_lette
     the genuine "11A. Delegation by Corporation" as if it came before "11AA"
     in error, when it is simply the next real section after it.
     """
-    provisions = {p.section_number: p for p in split_sections(DOUBLE_LETTER_SUFFIX_OUT_OF_LEXICAL_ORDER)}
+    provisions = {
+        p.section_number: p for p in split_sections(DOUBLE_LETTER_SUFFIX_OUT_OF_LEXICAL_ORDER)
+    }
     assert set(provisions) == {"11", "11AA", "11A"}
     assert "Delegation by Corporation" in provisions["11A"].heading
 
@@ -872,7 +869,7 @@ Overview of this Act
 5 Terms and conditions of employment (Chapter 2)
 (1) Chapter 2 provides for terms and conditions of employment of national system employees.
 (2) Part 21 has the core provisions for the Chapter.
-"""
+"""  # noqa: E501 - verbatim quoted statutory/reprint text; do not reflow
 
 
 def test_a_commencement_table_does_not_swallow_the_real_sections_after_it() -> None:
@@ -887,7 +884,9 @@ def test_a_commencement_table_does_not_swallow_the_real_sections_after_it() -> N
     table's cells wrap prose between the dated rows, but a real section
     does not sit inside that pattern.
     """
-    provisions = {p.section_number: p for p in split_sections(FAIR_WORK_ACT_COMMENCEMENT_TABLE_EXCERPT)}
+    provisions = {
+        p.section_number: p for p in split_sections(FAIR_WORK_ACT_COMMENCEMENT_TABLE_EXCERPT)
+    }
     assert set(provisions) >= {"1", "2", "3", "4", "5"}
     assert provisions["1"].heading == "Short title"
     assert provisions["2"].heading == "Commencement"
@@ -1095,9 +1094,7 @@ def _file_log_lines() -> list[dict[str, object]]:
     return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line]
 
 
-def test_a_file_ingest_writes_the_file_log(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_a_file_ingest_writes_the_file_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _stub_database(monkeypatch)
     source_file = tmp_path / "act.txt"
     source_file.write_text(SAMPLE, encoding="utf-8")
@@ -1113,14 +1110,13 @@ def test_a_file_ingest_writes_the_file_log(
 
     lines = _file_log_lines()
     assert any(
-        line["outcome"] == "allowed" and line["url"] == "https://www.legislation.gov.au/fixture-file"
+        line["outcome"] == "allowed"
+        and line["url"] == "https://www.legislation.gov.au/fixture-file"
         for line in lines
     ), f"file ingest never reached the file log: {lines}"
 
 
-def test_a_url_ingest_writes_the_file_log(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_a_url_ingest_writes_the_file_log(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     _stub_database(monkeypatch)
     fake_source = FetchedSource(
         url="https://www.legislation.gov.au/fixture-url",
@@ -1254,7 +1250,7 @@ commencement means the commencement of this Part.
 
 47 Transitioning casual employees
 (1) This clause applies if, before the commencement, a person was a regular casual employee.
-"""
+"""  # noqa: E501 - verbatim quoted statutory/reprint text; do not reflow
 
 
 def test_a_volume_that_opens_mid_schedule_labels_its_clauses_accordingly() -> None:
@@ -1267,7 +1263,9 @@ def test_a_volume_that_opens_mid_schedule_labels_its_clauses_accordingly() -> No
     would otherwise silently resolve to this Schedule clause instead of the
     real section 47 in volume 01, with no way for the reader to tell.
     """
-    provisions = {p.section_number: p for p in split_sections(FAIR_WORK_VOLUME_04_SCHEDULE_1_OPENING)}
+    provisions = {
+        p.section_number: p for p in split_sections(FAIR_WORK_VOLUME_04_SCHEDULE_1_OPENING)
+    }
     assert "47" not in provisions
     assert "Sch 1 cl 47" in provisions
     assert provisions["Sch 1 cl 47"].heading == "Transitioning casual employees"
@@ -1335,7 +1333,7 @@ These regulations may be cited as the Noise Abatement (Noise Labelling of Equipm
 2. Interpretation
 In these regulations unless the contrary intention appears —
 acoustic output descriptor means the quantity obtained when the test procedure specified in paragraph (b) of the appropriate item in Schedule 3 is used.
-"""
+"""  # noqa: E501 - verbatim quoted statutory/reprint text; do not reflow
 
 
 def test_a_run_of_bare_schedule_headings_each_with_a_wrapped_title_is_not_a_seed() -> None:
@@ -1384,22 +1382,22 @@ def test_a_note_block_after_a_section_is_not_a_second_section_one() -> None:
     the Short title section.
     """
     text = (
-        '1. Short title\n'
-        'This Act may be cited as the Offshore Minerals Act 2003.\n'
-        '\n'
-        '35. Act does not apply to exploration for or recovery of petroleum\n'
-        'This Act does not apply to the exploration for or recovery of petroleum.\n'
-        'Note:\n'
+        "1. Short title\n"
+        "This Act may be cited as the Offshore Minerals Act 2003.\n"
+        "\n"
+        "35. Act does not apply to exploration for or recovery of petroleum\n"
+        "This Act does not apply to the exploration for or recovery of petroleum.\n"
+        "Note:\n"
         '1. For "petroleum" see section 5.\n'
-        '2. Offshore petroleum exploration and mining are regulated by the '
-        'Petroleum (Submerged Lands) Act 1967 of the Commonwealth.\n'
-        '\n'
-        '36. Section number not used\n'
-        'See note 2 to section 3(1).\n'
+        "2. Offshore petroleum exploration and mining are regulated by the "
+        "Petroleum (Submerged Lands) Act 1967 of the Commonwealth.\n"
+        "\n"
+        "36. Section number not used\n"
+        "See note 2 to section 3(1).\n"
     )
     numbers = [p.section_number for p in ingest.split_sections(text)]
-    assert numbers.count('1') == 1, numbers
-    assert '35' in numbers and '36' in numbers
+    assert numbers.count("1") == 1, numbers
+    assert "35" in numbers and "36" in numbers
 
 
 def test_a_bare_notes_line_does_not_suppress_the_document() -> None:
@@ -1411,16 +1409,16 @@ def test_a_bare_notes_line_does_not_suppress_the_document() -> None:
     this is the case that keeps the pattern honest.
     """
     text = (
-        'Notes\n'
-        'Compilation table 9\n'
-        '\n'
-        '1. Citation\n'
-        'These regulations may be cited as the Chattel Securities '
-        'Regulations 1988.\n'
-        '\n'
-        '2. Commencement\n'
-        'These regulations come into operation on the day on which the Act '
-        'comes into operation.\n'
+        "Notes\n"
+        "Compilation table 9\n"
+        "\n"
+        "1. Citation\n"
+        "These regulations may be cited as the Chattel Securities "
+        "Regulations 1988.\n"
+        "\n"
+        "2. Commencement\n"
+        "These regulations come into operation on the day on which the Act "
+        "comes into operation.\n"
     )
     numbers = [p.section_number for p in ingest.split_sections(text)]
-    assert numbers == ['1', '2'], numbers
+    assert numbers == ["1", "2"], numbers

@@ -203,9 +203,7 @@ CORPUS_JURISDICTIONS = frozenset({"wa", "commonwealth"})
 
 #: Longest name first, so "australian capital territory" is not shadowed by
 #: a shorter alternative sharing a prefix.
-_JURISDICTION_NAMES_LONGEST_FIRST = sorted(
-    AUSTRALIAN_JURISDICTION_NAMES, key=len, reverse=True
-)
+_JURISDICTION_NAMES_LONGEST_FIRST = sorted(AUSTRALIAN_JURISDICTION_NAMES, key=len, reverse=True)
 JURISDICTION_NAME_PATTERN = re.compile(
     r"\b(?:" + "|".join(re.escape(name) for name in _JURISDICTION_NAMES_LONGEST_FIRST) + r")\b",
     re.IGNORECASE,

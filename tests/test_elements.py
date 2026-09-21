@@ -4,7 +4,15 @@ from pathlib import Path
 import pytest
 
 from michael.contracts import split_clauses
-from michael.elements import Element, ElementConfigError, elements_for, load_elements
+from michael.elements import (
+    CompletenessReport,
+    Element,
+    ElementConfigError,
+    ElementFinding,
+    audit,
+    elements_for,
+    load_elements,
+)
 
 
 def test_the_shipped_file_loads() -> None:
@@ -56,8 +64,6 @@ def test_an_element_with_no_synonyms_is_refused(tmp_path: Path) -> None:
     with pytest.raises(ElementConfigError, match="synonyms"):
         load_elements(bad)
 
-
-from michael.elements import CompletenessReport, ElementFinding, audit
 
 WITH_GOVERNING_LAW = """1. PARTIES
 The parties are Acme Pty Ltd and Beta Pty Ltd.
@@ -149,9 +155,7 @@ def test_a_finding_has_nowhere_to_put_a_verdict() -> None:
 # not match the `dispute_resolution` element, because none of its synonyms
 # were the bare word "dispute". `elements.yaml` was widened accordingly.
 
-REAL_FIXTURES = tuple(
-    sorted((pathlib.Path(__file__).parent / "fixtures" / "contracts").iterdir())
-)
+REAL_FIXTURES = tuple(sorted((pathlib.Path(__file__).parent / "fixtures" / "contracts").iterdir()))
 ELEMENTS_YAML = pathlib.Path(__file__).parent.parent / "elements.yaml"
 
 

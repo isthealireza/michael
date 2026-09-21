@@ -87,10 +87,7 @@ def load_elements(path: Path | None = None) -> tuple[Element, ...]:
 def _sections(path: Path | None) -> dict[str, list[str]]:
     source = path or settings().elements_file
     raw = yaml.safe_load(source.read_text(encoding="utf-8")) or {}
-    return {
-        section: [str(e["id"]) for e in (entries or ())]
-        for section, entries in raw.items()
-    }
+    return {section: [str(e["id"]) for e in (entries or ())] for section, entries in raw.items()}
 
 
 def elements_for(domain: str | None = None, *, path: Path | None = None) -> tuple[Element, ...]:
@@ -196,13 +193,9 @@ def audit(
 
     for element in elements_for(domain, path=path):
         heading_hits = [
-            c for c in clauses
-            if any(_hits(_heading_text(c), s) for s in element.synonyms)
+            c for c in clauses if any(_hits(_heading_text(c), s) for s in element.synonyms)
         ]
-        body_hits = [
-            c for c in clauses
-            if any(_hits(c.text.lower(), s) for s in element.synonyms)
-        ]
+        body_hits = [c for c in clauses if any(_hits(c.text.lower(), s) for s in element.synonyms)]
 
         if len(heading_hits) == 1:
             state: Literal["PRESENT", "ABSENT", "UNCERTAIN"] = "PRESENT"

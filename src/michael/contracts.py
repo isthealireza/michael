@@ -19,7 +19,8 @@ PREAMBLE_ID = "(preamble)"
 #: A numbered clause heading: "1.", "1.1", "1.1.1", "3.2(a)", optionally
 #: followed by a heading on the same line. Anchored at the line start.
 NUMBERED_CLAUSE = re.compile(
-    r"^[ \t]*(?P<number>\d{1,3}(?:\.\d{1,3})*(?:\([a-z]{1,2}\))?)[.)]?[ \t]+(?P<heading>\S[^\n]*)?$",
+    r"^[ \t]*(?P<number>\d{1,3}(?:\.\d{1,3})*(?:\([a-z]{1,2}\))?)[.)]?[ \t]+"
+    r"(?P<heading>\S[^\n]*)?$",
     re.MULTILINE,
 )
 
@@ -194,7 +195,9 @@ def _word_diff(before: str, after: str) -> tuple[str, ...]:
     old = normalise(before).split()
     new = normalise(after).split()
     lines: list[str] = []
-    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(None, old, new, autojunk=False).get_opcodes():
+    for tag, i1, i2, j1, j2 in difflib.SequenceMatcher(
+        None, old, new, autojunk=False
+    ).get_opcodes():
         if tag == "equal":
             continue
         if old[i1:i2]:
@@ -341,7 +344,9 @@ def compare(text_a: str, text_b: str) -> ComparisonReport:
     if len(left) <= MAX_UNPAIRED_FOR_SIMILARITY and len(right) <= MAX_UNPAIRED_FOR_SIMILARITY:
         scored = sorted(
             (
-                difflib.SequenceMatcher(None, normalise(a.text), normalise(b.text), autojunk=False).ratio(),
+                difflib.SequenceMatcher(
+                    None, normalise(a.text), normalise(b.text), autojunk=False
+                ).ratio(),
                 a_key,
                 b_key,
             )
@@ -367,13 +372,23 @@ def compare(text_a: str, text_b: str) -> ComparisonReport:
             del right[b_key]
 
     changes += [
-        ClauseChange(clause_id_before=key[0], clause_id_after=None, status="REMOVED",
-                     heading=clause.heading, diff=())
+        ClauseChange(
+            clause_id_before=key[0],
+            clause_id_after=None,
+            status="REMOVED",
+            heading=clause.heading,
+            diff=(),
+        )
         for key, clause in left.items()
     ]
     changes += [
-        ClauseChange(clause_id_before=None, clause_id_after=key[0], status="ADDED",
-                     heading=clause.heading, diff=())
+        ClauseChange(
+            clause_id_before=None,
+            clause_id_after=key[0],
+            status="ADDED",
+            heading=clause.heading,
+            diff=(),
+        )
         for key, clause in right.items()
     ]
     return ComparisonReport(unchanged=unchanged, changes=tuple(changes))

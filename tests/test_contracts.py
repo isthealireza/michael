@@ -1,5 +1,15 @@
-from michael.contracts import PREAMBLE_ID, Clause, split_clauses
+import pathlib
 
+import pytest
+
+from michael.contracts import (
+    PREAMBLE_ID,
+    ClauseChange,
+    ComparisonReport,
+    compare,
+    normalise,
+    split_clauses,
+)
 
 DECIMAL_NUMBERED = """SERVICES AGREEMENT
 This agreement is made between the parties named below.
@@ -70,7 +80,7 @@ def test_nothing_in_the_document_is_lost() -> None:
     """Every character of every document must survive into some clause."""
     for document in (DECIMAL_NUMBERED, ALL_CAPS_UNNUMBERED, SCHEDULE_RESTARTS_NUMBERING):
         clauses = split_clauses(document)
-        joined = "".join(document[c.char_start:c.char_end] for c in clauses)
+        joined = "".join(document[c.char_start : c.char_end] for c in clauses)
         assert joined.strip() == document.strip()
 
 
@@ -78,13 +88,6 @@ def test_a_document_with_no_clause_headings_returns_one_clause() -> None:
     clauses = split_clauses("Just some prose with no headings at all in it.")
     assert len(clauses) == 1
     assert clauses[0].clause_id == PREAMBLE_ID
-
-
-import pathlib
-
-import pytest
-
-from michael.contracts import normalise
 
 
 @pytest.mark.parametrize(
@@ -116,8 +119,6 @@ def test_a_material_edit_never_normalises_to_the_same_text(before: str, after: s
 def test_whitespace_only_differences_normalise_away(before: str, after: str) -> None:
     assert normalise(before) == normalise(after)
 
-
-from michael.contracts import ClauseChange, ComparisonReport, compare
 
 V1 = """1. PARTIES
 The parties are Acme Pty Ltd and Beta Pty Ltd.
@@ -199,7 +200,9 @@ def test_the_report_has_nowhere_to_put_a_verdict() -> None:
 # the way Task 3's evidence file is for the splitter.
 
 REAL_CONTRACT = (
-    pathlib.Path(__file__).parent / "fixtures" / "contracts"
+    pathlib.Path(__file__).parent
+    / "fixtures"
+    / "contracts"
     / "02_wa_gov_general_conditions_consultancy_agreement.docx"
 )
 

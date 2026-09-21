@@ -21,9 +21,7 @@ MICHAEL_JS = Path(__file__).resolve().parents[1] / "web" / "michael.js"
 
 def _pattern(name: str) -> re.Pattern[str]:
     source = MICHAEL_JS.read_text(encoding="utf-8")
-    match = re.search(
-        rf"const {name} = new RegExp\(String\.raw`(.*?)`", source, re.DOTALL
-    )
+    match = re.search(rf"const {name} = new RegExp\(String\.raw`(.*?)`", source, re.DOTALL)
     assert match, f"{name} is no longer a String.raw RegExp in michael.js"
     return re.compile(match.group(1))
 
@@ -55,9 +53,7 @@ CITATION = _pattern("CITATION")
         ),
     ],
 )
-def test_a_real_citation_captures_the_act_name_and_nothing_else(
-    text: str, expected: str
-) -> None:
+def test_a_real_citation_captures_the_act_name_and_nothing_else(text: str, expected: str) -> None:
     """Connectors inside a title are part of the name. Both of these are real
     Western Australian Acts, and dropping "and" or "of" would truncate them."""
     match = CITATION.search(text)
