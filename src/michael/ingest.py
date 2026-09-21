@@ -43,6 +43,31 @@ SECTION_RE = re.compile(
 
 MIN_PROVISION_CHARS = 40
 
+#: A subsection marker - "(1)", "(2)", "(23)" - the clearest sign that a
+#: provision carries real operative structure rather than a bare summary.
+SUBSECTION_MARKER_RE = re.compile(r"\(\d{1,3}\)")
+
+#: How many provisions a document needs before a document-wide proportion is
+#: meaningful. Below this, one or two naturally marker-free sections (a short
+#: title, a commencement clause) would otherwise look like "all of them".
+HEADINGS_ONLY_MIN_PROVISIONS = 3
+
+#: A genuine Act's provisions vary a lot in length - a one-line short title
+#: next to a page-long substantive section. A generated or extracted stub set
+#: does not: every heading gets roughly the same boilerplate sentence. This is
+#: the ratio between the longest and shortest provision body in the document;
+#: below it, the lengths are suspiciously uniform. Calibrated against real
+#: text on both sides:
+#:   - the W1-2 fixture (three "guide"-style stubs) sits at ratio 1.11;
+#:   - this project's own short-Act test fixture (SAMPLE in test_ingest.py -
+#:     a short title plus two real, differently-worded definitions) sits at
+#:     1.91, and must NOT be flagged;
+#:   - every zero-marker document with 3+ provisions in the full 205-document
+#:     production corpus sits at 2.72 or above (Corporations (Taxing) Act
+#:     1990 (WA) is the closest real case).
+#: 1.5 sits with margin below both real cases and above the fixture.
+HEADINGS_ONLY_MAX_LENGTH_RATIO = 1.5
+
 #: Lines that carry no operative text: structural headings, page numbers, blanks.
 STRUCTURAL_PREFIXES = (
     "part ",
@@ -664,6 +689,61 @@ def split_sections(text: str) -> list[Provision]:
     return provisions
 
 
+def detect_headings_only(provisions: list[Provision]) -> str | None:
+    """Detect a document whose provisions carry headings but not operative text.
+
+    The production incident this guards against: a "guide" or summary page
+    (for example a legislation.gov.au ``/latest`` HTML view, as happened with
+    Privacy Act 1988 (Cth) Part IIIC) extracts as real-looking sections - real
+    headings, bodies that clear :data:`MIN_PROVISION_CHARS` - while containing
+    no operative law at all, just short restatements of the heading.
+
+    Not a character-count threshold: ``MIN_PROVISION_CHARS`` is exactly what
+    that page defeats, and raising it would both miss a longer stub and reject
+    genuinely short real sections (a one-sentence "Short title" clause is
+    common and legitimate). Two structural signals instead, both required:
+
+    1. **Zero subsection structure across the whole document.** Not "few" -
+       many short, genuine WA Acts have entire sections written as a single
+       flowing paragraph with no ``(1)``/``(2)`` markers at all (pre-1900
+       Imperial Acts adopted into WA law, one-clause validation Acts). A
+       document-wide *zero* is the signal, not a proportion below some
+       threshold - a false positive here loses law, which is worse than
+       missing a defect.
+    2. **Suspiciously uniform provision lengths.** A real document without
+       subsection markers still has a short title next to a substantive
+       section - lengths vary by several times over. A stub set generated
+       from a template does not: every provision comes out close to the same
+       length. See :data:`HEADINGS_ONLY_MAX_LENGTH_RATIO` for how this was
+       calibrated against the full production corpus.
+
+    Both signals must hold, so a document is never flagged on either alone:
+    a real short Act (signal 1 true, signal 2 false because it still varies)
+    passes, and a document that merely happens to have one long provision
+    covering a lot of the wordcount (signal 2 true, signal 1 false because it
+    still has ordinary subsection numbering somewhere) also passes.
+
+    Returns a human-readable reason if the document looks headings-only, or
+    ``None`` if it reads as real law.
+    """
+    if len(provisions) < HEADINGS_ONLY_MIN_PROVISIONS:
+        return None
+    with_marker = sum(1 for p in provisions if SUBSECTION_MARKER_RE.search(p.text))
+    if with_marker > 0:
+        return None
+    lengths = [len(p.text) for p in provisions]
+    spread = max(lengths) / min(lengths)
+    if spread >= HEADINGS_ONLY_MAX_LENGTH_RATIO:
+        return None
+    return (
+        f"{len(provisions)} provisions, none containing a (1)/(2) subsection "
+        f"marker, with body lengths ranging only {min(lengths)}-{max(lengths)} "
+        f"chars (ratio {spread:.2f}, below the {HEADINGS_ONLY_MAX_LENGTH_RATIO} "
+        "floor for genuine variation) - reads as headings with summary text, "
+        "not operative provisions."
+    )
+
+
 def _validate(jurisdiction: str, doc_type: str, sha256: str) -> None:
     if jurisdiction not in JURISDICTIONS:
         raise IngestionError(f"jurisdiction must be one of {JURISDICTIONS}, got {jurisdiction!r}")
@@ -696,6 +776,9 @@ def ingest_document(
     provisions = split_sections(text)
     if not provisions:
         raise IngestionError(f"{citation}: no text to ingest")
+    headings_only_reason = detect_headings_only(provisions)
+    if headings_only_reason is not None:
+        raise IngestionError(f"{citation}: refused as headings-only - {headings_only_reason}")
 
     def write(target: Connection[DictRow]) -> IngestResult:
         return _write(

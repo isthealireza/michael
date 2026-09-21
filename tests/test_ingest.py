@@ -19,8 +19,10 @@ from michael.config import settings
 from michael.ingest import (
     schedule_spans,
     IngestionError,
+    Provision,
     _opening_schedule,
     _validate,
+    detect_headings_only,
     normalise_corpus_records,
     snapshot_date_of,
     split_sections,
@@ -924,6 +926,109 @@ This Act may be cited as the Example Act.
 """
     numbers = [p.section_number for p in split_sections(plain)]
     assert numbers == ["1", "2"]
+
+
+# --- W1-2: a headings-only page must not be silently accepted -------------
+
+#: The exact scenario from the QA campaign's Bug W1-2: a "guide" page whose
+#: sections read as real headings with real-looking bodies (each clears
+#: MIN_PROVISION_CHARS=40), but none carries any operative subsection
+#: structure - one line summarising the Part, one defining a term in a single
+#: sentence, one that is nothing but a pointer to "the compiled version".
+REALISTIC_HEADINGS_ONLY = """Part IIIC—Notification of eligible data breaches
+
+26WA Guide to this Part
+This Part sets out a scheme for notification of eligible data breaches under this Act.
+
+26WB Entity
+For the purposes of this Part, entity includes a person who is a file number recipient.
+
+26WC Deemed holding of information
+See the compiled version of this Act for the full text of this provision.
+"""
+
+
+def test_the_realistic_headings_only_fixture_is_detected() -> None:
+    provisions = split_sections(REALISTIC_HEADINGS_ONLY)
+    assert len(provisions) == 3, "fixture should still split into 3 real-looking provisions"
+    assert all("(1)" not in p.text and "(2)" not in p.text for p in provisions)
+    reason = detect_headings_only(provisions)
+    assert reason is not None, "a headings-only page with uniform short stubs must be flagged"
+
+
+def test_ingest_document_refuses_a_headings_only_page(monkeypatch: pytest.MonkeyPatch) -> None:
+    _stub_database(monkeypatch)
+    with pytest.raises(IngestionError, match="headings-only"):
+        ingest.ingest_document(
+            jurisdiction="commonwealth",
+            title="Privacy Act 1988",
+            citation="Privacy Act 1988 (Cth) - fixture",
+            source_url="https://www.legislation.gov.au/fixture-headings-only",
+            snapshot_date=date(2026, 1, 1),
+            sha256="b" * 64,
+            doc_type="act",
+            text=REALISTIC_HEADINGS_ONLY,
+        )
+
+
+def test_a_short_real_act_with_no_subsection_markers_is_not_flagged() -> None:
+    """Some genuine provisions have no (1)/(2) at all - a short title, a single-
+    sentence definition, a one-clause validation Act. The rule must judge the
+    document's structure, not punish brevity: real sections still vary widely
+    in length even when none of them uses subsection numbering, because a
+    "Short title" clause sits next to a real substantive one. A synthetic
+    stub set does not - see REALISTIC_HEADINGS_ONLY above."""
+    real_short_act = """1. Short title
+This is the Curriculum Council (Fees and Charges) Act 2006.
+
+2. Commencement
+This Act comes into operation on the day on which it receives the Royal Assent.
+
+3. Definition
+In this Act —
+Curriculum Council means the Curriculum Council established under the
+Curriculum Council Act 1997 section 5.
+
+4. Validation of fees and charges
+Any fee or charge imposed by and paid to the Curriculum Council before the
+coming into operation of this Act is taken to be, and to always have been, as
+validly and lawfully imposed and paid as it would have been if it had been
+imposed and paid under regulations made under the Curriculum Council Act 1997.
+"""
+    provisions = split_sections(real_short_act)
+    assert len(provisions) == 4
+    assert detect_headings_only(provisions) is None, "a real short Act must not be flagged"
+
+
+def test_a_document_with_subsection_markers_anywhere_is_never_flagged() -> None:
+    """One provision with real subsection structure is enough to clear the
+    whole document - the rule only fires on a document-wide zero."""
+    provisions = [
+        Provision(section_number="1", heading="A", text="1 A\nShort.", char_start=0, char_end=10),
+        Provision(section_number="2", heading="B", text="2 B\nShort.", char_start=10, char_end=20),
+        Provision(
+            section_number="3",
+            heading="C",
+            text="3 C\n(1) Has real subsection structure. (2) And another.",
+            char_start=20,
+            char_end=30,
+        ),
+    ]
+    assert detect_headings_only(provisions) is None
+
+
+def test_fewer_than_three_provisions_is_never_flagged() -> None:
+    """A document-wide proportion needs a document. Two provisions is not
+    enough of a sample to call "uniform" a defect rather than coincidence."""
+    provisions = [
+        Provision(
+            section_number="1", heading="A", text="1 A\n" + "x" * 40, char_start=0, char_end=10
+        ),
+        Provision(
+            section_number="2", heading="B", text="2 B\n" + "x" * 41, char_start=10, char_end=20
+        ),
+    ]
+    assert detect_headings_only(provisions) is None
 
 
 # --- File log audit trail -------------------------------------------------
