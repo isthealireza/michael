@@ -12,7 +12,7 @@ Two rules shape this module:
 from __future__ import annotations
 
 import re
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date
 
 from michael.bm25 import CorpusStats, normalise, raw_score
@@ -69,6 +69,18 @@ class RetrievalResult:
     best_score: float = 0.0
     reason: str = ""
     filters: dict[str, tuple[str, ...]] = field(default_factory=dict)
+    #: Set only by the direct identifier lookup (:func:`_section_lookup`).
+    #: ``provisions`` there is never truncated - this records how many rows
+    #: matched so a caller can tell "all of them" from "some of them", which
+    #: is the whole point: silent truncation of an identifier lookup is the
+    #: same defect class as returning the nearest guess.
+    identifier_lookup: bool = False
+    total_matches: int = 0
+    #: The Australian jurisdiction name the query itself asked about, when
+    #: that jurisdiction is not one the corpus holds (``wa`` or
+    #: ``commonwealth`` - see schema.py). ``None`` when the query names no
+    #: jurisdiction, or names one the corpus does hold.
+    jurisdiction_mismatch: str | None = None
 
     @property
     def covered(self) -> bool:
@@ -108,6 +120,20 @@ SECTION_REFERENCE = re.compile(
     re.IGNORECASE,
 )
 
+#: "Sch 1 cl 47A", "Schedule 2 clause 11" - the pinpoint format a Schedule
+#: clause is stored and cited under (see ``ingest.py``: a Schedule numbers its
+#: own clauses from 1, so a clause is cited relative to its Schedule rather
+#: than as a bare section number, which would collide with the Act's own
+#: numbering). Tried before ``SECTION_REFERENCE`` in
+#: :func:`extract_section_number` because it is the more specific pattern:
+#: "section 47" must not be allowed to swallow the "47" out of "Sch 1 cl 47A"
+#: and miss the Schedule and clause numbers either side of it.
+SCHEDULE_REFERENCE = re.compile(
+    r"\bsch(?:edule)?\.?\s*(?P<sch>\d{1,4}[A-Za-z]{0,4})"
+    r"\s+cl(?:ause)?\.?\s*(?P<cl>\d{1,4}[A-Za-z]{0,4})\b",
+    re.IGNORECASE,
+)
+
 #: A Title Case phrase ending in "Act" - "Fair Work Act", "Land Tax Assessment
 #: Act" - so a lookup can be narrowed to the named statute when one is given.
 #: Deliberately simple: it need only match well enough to filter by
@@ -118,11 +144,20 @@ ACT_NAME_PHRASE = re.compile(r"\b(?:[A-Z][\w'-]*\s+){1,6}Act\b")
 def extract_section_number(query: str) -> str | None:
     """The section/pinpoint identifier a query is asking about, if any.
 
-    Returns the number uppercased ("47a" -> "47A") so a lookup can match
-    ``section_number`` case-insensitively. Returns ``None`` for a query with
-    no explicit section marker, which is what keeps this from hijacking an
-    ordinary content query that happens to contain a number.
+    Tries the Schedule-clause form first ("Sch 1 cl 47A" -> "Sch 1 cl 47A",
+    matching ``section_number`` case-insensitively), because it is the more
+    specific pattern and would otherwise be shadowed by ``SECTION_REFERENCE``
+    matching only the trailing clause number. Falls back to a plain section
+    marker ("section 47", "s 47" -> "47"), uppercased so the lookup can match
+    ``section_number`` case-insensitively.
+
+    Returns ``None`` for a query with no explicit section or Schedule-clause
+    marker, which is what keeps this from hijacking an ordinary content query
+    that happens to contain a number.
     """
+    schedule = SCHEDULE_REFERENCE.search(query)
+    if schedule is not None:
+        return f"Sch {schedule.group('sch').upper()} cl {schedule.group('cl').upper()}"
     match = SECTION_REFERENCE.search(query)
     if match is None:
         return None
@@ -134,6 +169,63 @@ def extract_act_phrase(query: str) -> str | None:
     """The named Act, if the query names one. ``None`` narrows nothing."""
     match = ACT_NAME_PHRASE.search(query)
     return match.group(0) if match else None
+
+
+# --- jurisdiction-mismatch signal -------------------------------------------
+#
+# schema.py's CHECK constraint means the corpus can only ever hold 'wa' and
+# 'commonwealth' documents. A query that names a different Australian state or
+# territory by name ("New South Wales", "Victoria", ...) can still score above
+# threshold - lexical/vector similarity does not know the corpus is
+# jurisdiction-limited - and would then return WA or Commonwealth provisions
+# with nothing flagging that they answer the wrong jurisdiction's law. The
+# citation string names its own jurisdiction ("(WA)"), so a careful reader is
+# not deceived, but nothing upstream of that citation says so. This is a
+# signal, not a refusal: WA law returned with a clear flag is more useful than
+# NOT COVERED, per the task that added this.
+
+#: The jurisdiction a query might name, mapped to the short code the corpus
+#: would use for it if the corpus held it. Anything mapping to a code outside
+#: ``CORPUS_JURISDICTIONS`` is a jurisdiction Michael does not hold.
+AUSTRALIAN_JURISDICTION_NAMES: dict[str, str] = {
+    "western australia": "wa",
+    "new south wales": "nsw",
+    "victoria": "vic",
+    "queensland": "qld",
+    "south australia": "sa",
+    "tasmania": "tas",
+    "northern territory": "nt",
+    "australian capital territory": "act",
+}
+
+#: Jurisdictions the corpus actually holds (schema.py's CHECK constraint).
+CORPUS_JURISDICTIONS = frozenset({"wa", "commonwealth"})
+
+#: Longest name first, so "australian capital territory" is not shadowed by
+#: a shorter alternative sharing a prefix.
+_JURISDICTION_NAMES_LONGEST_FIRST = sorted(
+    AUSTRALIAN_JURISDICTION_NAMES, key=len, reverse=True
+)
+JURISDICTION_NAME_PATTERN = re.compile(
+    r"\b(?:" + "|".join(re.escape(name) for name in _JURISDICTION_NAMES_LONGEST_FIRST) + r")\b",
+    re.IGNORECASE,
+)
+
+
+def named_jurisdiction_mismatch(query: str) -> str | None:
+    """The jurisdiction named in the query, if the corpus does not hold it.
+
+    Returns the matched name as it appears in the query (e.g. "New South
+    Wales"), or ``None`` when the query names no Australian jurisdiction, or
+    names one the corpus does hold (WA, or a phrase mapping to it).
+    """
+    match = JURISDICTION_NAME_PATTERN.search(query)
+    if match is None:
+        return None
+    code = AUSTRALIAN_JURISDICTION_NAMES[match.group(0).lower()]
+    if code in CORPUS_JURISDICTIONS:
+        return None
+    return match.group(0)
 
 
 SECTION_LOOKUP_SQL = """
@@ -149,7 +241,7 @@ SELECT p.id AS provision_id, p.document_id, p.section_number, p.heading, p.text,
 """
 
 
-def _section_lookup(query: str, *, routing: Routing, top_k: int) -> RetrievalResult | None:
+def _section_lookup(query: str, *, routing: Routing) -> RetrievalResult | None:
     """Look a section number up directly, by identifier rather than ranking.
 
     Returns ``None`` - not an empty, ``covered=False`` result - when nothing
@@ -159,12 +251,17 @@ def _section_lookup(query: str, *, routing: Routing, top_k: int) -> RetrievalRes
     The hybrid path still applies its own threshold and can still say NOT
     COVERED correctly if the section genuinely is not in the corpus.
 
-    A pinpoint that resolves to more than one provision (a known live defect:
-    two provisions currently share the citation "Fair Work Act 2009 (Cth) s
-    47", tracked and fixed separately) is returned as every matching row, not
-    the first - each carries its own heading and text, so the caller can tell
-    them apart. Silently returning one of them would be exactly the kind of
-    guess this project does not make.
+    A pinpoint that resolves to more than one provision (a known corpus
+    defect: duplicate-pinpoint groups, tracked separately and not fixable
+    here without a re-ingest) is returned as **every** matching row, never
+    truncated to ``top_k`` - each carries its own heading and text, so the
+    caller can tell them apart. Silently returning only the first few, or
+    only ``top_k`` of them, would be exactly the kind of guess this project
+    does not make: an identifier lookup that hides how many rows share the
+    identifier is no more honest than one that hides the identifier did not
+    match at all. ``total_matches`` on the result records the true count so a
+    caller can render "N provisions share this pinpoint" even though nothing
+    here is cut.
     """
     section = extract_section_number(query)
     if section is None:
@@ -202,7 +299,7 @@ def _section_lookup(query: str, *, routing: Routing, top_k: int) -> RetrievalRes
             score=1.0,
         )
         for row in rows
-    )[:top_k]
+    )
 
     return RetrievalResult(
         query=query,
@@ -213,6 +310,8 @@ def _section_lookup(query: str, *, routing: Routing, top_k: int) -> RetrievalRes
         best_score=1.0,
         reason="",
         filters={"jurisdictions": (), "doc_types": ()},
+        identifier_lookup=True,
+        total_matches=len(provisions),
     )
 
 
@@ -295,6 +394,12 @@ def search(
         "jurisdictions": routing.jurisdictions,
         "doc_types": routing.doc_types,
     }
+    # A signal, not a refusal: a query naming a jurisdiction the corpus does
+    # not hold still runs and can still be covered. Computed once and carried
+    # on every result shape below - empty, direct-lookup and hybrid alike -
+    # because a NOT COVERED reply and a covered one can both be misread the
+    # same way if the reader assumes "the corpus searched what I named".
+    jurisdiction_mismatch = named_jurisdiction_mismatch(query)
 
     def empty(reason: str, best: float = 0.0) -> RetrievalResult:
         return RetrievalResult(
@@ -305,6 +410,7 @@ def search(
             best_score=best,
             reason=reason,
             filters=filters,
+            jurisdiction_mismatch=jurisdiction_mismatch,
         )
 
     if not query.strip():
@@ -315,9 +421,9 @@ def search(
     # it finds nothing, so an ordinary content query, or a section reference
     # this lookup could not resolve, still falls through to hybrid search
     # below rather than this path deciding NOT COVERED on its own.
-    direct = _section_lookup(query, routing=routing, top_k=top_k)
+    direct = _section_lookup(query, routing=routing)
     if direct is not None:
-        return direct
+        return replace(direct, jurisdiction_mismatch=jurisdiction_mismatch)
 
     # Fails closed: no embeddings means no vector arm, and a lexical-only
     # answer would be a different, weaker guarantee than the one advertised.
@@ -423,4 +529,5 @@ def search(
         best_score=best,
         reason="",
         filters=filters,
+        jurisdiction_mismatch=jurisdiction_mismatch,
     )

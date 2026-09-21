@@ -175,6 +175,30 @@ def search_provisions(
     if not result.covered:
         payload["reason"] = result.reason
         payload["not_covered"] = result.not_covered_message(query.strip() or "this topic")
+    if result.identifier_lookup:
+        # A direct identifier lookup never truncates (retrieve._section_lookup
+        # returns every matching row), so this is always "how many, in full" -
+        # never "how many of some hidden larger number". total_matches makes
+        # that explicit rather than leaving the reader to infer it from the
+        # length of "provisions".
+        payload["identifier_lookup"] = True
+        payload["total_matches"] = result.total_matches
+        if result.total_matches > 1:
+            payload["ambiguous_pinpoint"] = True
+            payload["note"] = (
+                f"This pinpoint matches {result.total_matches} distinct provisions in the "
+                "corpus, not one. This is a known duplicate-citation defect in the source "
+                "data, not a ranking choice - all matching provisions are returned below, "
+                "in citation order, and none of them is authoritative over the others."
+            )
+    if result.jurisdiction_mismatch:
+        payload["jurisdiction_mismatch"] = result.jurisdiction_mismatch
+        payload["jurisdiction_mismatch_note"] = (
+            f"This query names {result.jurisdiction_mismatch}, which the corpus does not "
+            "hold - only Western Australia and Commonwealth legislation is ingested. Any "
+            "provisions returned below are WA or Commonwealth law, not law of the named "
+            "jurisdiction."
+        )
     return payload
 
 
