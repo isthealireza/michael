@@ -94,6 +94,29 @@ def test_certifying_a_clause_is_reported_in_either_direction() -> None:
         assert [f.rule for f in check(body)] == ["certification"], claim
 
 
+def test_the_required_disclaimer_is_not_reported_as_a_certification() -> None:
+    """MICHAEL.md requires exactly this sentence shape, verbatim from a real
+    deployed output (bench/e5): declining to certify must not itself be
+    scored as a certification.
+    """
+    for disclaimer in (
+        "Its content is based on the provisions cited; that is not a "
+        "statement that the clause is compliant.",
+        "Its clauses are based on the provisions cited; that is not a "
+        "statement that any clause is compliant.",
+        "Nothing in this document is a statement that the clause is "
+        "compliant.",
+        "This is not a certification that the clause is compliant.",
+        "Michael does not certify that the clause is compliant.",
+    ):
+        body = CLEAN.replace(
+            "Under the Fair Work Act 2009 (Cth) s 117 an employer must give "
+            "written notice.",
+            disclaimer,
+        )
+        assert check(body) == [], disclaimer
+
+
 def test_a_statement_about_the_law_is_not_a_certification() -> None:
     """Michael must still be able to say what the law requires."""
     body = CLEAN.replace(

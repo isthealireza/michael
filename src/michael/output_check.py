@@ -66,6 +66,21 @@ CERTIFIES = re.compile(
 assertion about a clause, so "an employer complies with s 117 by ..." - a
 statement about the law, which is allowed - does not trip it."""
 
+DISCLAIMS = re.compile(
+    r"\b(?:not|never|no|nor|nothing)\b[^.\n]{0,60}?"
+    r"\b(?:a|an)?\s*(?:statement|assertion|certification|claim|finding)\b"
+    r"[^.\n]{0,30}?\bthat\b"
+    r"|\b(?:does not|doesn't|do not|never)\s+(?:assert|certify|claim|say|state)\b"
+    r"[^.\n]{0,30}?\bthat\b",
+    re.IGNORECASE,
+)
+"""MICHAEL.md requires exactly this kind of sentence: "that is not a
+statement that the clause is compliant." Read in isolation, CERTIFIES
+matches "the clause is compliant" inside it - the regex has no way to see
+the negated "statement that" in front of it. This pattern finds that
+negating frame so check() can tell "the clause is compliant" the assertion
+from "the clause is compliant" the thing someone declined to assert."""
+
 
 @dataclass(frozen=True)
 class Finding:
@@ -104,10 +119,13 @@ def check(text: str) -> list[Finding]:
     if not NOTICE.search(out):
         findings.append(Finding("notice", "no closing notice"))
 
-    certified = CERTIFIES.search(out)
-    if certified:
+    for certified in CERTIFIES.finditer(out):
+        preceding = out[max(0, certified.start() - 100) : certified.start()]
+        if DISCLAIMS.search(preceding):
+            continue
         findings.append(
             Finding("certification", f"certifies a clause: {certified.group(0)!r}")
         )
+        break
 
     return findings
