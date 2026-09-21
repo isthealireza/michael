@@ -104,6 +104,90 @@ database.
 5. No real client data, in any environment.
 6. Secrets stay in Railway environment variables. Never print one.
 
+## Rollback
+
+F3 in `.orca/PRODUCTION-READY.md`. There is no dedicated `railway rollback`
+CLI subcommand (`railway --help` lists `redeploy`, `restart`, `down`, `up` and
+`deployment`, and nothing else that touches a past deployment) - that part of
+the original finding (W4-6) still holds. There IS a real rollback mechanism,
+verified below against this project's actual linked service, not guessed.
+
+### 1. Identify the last known-good deployment
+
+```
+railway status                        # current deployment ID, confirms the linked service
+railway deployment list --limit 20     # id | status | timestamp, newest first
+```
+
+Every deployment superseded by a newer one shows `REMOVED`, not `SUCCESS` -
+that is Railway's normal history bookkeeping, not a sign the deployment
+failed. Read the deployment's commit before trusting it as "known-good":
+
+```
+railway deployment list --json --limit 20   # includes meta.commitHash, meta.commitMessage
+```
+
+Match `commitHash` against `git log --oneline` in this repo to confirm the
+target was a commit that had a green `uv run pytest` / `uv run mypy src tests`
+gate (and, once `.github/workflows/ci.yml` exists, a green CI run) at the time
+it was deployed - a rollback to a red commit is not a rollback to "good", it
+is a rollback to a different, differently-broken state.
+
+**Not every past deployment can be rolled back to.** Railway's own schema
+carries a `canRollback` field per deployment (see the Public API note below);
+old build artefacts can age out. Check before promising a specific target:
+
+```
+railway api 'query($id: String!) { deployment(id: $id) { id status canRollback meta } }' \
+  --var id=<deployment-id>
+```
+
+### 2. Roll back
+
+**Dashboard (primary path):** open the project, the `michael-hermes` service,
+its Deployments tab; find the target deployment by the commit identified in
+step 1; use its rollback action. `railway open` opens the project dashboard
+in a browser from this machine.
+
+**CLI/API (no dashboard needed):** the Public API exposes a real
+`deploymentRollback` mutation
+(https://docs.railway.com/integrations/api/manage-deployments#rollback-to-a-deployment),
+reachable from this machine without a browser via the CLI's own GraphQL
+passthrough:
+
+```
+railway api 'mutation($id: String!) { deploymentRollback(id: $id) { id status } }' \
+  --var id=<deployment-id-from-step-1>
+```
+
+This is a production mutation - a deploy, functionally - so it is an
+**operator action**: an escalation and the owner's call, exactly like a
+forward deploy, not something a worker runs unprompted. Read-only inspection
+(`railway status`, `railway deployment list`, the `deployment{...}` query
+above) stays fine for anyone to run.
+
+### 3. Verify - by artefact, not by the green light
+
+A rollback that only checks "is the service Online" repeats this project's
+own mistake of trusting a status light over a measurement (see
+`.orca/PRODUCTION-READY.md`'s own framing, and W4-7). After the rollback
+reports success:
+
+```
+railway status                                                    # new deployment ID matches the target
+curl -sI https://michael-hermes-production.up.railway.app/assets/michael.html
+curl -sI https://michael-hermes-production.up.railway.app/assets/michael.js
+```
+
+Compare the served bytes' sha256 (LF-normalised - see finding W4-1) against
+`git show <target-commit>:web/michael.html` / `:web/michael.js` from this
+repo at the commit identified in step 1. A matching hash is the proof the
+rollback actually landed the intended build, not merely that Railway reports
+a green status - the same distinction D1-D3 already draw for a forward
+deploy. Re-check `.orca/ro.sh cli hosts` (or another cheap read) to confirm
+the container is actually serving, not just reporting `Online` while still
+booting.
+
 ## Known trap
 
 `railway ssh` arguments are parsed by your local shell first. A quoted Python

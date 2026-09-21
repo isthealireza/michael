@@ -34,8 +34,10 @@ An Act to record fixture employment standards for testing.
     according to an agreed pattern of work.
 
 61 Minimum standards
-    The minimum standards in this Part apply to a casual worker in the same way
-    as they apply to any other worker, except as expressly provided.
+    (1) The minimum standards in this Part apply to a casual worker in the same
+    way as they apply to any other worker, except as expressly provided.
+    (2) Subsection (1) does not limit any other entitlement a casual worker has
+    under this Act or under a fair work instrument.
 
 125B Casual worker information statement
     An employer must give each casual worker the casual worker information

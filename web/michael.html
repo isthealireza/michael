@@ -3,6 +3,56 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<!-- Rewritten by hermes/Dockerfile at build time from "dev" to a hash of
+     web/michael.js. Lets the bootstrap script below detect a stale cached
+     copy of THIS file (see that script for why: /assets/ is served
+     Cache-Control: immutable for a year, at this page's own stable,
+     unhashed, bookmarked filename). -->
+<meta name="michael-build" content="dev">
+<script>
+// This page is served from the dashboard's /assets/ mount, which the
+// dashboard marks "public, max-age=31536000, immutable" for every file in
+// the directory - correct for the OTHER files there, which are Vite
+// bundle chunks named with a content hash (ChatPage-oNWcZI--.js), so a
+// content change always produces a new URL. This page is not: it keeps a
+// stable, bookmarked name (/assets/michael.html) on purpose. A browser
+// that already cached it will never revalidate on its own for a year, so
+// a shipped fix - the citation-chip wrap, the double-escape fix, this
+// very mechanism - would silently never reach a returning visitor. See
+// .orca/reports/2026-09-20-worker4-production-qa.md, finding W4-7.
+//
+// Fix: on every load, force one no-store (cache-bypassing) fetch of this
+// same URL and compare build markers. If the deployed page has moved on,
+// navigate to a `?v=<hash>` variant the browser has never cached, which
+// therefore always fetches fresh over the network. web/michael.js is
+// content-hashed the same way at build time, so once this shell is
+// current it always references the right script.
+(function () {
+  try {
+    var metaEl = document.querySelector('meta[name="michael-build"]');
+    var mine = metaEl ? metaEl.content : '';
+    // "dev" means this file was opened directly (or under the Node test
+    // harness) rather than through the built container image - nothing to
+    // bust, and no network to reach.
+    if (!mine || mine === 'dev') return;
+    fetch(location.pathname, { cache: 'no-store' })
+      .then(function (r) { return r.text(); })
+      .then(function (html) {
+        var m = html.match(/name="michael-build" content="([^"]*)"/);
+        var latest = m && m[1];
+        if (latest && latest !== mine) {
+          location.replace(location.pathname + '?v=' + encodeURIComponent(latest));
+        }
+      })
+      .catch(function () {
+        // Offline, or the fetch failed for any other reason: fall through
+        // and use the cached copy already loaded. Never block on this.
+      });
+  } catch (e) {
+    // Never let the update check break the page itself.
+  }
+})();
+</script>
 <title>MICHAEL — Legal Research</title>
 <style>
   :root{

@@ -1,0 +1,104 @@
+# The gate from .orca/PRODUCTION-READY.md section A, run on every push and
+# pull request. Before this file existed, every gate here ran only when a
+# human ran it by hand before approving a commit - that, not carelessness,
+# is how 77 real ruff errors reached main (W4-4/W4-2). Each job step fails
+# the build on its own; there is no continue-on-error anywhere in this file.
+#
+# A5 (integration tests run at least once, result recorded) needs a real
+# Postgres with pgvector and the same read-only role the answering path
+# depends on, so this workflow brings one up as a service container rather
+# than skipping those tests. See the "integration" job below for why the
+# role is created in a step instead of as an initdb volume mount.
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  gate:
+    name: pytest, mypy, ruff
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: michael
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: michael
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd "pg_isready -U michael -d michael"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      MICHAEL_DATABASE_URL: postgresql://michael:test@127.0.0.1:5433/michael
+      MICHAEL_RO_DATABASE_URL: postgresql://michael_ro:test@127.0.0.1:5433/michael
+      EMBEDDING_API_KEY: test-key-not-used-offline
+      EMBEDDING_DIM: "8"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+        with:
+          version: "0.11.29"
+
+      - name: Set up Python
+        run: uv python install 3.13
+
+      - name: Install dependencies
+        run: uv sync --extra mcp --group dev
+
+      # A GitHub Actions service container starts before `actions/checkout`
+      # runs, so an initdb-style volume mount of db/init (which would need
+      # the checked-out repo to already exist on the runner) cannot be used
+      # here the way docker-compose.yml uses it locally. The service
+      # container above only creates the POSTGRES_USER role (michael);
+      # this step runs the same statements db/init/001_roles.sh runs, now
+      # that the Postgres server and the repository are both present, to
+      # create michael_ro with the same read-only guarantee
+      # (default_transaction_read_only = on) tests/test_integration.py
+      # exercises directly.
+      - name: Create the read-only role (mirrors db/init/001_roles.sh)
+        env:
+          PGHOST: 127.0.0.1
+          PGPORT: "5433"
+          PGPASSWORD: test
+          MICHAEL_RO_PASSWORD: test
+        run: |
+          sudo apt-get update -y >/dev/null
+          sudo apt-get install -y postgresql-client >/dev/null
+          POSTGRES_USER=michael POSTGRES_DB=michael bash db/init/001_roles.sh
+
+      - name: ruff check
+        run: uv run ruff check .
+
+      - name: ruff format --check
+        run: uv run ruff format --check .
+
+      - name: mypy
+        run: uv run mypy src tests
+
+      - name: pytest (unit/acceptance — excludes integration and network)
+        run: uv run pytest -q
+
+      # A5: integration tests must actually run and their result must be
+      # recorded, not silently skipped. tests/test_integration.py's own
+      # `michael_db` fixture calls pytest.skip() (exit code 0, not a
+      # failure) if it cannot reach Postgres — the exact shape of defect
+      # W4-5 was found under. The service container and role above should
+      # make that reachable every time, but "should" is not a gate: fail
+      # the build explicitly if anything under this marker skips, so a
+      # regression here cannot go unnoticed behind a green checkmark again.
+      - name: pytest -m integration (A5 — result recorded above)
+        run: |
+          set -o pipefail
+          uv run pytest -m integration -v -rs | tee /tmp/integration.log
+          if grep -qi "skipped" /tmp/integration.log; then
+            echo "::error::Integration tests were skipped — A5 requires them to actually run, not skip" >&2
+            exit 1
+          fi

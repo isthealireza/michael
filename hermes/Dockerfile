@@ -51,7 +51,32 @@ RUN chmod +x /usr/local/bin/railway-entrypoint.sh
 # public - markup and script. Every data endpoint it calls stays gated:
 # /api/auth/ws-ticket and /api/ws both require the session, so nothing from
 # the corpus is reachable without signing in.
-COPY web/michael.html web/michael.js /opt/hermes/hermes_cli/web_dist/assets/
+#
+# The dashboard's /assets/ mount marks every file in it
+# "Cache-Control: public, max-age=31536000, immutable" - correct for its
+# own Vite bundle, whose every filename carries a content hash
+# (ChatPage-oNWcZI--.js), wrong for michael.js at a stable name: a shipped
+# fix would never reach a browser that had already cached it (W4-7,
+# .orca/reports/2026-09-20-worker4-production-qa.md). Content-hash
+# michael.js the same way its neighbours already are, and rewrite
+# michael.html's <script src> and build-marker <meta> to match, so the
+# hashed filename changes whenever the content does. michael.html itself
+# keeps its documented, bookmarked name
+# (.../assets/michael.html) and instead carries the inline
+# self-update check in web/michael.html, which detects a stale cached copy
+# of ITSELF and redirects to a never-cached `?v=<hash>` URL.
+COPY web/michael.html web/michael.js /tmp/michael-web/
+RUN set -eu \
+    && cd /tmp/michael-web \
+    && BUILD_ID=$(sha256sum michael.js | cut -c1-12) \
+    && mv michael.js "michael-${BUILD_ID}.js" \
+    && sed -i \
+         -e "s/michael\.js/michael-${BUILD_ID}.js/" \
+         -e "s/content=\"dev\"/content=\"${BUILD_ID}\"/" \
+         michael.html \
+    && mkdir -p /opt/hermes/hermes_cli/web_dist/assets \
+    && cp michael.html "michael-${BUILD_ID}.js" /opt/hermes/hermes_cli/web_dist/assets/ \
+    && rm -rf /tmp/michael-web
 
 WORKDIR /opt/data
 
