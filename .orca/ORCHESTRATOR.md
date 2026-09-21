@@ -119,10 +119,10 @@ running Claude. Reuse them — do not spawn new ones. Each has a role brief in
 
 | Role | Title | Terminal handle | Brief |
 |---|---|---|---|
-| WORKER-1 | Ingestion & Corpus Engineer | `term_3ed91e19-e311-453a-8970-2637468445a4` | `.orca/WORKER-1.md` |
-| WORKER-2 | Retrieval & Calibration Engineer | `term_88f6a6e8-4625-433d-b71a-26242bc4b187` | `.orca/WORKER-2.md` |
-| WORKER-3 | Drafting & Compliance Engineer | `term_220227ec-2527-4537-bc15-b2e29802acc9` | `.orca/WORKER-3.md` |
-| WORKER-4 | Platform & Release Engineer | `term_c89ed380-9a54-4cb0-8f2b-e16fbf2936fb` | `.orca/WORKER-4.md` |
+| WORKER-1 | Ingestion & Corpus Engineer | `term_0c2099f6-6914-42c4-8d96-12925e96e79f` | `.orca/WORKER-1.md` |
+| WORKER-2 | Retrieval & Calibration Engineer | `term_48e1dcc2-70d3-474a-811c-57558c8397a9` | `.orca/WORKER-2.md` |
+| WORKER-3 | Drafting & Compliance Engineer | `term_ab2e7363-98e9-4bb1-8cb5-e782cf303f4c` | `.orca/WORKER-3.md` |
+| WORKER-4 | Platform & Release Engineer | `term_5c9d9da6-bdf3-437d-b8ea-a416737e6192` | `.orca/WORKER-4.md` |
 
 Scope, so you can route without guessing:
 
@@ -136,6 +136,17 @@ Scope, so you can route without guessing:
   ASD-STE100.
 - **WORKER-4** — `tests/`, docker, `hermes/` config rendering, the three-tool
   agent profile, `.env` hygiene, Railway, CI, mypy.
+
+**Handles change whenever Orca restarts, and they have three times.** When a
+handle is stale, `terminal read` returns `terminal_handle_stale` and
+`dispatch --inject` is refused with `no recognized agent detected` — note that
+`dispatch --dry-run` does NOT catch this, it passes against a dead terminal.
+A terminal listed with `agentIdentity: claude` may still be a bare shell; the
+field is stale metadata, not proof of a live agent.
+
+**Recovery:** `orca orchestration worker-start --task <id> --worktree current
+--agent claude` creates a fresh supervised agent and delivers the task. Prefer
+it over trying to relaunch a CLI inside a dead terminal.
 
 Reassign freely when the work does not fit the map — a role is a default, not
 a fence. But say so explicitly in the task when you cross a boundary, so two
