@@ -67,6 +67,7 @@ mcp_servers:
         - classify_request
         - search_provisions
         - draft_document
+        - validate_output
       exclude:
         # Named as well as omitted, so the intent survives an edit to include.
         - apply_schema

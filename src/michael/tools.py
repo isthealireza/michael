@@ -29,6 +29,7 @@ from michael import ingest as ingestion
 from michael import retrieve
 from michael.config import settings
 from michael.domains import Routing, load_domains, route
+from michael.output_check import citation_fidelity
 from michael.schema import apply_schema as _apply_schema
 from michael.sources import ALLOWED_HOSTS
 
@@ -108,6 +109,23 @@ def list_domains() -> dict[str, Any]:
 def load_system_prompt() -> str:
     """MICHAEL.md, to be loaded on every request."""
     return settings().system_prompt_file.read_text(encoding="utf-8")
+
+
+def validate_output(
+    output: str,
+    *,
+    provisions: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
+    """Validate quoted text in a proposed answer against retrieved sources."""
+    findings = citation_fidelity(output, provisions or [])
+    return {
+        "clean": not findings,
+        "findings": [{"rule": f.rule, "detail": f.detail} for f in findings],
+        "note": (
+            "Quoted legal text must be copied from retrieved provisions. "
+            "Paraphrases still require the pinpoint citation and human review."
+        ),
+    }
 
 
 def allowed_hosts() -> dict[str, Any]:
@@ -443,6 +461,22 @@ ANSWERING_TOOLS: tuple[dict[str, Any], ...] = (
         },
     },
     {
+        "name": "validate_output",
+        "description": (
+            "Validate a proposed answer before returning it. Pass the exact output text "
+            "and the provisions returned by search_provisions. Any quoted legal text "
+            "not present in those provisions must be removed or corrected."
+        ),
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "output": {"type": "string"},
+                "provisions": {"type": "array", "items": {"type": "object"}},
+            },
+            "required": ["output", "provisions"],
+        },
+    },
+    {
         "name": "list_domains",
         "description": "The domain routing table from domains.yaml.",
         "input_schema": {"type": "object", "properties": {}},
@@ -532,6 +566,7 @@ _HANDLERS: dict[str, Callable[..., Any]] = {
     "classify_request": classify_request,
     "search_provisions": search_provisions,
     "draft_document": draft_document,
+    "validate_output": validate_output,
     "list_domains": list_domains,
     "allowed_hosts": allowed_hosts,
     "apply_schema": apply_schema,

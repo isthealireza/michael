@@ -19,6 +19,7 @@ that "a well-formed output" cannot come to mean three different things.
 from __future__ import annotations
 
 import re
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 
 CLASSIFICATION = re.compile(
@@ -86,6 +87,39 @@ class Finding:
 
     rule: str
     detail: str
+
+
+def _normalise_quote(text: str) -> str:
+    """Make source/output whitespace comparable without changing words."""
+    return " ".join(text.replace("\u201c", '"').replace("\u201d", '"').split())
+
+
+def citation_fidelity(text: str, provisions: Sequence[Mapping[str, object]]) -> list[Finding]:
+    """Find quoted legal text that is not present in retrieved provisions.
+
+    This deliberately does not judge paraphrases. It enforces only Michael's
+    stronger promise that text inside quotation marks is copied from the
+    retrieved corpus.
+    """
+    source_text = tuple(
+        _normalise_quote(str(provision.get("text", "")))
+        for provision in provisions
+        if str(provision.get("text", "")).strip()
+    )
+    findings: list[Finding] = []
+    quoted = re.findall(r'["\u201c]([^"\u201d]+)["\u201d]', text or "")
+    for quote in quoted:
+        normalised = _normalise_quote(quote)
+        if len(normalised) < 20:
+            continue
+        if not source_text or not any(normalised in source for source in source_text):
+            findings.append(
+                Finding(
+                    "citation_fidelity",
+                    f"quoted text is not present in retrieved provisions: {quote!r}",
+                )
+            )
+    return findings
 
 
 def _first_nonblank(text: str) -> str:

@@ -109,7 +109,12 @@ def test_the_agent_profile_grants_no_write_tool() -> None:
     )
 
     granted = set(michael["tools"]["include"])
-    assert granted == {"classify_request", "search_provisions", "draft_document"}
+    assert granted == {
+        "classify_request",
+        "search_provisions",
+        "draft_document",
+        "validate_output",
+    }
 
     writers = {"ingest_source_url", "ingest_local_file", "seed_corpus", "apply_schema"}
     assert not (granted & writers), f"write tools granted: {sorted(granted & writers)}"

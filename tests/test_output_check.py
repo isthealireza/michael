@@ -8,7 +8,7 @@ invented fixture only ever shows the gap the author already knew about.
 
 from __future__ import annotations
 
-from michael.output_check import check
+from michael.output_check import check, citation_fidelity
 
 CLEAN = """CLASSIFICATION: RESEARCH - domain: employment
 
@@ -127,3 +127,17 @@ def test_a_finding_names_the_rule_and_says_what_is_wrong() -> None:
     finding = check("hello")[0]
     assert finding.rule == "classification"
     assert finding.detail
+
+
+def test_quoted_operative_words_must_exist_in_retrieved_provisions() -> None:
+    provisions = [{"text": "An employer must give written notice of termination."}]
+    clean = 'The Act says "An employer must give written notice of termination."'
+    assert citation_fidelity(clean, provisions) == []
+
+    invented = 'The Act says "An employer must give four weeks of written notice."'
+    findings = citation_fidelity(invented, provisions)
+    assert [finding.rule for finding in findings] == ["citation_fidelity"]
+
+
+def test_short_quoted_labels_are_not_treated_as_legal_quotes() -> None:
+    assert citation_fidelity('See "s 117".', []) == []

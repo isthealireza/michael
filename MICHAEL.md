@@ -16,6 +16,9 @@ words. If retrieval is empty, reply "NOT COVERED — run ingestion for
 law, not skipping the closing blocks: a NOT COVERED reply still ends with
 VERIFY BEFORE USE and the closing notice, and its OPEN ITEMS may read
 "None."
+Before returning a research answer, call `validate_output` with the final text
+and the provisions returned by `search_provisions`. If it reports a
+`citation_fidelity` finding, remove or correct the quote before returning.
 DRAFT: use templates only. Apply the [MISSING] rule above.
 Every output ends with the three blocks below — an answer, a refusal and a
 NOT COVERED reply alike:
