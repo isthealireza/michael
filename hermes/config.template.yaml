@@ -95,6 +95,10 @@ dashboard:
 # back to execution: installing a package, scheduling a job, or spawning a
 # subagent with its own tools.
 agent:
+  # Michael's answering path normally needs classify -> retrieve -> draft ->
+  # validate. Bound tool loops so a stalled provider or MCP turn cannot run
+  # indefinitely and consume the Railway process.
+  max_turns: 16
   disabled_toolsets:
     - terminal
     - file
