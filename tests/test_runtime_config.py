@@ -121,6 +121,18 @@ def test_the_agent_profile_grants_no_write_tool() -> None:
     assert writers <= set(michael["tools"]["exclude"]), "write tools must also be excluded by name"
 
 
+def test_env_example_documents_required_deployment_variables() -> None:
+    root = pathlib.Path(__file__).resolve().parents[1]
+    example = (root / ".env.example").read_text(encoding="utf-8")
+    for key in (
+        "DASHBOARD_USERNAME=",
+        "DASHBOARD_PASSWORD_HASH=",
+        "MICHAEL_DOMAINS_FILE=",
+        "MICHAEL_SYSTEM_PROMPT=",
+    ):
+        assert key in example
+
+
 def test_michael_still_refuses_writers_without_allow_writes() -> None:
     """Defence in depth: the dispatcher refuses even if the transport slips."""
     from michael import tools
