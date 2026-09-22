@@ -89,9 +89,110 @@ class Finding:
     detail: str
 
 
+_PUNCTUATION = str.maketrans(
+    {
+        "\u201c": '"',
+        "\u201d": '"',
+        "\u2018": "'",
+        "\u2019": "'",
+        "\u2013": "-",
+        "\u2014": "-",
+        "\u2012": "-",
+        "\u2212": "-",
+        "\u00a0": " ",
+    }
+)
+"""Models and renderers swap these for their ASCII equivalents freely. A
+quote differing from its source only by an em dash is a faithful quote, and
+flagging it teaches the model to delete quotes that were never wrong."""
+
+
 def _normalise_quote(text: str) -> str:
-    """Make source/output whitespace comparable without changing words."""
-    return " ".join(text.replace("\u201c", '"').replace("\u201d", '"').split())
+    """Make source/output whitespace and punctuation comparable.
+
+    Words are never changed. Only the characters a model can substitute
+    without altering what the provision says are folded together.
+    """
+    return " ".join(text.translate(_PUNCTUATION).split())
+
+
+_VALUE = re.compile(
+    r"\$\s?\d[\d,]*(?:\.\d+)?"
+    r"|\b(?:\d[\d,]*(?:\.\d+)?"
+    r"|one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve)"
+    r"\s*(?:'s|s')?\s*"
+    r"(?:weeks?|days?|months?|years?|hours?|penalty units?|per ?cent|%)\b",
+    re.IGNORECASE,
+)
+"""A quantity with its unit - the load-bearing span of a tiered statutory
+table. "3 weeks" is seven characters, so the length rule below, which exists
+to let pinpoints like "s 117" through, skipped the one figure in the answer
+a reader cannot check for themselves. That is the span that diverged in the
+s 117(3) instance."""
+
+_SEGMENT_GAP = r".{0,12}?"
+"""How far apart two quoted fragments may sit in the source and still count
+as quoted from one place. A statutory table separates a tier from its value
+by a cell boundary, which normalises to a single space; the model renders
+that boundary as a dash it invented. Twelve characters admits the cell
+boundary without reaching into the next row."""
+
+_BLOCKQUOTE = re.compile(r"^[ \t]*>[ \t]?(.*)$", re.MULTILINE)
+_MODEL_SEPARATOR = re.compile(r"\s+-+\s+|\s*\|\s*")
+"""What a model puts between the cells of a row it is rendering. None of it
+is in the source, so a blockquoted row can only be checked cell by cell.
+Matched after normalisation, never before: a model renders a cell boundary
+as an em dash far more often than as a hyphen, and a pattern applied to the
+raw line splits nothing and then condemns a faithfully quoted row."""
+
+_QUOTED = re.compile(r'["\u201c]([^"\u201d\n]+)["\u201d]')
+
+
+def _worth_checking(segment: str) -> bool:
+    """Is this fragment a claim about what a source says, or just a label?
+
+    A pinpoint like "s 117", or a defined term in quotation marks, asserts
+    nothing about the wording of a provision. A quantity does, and so does
+    any fragment long enough to be operative text.
+    """
+    return len(segment) >= 20 or bool(_VALUE.search(segment))
+
+
+def _groups(text: str) -> list[list[str]]:
+    """The quoted fragments of the output, grouped by where they came from.
+
+    Fragments the model wrote next to each other - `"<tier>" - "<value>"`, or
+    the cells of one blockquoted row - form one group, because together they
+    are a single claim about a single place in a single provision. Checking
+    each fragment on its own is what let a real figure from the wrong row of
+    the right table pass.
+    """
+    groups: list[list[str]] = []
+
+    for line in _BLOCKQUOTE.findall(text):
+        row = [
+            normalised
+            for segment in _MODEL_SEPARATOR.split(_normalise_quote(line))
+            if _worth_checking(normalised := _normalise_quote(segment))
+        ]
+        if row:
+            groups.append(row)
+
+    current: list[str] = []
+    end_of_previous = -1
+    for match in _QUOTED.finditer(text):
+        glue = text[end_of_previous : match.start()] if end_of_previous >= 0 else None
+        adjacent = glue is not None and len(glue) <= 12 and not any(c.isalpha() for c in glue)
+        if not adjacent and current:
+            groups.append(current)
+            current = []
+        if _worth_checking(normalised := _normalise_quote(match.group(1))):
+            current.append(normalised)
+        end_of_previous = match.end()
+    if current:
+        groups.append(current)
+
+    return groups
 
 
 def citation_fidelity(text: str, provisions: Sequence[Mapping[str, object]]) -> list[Finding]:
@@ -99,7 +200,8 @@ def citation_fidelity(text: str, provisions: Sequence[Mapping[str, object]]) -> 
 
     This deliberately does not judge paraphrases. It enforces only Michael's
     stronger promise that text inside quotation marks is copied from the
-    retrieved corpus.
+    retrieved corpus - and that fragments quoted together were adjacent in
+    the source they are attributed to.
     """
     source_text = tuple(
         _normalise_quote(str(provision.get("text", "")))
@@ -107,18 +209,16 @@ def citation_fidelity(text: str, provisions: Sequence[Mapping[str, object]]) -> 
         if str(provision.get("text", "")).strip()
     )
     findings: list[Finding] = []
-    quoted = re.findall(r'["\u201c]([^"\u201d]+)["\u201d]', text or "")
-    for quote in quoted:
-        normalised = _normalise_quote(quote)
-        if len(normalised) < 20:
+    for group in _groups(text or ""):
+        pattern = re.compile(_SEGMENT_GAP.join(re.escape(segment) for segment in group))
+        if any(pattern.search(source) for source in source_text):
             continue
-        if not source_text or not any(normalised in source for source in source_text):
-            findings.append(
-                Finding(
-                    "citation_fidelity",
-                    f"quoted text is not present in retrieved provisions: {quote!r}",
-                )
+        findings.append(
+            Finding(
+                "citation_fidelity",
+                f"quoted text is not present in retrieved provisions: {' ... '.join(group)!r}",
             )
+        )
     return findings
 
 

@@ -141,3 +141,92 @@ def test_quoted_operative_words_must_exist_in_retrieved_provisions() -> None:
 
 def test_short_quoted_labels_are_not_treated_as_legal_quotes() -> None:
     assert citation_fidelity('See "s 117".', []) == []
+
+
+# The s 117(3) notice-period table, as it sits in provisions.text (row 73073).
+# Reduced from the corpus read recorded in
+# .orca/reports/2026-09-22-worker3-citation-integrity-investigation.md.
+S117_TABLE = (
+    "Employee's period of continuous service with the employer at the end "
+    "of the day the notice is given Period 1 Not more than 1 year 1 week "
+    "2 More than 1 year but not more than 3 years 2 weeks "
+    "3 More than 3 years but not more than 5 years 3 weeks "
+    "4 More than 5 years 4 weeks"
+)
+
+
+def test_a_misquoted_table_value_is_caught_even_though_the_quote_is_short() -> None:
+    """The live defect: a correct citation wrapped around a wrong number.
+
+    One of three isolated calls quoting s 117(3) returned "4 weeks" for the
+    tier the table gives as "3 weeks". The quote is seven characters, so a
+    minimum-length rule aimed at skipping labels skipped the one thing in
+    the answer a reader cannot check for themselves.
+    """
+    answer = (
+        'The relevant table row states: "More than 3 years but not more than 5 years" - "4 weeks"'
+    )
+    findings = citation_fidelity(answer, [{"text": S117_TABLE}])
+    assert [finding.rule for finding in findings] == ["citation_fidelity"]
+
+
+def test_a_correctly_quoted_table_value_is_not_flagged() -> None:
+    answer = (
+        'The relevant table row states: "More than 3 years but not more than 5 years" - "3 weeks"'
+    )
+    assert citation_fidelity(answer, [{"text": S117_TABLE}]) == []
+
+
+def test_a_value_quoted_from_the_wrong_row_of_the_same_table_is_caught() -> None:
+    """The whole point of checking the pair rather than the value alone.
+
+    "4 weeks" is genuinely in the s 117(3) table - it is the figure for more
+    than 5 years - so a substring test over the provision text passes a quote
+    that attaches it to the wrong tier. The tier and its value have to be
+    adjacent in the source, not merely both present somewhere in it.
+    """
+    answer = '"More than 1 year but not more than 3 years" - "4 weeks"'
+    findings = citation_fidelity(answer, [{"text": S117_TABLE}])
+    assert [finding.rule for finding in findings] == ["citation_fidelity"]
+
+
+def test_a_misquoted_value_inside_a_blockquote_is_caught() -> None:
+    """Three of five live runs quoted the table as a blockquote, not in
+    quotation marks. A check that only reads quotation marks sees nothing."""
+    answer = (
+        "The relevant table cell reads:\n\n"
+        "> More than 3 years but not more than 5 years - 6 weeks\n"
+    )
+    findings = citation_fidelity(answer, [{"text": S117_TABLE}])
+    assert [finding.rule for finding in findings] == ["citation_fidelity"]
+
+
+def test_a_blockquoted_row_joined_by_a_dash_the_model_added_is_not_flagged() -> None:
+    """The source table has no dash between the tier and its value; the model
+    inserts one to render the row. Checking the whole line as a literal
+    substring would fail every correctly quoted row."""
+    answer = (
+        "The relevant table cell reads:\n\n"
+        "> More than 3 years but not more than 5 years - 3 weeks\n"
+    )
+    assert citation_fidelity(answer, [{"text": S117_TABLE}]) == []
+
+
+def test_a_blockquoted_row_joined_by_an_em_dash_is_not_flagged() -> None:
+    """Run 3 of the five live reproduction calls wrote exactly this line.
+
+    A model renders the cell boundary as an em dash far more often than as a
+    hyphen, so a separator pattern that only knows the hyphen splits nothing
+    and condemns a faithfully quoted row.
+    """
+    answer = (
+        "The relevant table cell (Period 3) reads:\n\n"
+        "> More than 3 years but not more than 5 years — 3 weeks\n"
+    )
+    assert citation_fidelity(answer, [{"text": S117_TABLE}]) == []
+
+
+def test_a_quote_differing_only_in_dashes_and_smart_quotes_is_not_flagged() -> None:
+    provisions = [{"text": "a period of 12 months - or, where the employee agrees, 6 months"}]
+    answer = "The Act allows “a period of 12 months — or, where the employee agrees”."
+    assert citation_fidelity(answer, provisions) == []
