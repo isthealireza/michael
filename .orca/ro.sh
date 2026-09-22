@@ -73,7 +73,10 @@ print(' '.join(shlex.quote(a) for a in sys.argv[1:]))" "$@")
     remote_args=$(python -c "
 import shlex, sys
 print(' '.join(shlex.quote(a) for a in sys.argv[1:]))" "$@")
-    MSYS_NO_PATHCONV=1 railway ssh --service "$SERVICE" --environment "$ENVIRONMENT"       sh -c "$readonly_env hermes -z $remote_args" 2>&1 | grep -v "Using SSH key from file"
+    # --cli is required for non-TTY Railway SSH sessions. Keep the timeout
+    # inside the container: a local timeout only closes SSH and leaves the
+    # remote Hermes process running with its MCP children.
+    MSYS_NO_PATHCONV=1 railway ssh --service "$SERVICE" --environment "$ENVIRONMENT"       sh -c "$readonly_env timeout 120 hermes -z $remote_args --cli" 2>&1 | grep -v "Using SSH key from file"
     ;;
   *)
     echo "usage: .orca/ro.sh {python <script.py> | cli <subcommand> [args] | agent <question>}" >&2
