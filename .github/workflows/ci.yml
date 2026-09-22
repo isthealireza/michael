@@ -74,12 +74,6 @@ jobs:
           sudo apt-get install -y postgresql-client >/dev/null
           POSTGRES_USER=michael POSTGRES_DB=michael bash db/init/001_roles.sh
 
-      - name: ruff check
-        run: uv run ruff check .
-
-      - name: ruff format --check
-        run: uv run ruff format --check .
-
       - name: mypy
         run: uv run mypy src tests
 
@@ -102,3 +96,13 @@ jobs:
             echo "::error::Integration tests were skipped — A5 requires them to actually run, not skip" >&2
             exit 1
           fi
+
+      - name: ruff check
+        run: uv run ruff check .
+
+      # Scope formatting to executable Python. Documentation contains
+      # illustrative Python fences which are intentionally not formatter input.
+      # Keep this after all substantive gates so a formatting-only problem
+      # cannot hide typechecking or test results.
+      - name: ruff format --check (Python source)
+        run: uv run ruff format --check src tests bench calibration
