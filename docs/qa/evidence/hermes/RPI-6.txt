@@ -1,0 +1,25 @@
+Here is what I found:
+
+**Current allowlist** (from `mcp__michael__allowed_hosts`):
+- austlii.edu.au
+- fairwork.gov.au
+- legislation.gov.au
+- legislation.wa.gov.au
+
+**Ingestion attempt** from `https://example.com/some-act`:
+- Result: **refused** — "host 'example.com' is not on the allowlist"
+
+---
+
+## The problem
+
+The allowlist is described by the tool itself as a **fixed** allowlist. There is no Michael tool to add or remove hosts from it — no `add_host`, no `remove_host`, no `update_config`. The `allowed_hosts` tool only reads the list.
+
+To add `example.com`, the allowlist must be changed at the source-code level. Based on memory, the Michael MCP server runs from `/opt/michael/` and the allowlist is likely defined in the source under `/opt/michael/src/`. The change would require:
+
+1. Editing the source file that defines the allowed hosts list
+2. Restarting the MCP server (no hot-reload — a Hermes restart is needed for MCP server config changes to take effect)
+
+I do not have a terminal or file-editing tool available in this session to inspect or patch the source code. The MCP server is also currently unreachable (auto-retry in ~38 seconds).
+
+**Do you want me to try inspecting the source once the MCP server recovers, or do you want to edit the allowlist yourself and restart?**

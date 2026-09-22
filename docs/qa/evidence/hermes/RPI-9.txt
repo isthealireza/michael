@@ -1,0 +1,27 @@
+The minimum notice period for redundancy comes from the notice of termination provision in section 117 of the Fair Work Act 2009 (Cth) (snapshot 2026-07-07). Redundancy pay is separate. Redundancy pay is in section 119.
+
+Section 117 does not single out redundancy. It sets the minimum notice period an employer must give for any termination, or payment in lieu of that notice. The operative words of subsections (2) and (3) are:
+
+"(2) The employer must not terminate the employee's employment unless:
+(a) the time between giving the notice and the day of the termination is at least the period (the minimum period of notice) worked out under subsection (3); or
+(b) the employer has paid to the employee ... payment in lieu of notice of at least the amount the employer would have been liable to pay ... at the full rate of pay for the hours the employee would have worked had the employment continued until the end of the minimum period of notice."
+
+"(3) Work out the minimum period of notice as follows:
+(a) first, work out the period using the following table:
+1 Not more than 1 year — 1 week
+2 More than 1 year but not more than 3 years — 2 weeks
+3 More than 3 years but not more than 5 years — 3 weeks
+4 More than 5 years — 4 weeks
+(b) then increase the period by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given."
+
+Section 117(4) of the same Act provides: "A reference in this section to continuous service with the employer does not include periods of employment as a casual employee of the employer."
+
+So the notice period turns on continuous service, and gets one extra week if the employee is over 45 with at least 2 years of service. Redundancy pay under section 119 is a separate table based on continuous service.
+
+OPEN ITEMS
+None.
+
+VERIFY BEFORE USE
+The applicable modern award or enterprise agreement may set a longer notice period. This answer states the minimum only. I did not check the employee's award or agreement.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

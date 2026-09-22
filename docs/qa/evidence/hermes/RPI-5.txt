@@ -1,0 +1,55 @@
+Here is what the retrieved provisions show.
+
+---
+
+**Notice period for redundancy**
+
+The Fair Work Act 2009 (Cth) does not prescribe a separate notice period for redundancy. The standard notice of termination provisions in s 117 apply equally to redundancy terminations.
+
+**Section 117 — Fair Work Act 2009 (Cth) (snapshot 2026-07-07)**
+
+Section 117(1) says:
+
+"An employer must not terminate an employee's employment unless the employer has given the employee written notice of the day of the termination (which cannot be before the day the notice is given)."
+
+Section 117(2) requires that either:
+
+"(a) the time between giving the notice and the day of the termination is at least the period (the minimum period of notice) worked out under subsection (3); or
+(b) the employer has paid to the employee … payment in lieu of notice of at least the amount the employer would have been liable to pay … at the full rate of pay for the hours the employee would have worked had the employment continued until the end of the minimum period of notice."
+
+**Minimum notice periods — section 117(3)**
+
+The table in s 117(3(a):
+
+| Continuous service at end of day notice given | Period |
+|---|---|
+| Not more than 1 year | 1 week |
+| More than 1 year but not more than 3 years | 2 weeks |
+| More than 3 years but not more than 5 years | 3 weeks |
+| More than 5 years | 4 weeks |
+
+Section 117(3)(b) then adds:
+
+"then increase the period by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given."
+
+Casual employees are excluded from the continuous service count (s 117(4)).
+
+**Redundancy pay is separate**
+
+Redundancy pay under s 119 is an additional entitlement payable on top of notice. It is not a substitute for notice. The s 119 redundancy pay scale ranges from 4 weeks (1 to 2 years service) up to 16 weeks (9 to 10 years), dropping to 12 weeks at 10 years or more.
+
+**Key exclusion — section 123**
+
+Section 123(1) provides that the entire Division (including both notice and redundancy pay) does not apply to casual employees, employees terminated for serious misconduct, employees on a specified-term or specified-task arrangement, and certain trainees.
+
+---
+
+OPEN ITEMS
+
+None.
+
+VERIFY BEFORE USE
+
+The answer is drawn only from Fair Work Act 2009 (Cth) ss 117, 119 and 123. Modern awards or enterprise agreements may contain terms that provide for more generous notice periods or different redundancy arrangements. The applicable award or agreement was not identified in this request and was not searched. If a modern award or enterprise agreement applies, its terms must also be checked.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

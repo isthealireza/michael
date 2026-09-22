@@ -33,6 +33,11 @@ module-name = "michael"
 target-version = "py313"
 line-length = 100
 src = ["src", "tests"]
+# Captured evidence, not maintained source. These are the harness scripts a QA
+# run actually executed, kept beside the results they produced so a reader can
+# see how a number was obtained. Linting or reformatting them would edit the
+# record of what ran, which is the one property that makes them worth keeping.
+extend-exclude = ["docs/qa", ".orca/reports"]
 
 [tool.ruff.lint]
 select = ["B", "E", "F", "I", "UP"]

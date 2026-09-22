@@ -1,0 +1,40 @@
+The Fair Work Act 2009 (Cth) does not have a separate "redundancy notice period" distinct from the general notice of termination. When an employer terminates for redundancy, the notice obligation under section 117 still applies. Here is what the corpus provides.
+
+---
+
+Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07) — "Requirement for notice of termination or payment in lieu"
+
+An employer must give written notice of the day of termination. The minimum period is:
+
+| Continuous service at the day notice is given | Period |
+|---|---|
+| Not more than 1 year | 1 week |
+| More than 1 year but not more than 3 years | 2 weeks |
+| More than 3 years but not more than 5 years | 3 weeks |
+| More than 5 years | 4 weeks |
+
+Then, under s 117(3)(b): "then increase the period by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given."
+
+Alternatively, s 117(2)(b) permits the employer to make a payment in lieu of notice — "at least the amount the employer would have been liable to pay to the employee … at the full rate of pay for the hours the employee would have worked had the employment continued until the end of the minimum period of notice."
+
+Casual employees are excluded: "A reference in this section to continuous service with the employer does not include periods of employment as a casual employee of the employer" — s 117(4).
+
+---
+
+Fair Work Act 2009 (Cth) s 119 (snapshot 2026-07-07) — "Redundancy pay"
+
+This is a separate entitlement. It is severance pay, not a notice period. It applies when employment is terminated at the employer's initiative because the job is no longer required. The amounts range from 4 weeks (1 to 2 years service) to 16 weeks (9 to 10 years), reducing to 12 weeks at 10 or more years.
+
+Note: sections 121, 122 and 123 set out exclusions. Certain employers (small business employers with fewer than 15 employees) and certain categories of employee are not entitled to redundancy pay — those sections were not retrieved in this search and would need separate confirmation if relevant.
+
+---
+
+OPEN ITEMS
+
+None.
+
+VERIFY BEFORE USE
+
+Whether a modern award or enterprise agreement varies the notice period (s 118 permits awards and agreements to set notice periods for employee-initiated termination, but awards may also contain consultation obligations for redundancy). The corpus did not return a specific award provision — if the employee is award-covered, the applicable award should be checked. Whether the employee falls within any exclusion under s 123 (and therefore s 117 does not apply at all) was not confirmed.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

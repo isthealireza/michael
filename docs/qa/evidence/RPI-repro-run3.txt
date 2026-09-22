@@ -1,0 +1,50 @@
+Classification: **RESEARCH** / Domain: **employment**
+
+---
+
+The Fair Work Act 2009 (Cth) does not prescribe a separate notice period that applies only to redundancy. The notice period for a redundancy termination is the same minimum notice period that applies to any termination of employment, set out in section 117.
+
+**Minimum notice period — Fair Work Act 2009 (Cth) s 117(2)–(3) (snapshot 2026-07-07)**
+
+Section 117(2) requires that the employer must not terminate unless:
+
+> "(a) the time between giving the notice and the day of the termination is at least the period (the minimum period of notice) worked out under subsection (3); or
+> (b) the employer has paid to the employee … payment in lieu of notice …"
+
+Section 117(3) sets out the minimum period:
+
+> "(a) first, work out the period using the following table:
+>
+> | Employee's period of continuous service | Period |
+> |---|---|
+> | Not more than 1 year | 1 week |
+> | More than 1 year but not more than 3 years | 2 weeks |
+> | More than 3 years but not more than 5 years | 3 weeks |
+> | More than 5 years | 4 weeks |
+>
+> (b) then increase the period by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given."
+
+Section 117(4) states that "continuous service with the employer does not include periods of employment as a casual employee."
+
+**Employees not covered — Fair Work Act 2009 (Cth) s 123 (snapshot 2026-07-07)**
+
+Section 123(1) excludes certain employees from the notice provisions (Subdivision A, which includes s 117):
+
+> "(a) an employee employed for a specified period of time, for a specified task, or for the duration of a specified season;
+> (b) an employee whose employment is terminated because of serious misconduct;
+> (c) a casual employee;
+> (d) an employee (other than an apprentice) to whom a training arrangement applies …"
+
+**Key distinction — notice vs redundancy pay**
+
+The notice period (s 117) and redundancy pay (s 119) are separate entitlements. The notice period is the time between giving notice and the day of termination. Redundancy pay under s 119 is an additional lump sum payment based on years of continuous service, ranging from 4 weeks (1–2 years of service) to 12 weeks (10+ years). Both may be payable on a redundancy, provided the employee is not excluded by s 123.
+
+---
+
+**OPEN ITEMS**
+None.
+
+**VERIFY BEFORE USE**
+Whether a particular employee falls within the exclusions in s 123(1) (casual, specified task, serious misconduct, training arrangement) has not been assessed. An applicable modern award or enterprise agreement may provide for a longer notice period than the NES minimum.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

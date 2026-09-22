@@ -1,0 +1,24 @@
+Here is what the law says.
+
+---
+
+The general rule: **no**. Section 117 of the Fair Work Act 2009 (Cth) requires written notice before termination. The minimum notice period depends on continuous service — from 1 week (less than 1 year) up to 4 weeks (more than 5 years), plus 1 extra week if the employee is over 45 with at least 2 years' service. Section 117(2)(b) allows payment in lieu of that notice, but the notice obligation itself cannot simply be ignored.
+
+> Fair Work Act 2009 (Cth) s 117(1) (snapshot 2026-07-07): "An employer must not terminate an employee's employment unless the employer has given the employee written notice of the day of the termination (which cannot be before the day the notice is given)."
+
+The exception: **yes — but only for serious misconduct**. Section 123(1)(b) says the notice-of-termination Division (including s 117) does not apply to an employee whose employment is terminated "because of serious misconduct."
+
+> Fair Work Act 2009 (Cth) s 123(1)(b) (snapshot 2026-07-07): "This Division does not apply to ... an employee whose employment is terminated because of serious misconduct."
+
+So the question turns entirely on whether what the employee did qualifies as "serious misconduct." That definition is in Fair Work Regulations 2009 (Cth) regulation 1.07 — and it is **not in the corpus**. The corpus returned no provisions on the regulation above the retrieval threshold.
+
+---
+
+OPEN ITEMS
+1. [MISSING: facts — what did the employee actually do? Without this, no assessment of serious misconduct is possible.]
+2. [MISSING: the definition of "serious misconduct" from Fair Work Regulations 2009 (Cth) reg 1.07 — not ingested.]
+
+VERIFY BEFORE USE
+The definition of "serious misconduct" could not be retrieved. The answer assumes the employee is a national-system employee not excluded by s 123(1)(a), (c), (d) or (e). Without facts about the employee's conduct, continuous service, age, award coverage and employment type, the legal conclusion is incomplete.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

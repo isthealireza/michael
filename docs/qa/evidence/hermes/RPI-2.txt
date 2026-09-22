@@ -1,0 +1,84 @@
+The clause is not compliant with the Fair Work Act 2009 (Cth). It conflicts with three separate areas of the Act. Here is what the relevant provisions require.
+
+---
+
+**1. Notice of termination — National Employment Standards**
+
+*Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07)*
+
+Section 117(1) requires written notice:
+
+"An employer must not terminate an employee's employment unless the employer has given the employee written notice of the day of the termination (which cannot be before the day the notice is given)."
+
+Section 117(2)-(3) requires a minimum notice period based on continuous service, or payment in lieu:
+
+| Continuous service | Minimum notice |
+|---|---|
+| Not more than 1 year | 1 week |
+| More than 1 year but not more than 3 years | 2 weeks |
+| More than 3 years but not more than 5 years | 3 weeks |
+| More than 5 years | 4 weeks |
+
+Plus 1 additional week if the employee is over 45 and has completed at least 2 years of continuous service (s 117(3)(b)).
+
+The only circumstances in which the notice requirement does not apply are listed in s 123. The relevant exception is s 123(1)(b): "an employee whose employment is terminated because of serious misconduct". Even then, the termination must be *because of* serious misconduct — that is a reason, not "without cause".
+
+---
+
+**2. The NES are minimum standards that cannot be displaced**
+
+*Fair Work Act 2009 (Cth) s 61(1) (snapshot 2026-07-07)*
+
+"This Part sets minimum standards that apply to the employment of employees which cannot be displaced, even if an enterprise agreement includes terms of the kind referred to in subsection 55(5)."
+
+Section 61(2)(i) lists "notice of termination and redundancy pay (Division 11)" as one of the NES matters.
+
+*Fair Work Act 2009 (Cth) s 55(1) (snapshot 2026-07-07)*
+
+"A modern award or enterprise agreement must not exclude the National Employment Standards or any provision of the National Employment Standards."
+
+*Fair Work Act 2009 (Cth) s 44 (snapshot 2026-07-07)*
+
+"An employer must not contravene a provision of the National Employment Standards."
+
+A contractual clause that permits termination "without notice" in all circumstances directly excludes the s 117 NES entitlement to notice (or payment in lieu). That is not permitted.
+
+---
+
+**3. Unfair dismissal — "without cause"**
+
+*Fair Work Act 2009 (Cth) s 385 (snapshot 2026-07-07)*
+
+"A person has been unfairly dismissed if the FWC is satisfied that:
+(a) the person has been dismissed; and
+(b) the dismissal was harsh, unjust or unreasonable; ..."
+
+*Fair Work Act 2009 (Cth) s 387 (snapshot 2026-07-07)*
+
+"In considering whether it is satisfied that a dismissal was harsh, unjust or unreasonable, the FWC must take into account:
+(a) whether there was a valid reason for the dismissal related to the person's capacity or conduct ..."
+
+A clause authorising termination "without cause" means the employer asserts the right to dismiss in the absence of any valid reason. That is directly at odds with s 387(a). A protected employee (s 382) dismissed under such a clause could apply to the FWC for a remedy (s 394).
+
+---
+
+**Summary of conflicts**
+
+| Clause element | Contravenes |
+|---|---|
+| "without notice" | s 117 (NES — notice of termination), s 44 (contravening NES), s 61 (NES cannot be displaced) |
+| "without cause" | s 385 / s 387 (unfair dismissal — no valid reason) |
+| "at any time" | s 117 (timing of notice), and general protections (Part 3-1, s 340 — adverse action) |
+
+---
+
+OPEN ITEMS
+
+1. [MISSING: type of employment relationship — employee vs contractor, permanent vs casual, and whether the employee is covered by a modern award or enterprise agreement]
+2. [MISSING: length of continuous service and age of employee — needed to determine applicable notice period under s 117(3)]
+3. [MISSING: whether the employer is a small business — affects application of the Small Business Fair Dismissal Code under s 385(c)]
+4. [MISSING: whether the employee earns above the high income threshold and is not award/agreement covered — affects unfair dismissal protection under s 382]
+
+VERIFY BEFORE USE — the specific application of ss 117, 123, 385 and 387 depends on facts not provided, including the nature of the employment relationship, the employee's service period and age, whether the employer is a small business, and whether any modern award or enterprise agreement applies.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

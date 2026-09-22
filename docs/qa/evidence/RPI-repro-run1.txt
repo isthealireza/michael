@@ -1,0 +1,58 @@
+RESEARCH — employment
+
+The Fair Work Act 2009 (Cth) does not set a separate notice period for redundancy. The same minimum notice period applies to all terminations, including redundancy. That minimum is in section 117.
+
+---
+
+**Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07)**
+
+Section 117(2) states:
+
+"*The employer must not terminate the employee's employment unless: (a) the time between giving the notice and the day of the termination is at least the period (the minimum period of notice) worked out under subsection (3); or (b) the employer has paid to the employee … payment in lieu of notice …*"
+
+Section 117(3) works out the minimum period:
+
+| Employee's period of continuous service | Period |
+|---|---|
+| Not more than 1 year | 1 week |
+| More than 1 year but not more than 3 years | 2 weeks |
+| More than 3 years but not more than 5 years | 3 weeks |
+| More than 5 years | 4 weeks |
+
+Section 117(3)(b) then adds:
+
+"*then increase the period by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given.*"
+
+Section 117(4) provides that "*continuous service with the employer does not include periods of employment as a casual employee of the employer.*"
+
+---
+
+**Employees not covered by the notice requirement**
+
+Fair Work Act 2009 (Cth) s 123 (snapshot 2026-07-07) lists employees to whom Subdivision A (notice of termination) does not apply:
+
+- (1)(a) An employee employed for a specified period, task or season
+- (1)(b) An employee terminated for serious misconduct
+- (1)(c) A casual employee
+- (1)(d) Certain employees under a training arrangement
+- (3)(b) A daily hire employee in building and construction
+- (3)(c) A daily hire employee in the meat industry (slaughter of livestock)
+- (3)(d) A weekly hire employee in the meat industry whose termination is determined solely by seasonal factors
+
+---
+
+**Note on redundancy pay (separate entitlement)**
+
+The notice period under s 117 is separate from redundancy pay under s 119. An employee made redundant may be entitled to both: notice (or payment in lieu) under s 117, plus redundancy pay under s 119. Section 119 sets redundancy pay from 4 weeks (1-2 years service) up to 16 weeks (9-10 years service), dropping to 12 weeks at 10+ years.
+
+---
+
+**OPEN ITEMS**
+
+None.
+
+**VERIFY BEFORE USE**
+
+A modern award or enterprise agreement may provide a longer notice period than the NES minimum. The applicable award or agreement was not identified. This answer states the National Employment Standards minimum only.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

@@ -1,0 +1,32 @@
+**RESEARCH — employment**
+
+There is no separate notice period that applies only to redundancy. Redundancy is a reason for termination, and the general notice of termination requirements in the Fair Work Act 2009 (Cth) apply to redundancy terminations in the same way as any other employer-initiated termination.
+
+**Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07)** — "Requirement for notice of termination or payment in lieu":
+
+The employer must give written notice of the day of termination. The minimum period between giving notice and the termination day depends on continuous service:
+
+- Not more than 1 year: 1 week
+- More than 1 year but not more than 3 years: 2 weeks
+- More than 3 years but not more than 5 years: 3 weeks
+- More than 5 years: 4 weeks
+
+Then the period is increased by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service.
+
+Alternatively, the employer may make a payment in lieu of notice equal to the amount the employee would have earned had they worked through the notice period.
+
+**Fair Work Act 2009 (Cth) s 123(1) (snapshot 2026-07-07)** excludes certain employees from these notice provisions entirely — including casual employees, employees terminated for serious misconduct, and employees employed for a specified period, task or season. Section 123(3) further excludes certain daily hire and weekly hire employees in building/construction and the meat industry from the notice provisions.
+
+So the notice period for a redundant employee is the s 117 period based on their length of continuous service and age — unless they fall within a s 123 exclusion.
+
+---
+
+OPEN ITEMS
+
+None.
+
+VERIFY BEFORE USE
+
+A modern award or enterprise agreement may provide a longer notice period or additional consultation obligations for redundancy. Only the Fair Work Act has been checked.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.

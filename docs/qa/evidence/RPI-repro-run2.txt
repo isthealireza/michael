@@ -1,0 +1,55 @@
+**RESEARCH — employment**
+
+The notice period for termination (including redundancy) is set out in the Fair Work Act 2009 (Cth), s 117 (snapshot 2026-07-07).
+
+Section 117(3)(a) provides the minimum notice period based on continuous service:
+
+"Period
+
+Employee's period of continuous service with the employer at the end of the day the notice is given
+Period
+1
+Not more than 1 year
+1 week
+2
+More than 1 year but not more than 3 years
+2 weeks
+3
+More than 3 years but not more than 5 years
+3 weeks
+4
+More than 5 years
+4 weeks"
+
+Section 117(3)(b) adds an extra week:
+
+"then increase the period by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given."
+
+So the minimum notice an employer must give ranges from 1 week (up to 1 year of service) to 5 weeks (more than 5 years of service, plus over 45 with at least 2 years of service).
+
+Section 117(2)(b) permits payment in lieu of notice: the employer may pay the employee the amount they would have earned during the minimum notice period instead of working it.
+
+**Who is not covered**
+
+Section 123(1) (snapshot 2026-07-07) excludes these employees from the notice provisions:
+
+"(a) an employee employed for a specified period of time, for a specified task, or for the duration of a specified season;
+(b) an employee whose employment is terminated because of serious misconduct;
+(c) a casual employee;
+(d) an employee (other than an apprentice) to whom a training arrangement applies …"
+
+Section 123(3) also excludes certain daily hire and weekly hire employees in building/construction and the meat industry.
+
+**Redundancy pay is separate**
+
+Do not confuse notice with redundancy pay. Redundancy pay (severance) is governed by s 119 and is based on a different table tied to years of continuous service. An employee made redundant receives both notice (or payment in lieu) under s 117 and redundancy pay under s 119 (unless excluded by s 123(4)).
+
+---
+
+OPEN ITEMS
+None.
+
+VERIFY BEFORE USE
+A modern award or enterprise agreement may provide a longer notice period. The above is the statutory minimum only. Whether a particular employee is covered by the notice provisions requires checking the exclusions in s 123 against the employee's circumstances.
+
+Internal research only. Not legal advice. Requires review by an admitted Australian legal practitioner.
