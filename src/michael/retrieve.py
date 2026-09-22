@@ -209,18 +209,46 @@ JURISDICTION_NAME_PATTERN = re.compile(
     re.IGNORECASE,
 )
 
+#: Standard Australian jurisdiction abbreviations, in running text and
+#: citation suffixes such as ``(NSW)``. These are case-sensitive so ``ACT``
+#: does not match the ordinary word ``Act``.
+AUSTRALIAN_JURISDICTION_ABBREVIATIONS: dict[str, str] = {
+    "NSW": "nsw",
+    "Vic": "vic",
+    "VIC": "vic",
+    "Qld": "qld",
+    "QLD": "qld",
+    "SA": "sa",
+    "Tas": "tas",
+    "TAS": "tas",
+    "NT": "nt",
+    "ACT": "act",
+}
+
+_JURISDICTION_ABBREVIATIONS_LONGEST_FIRST = sorted(
+    AUSTRALIAN_JURISDICTION_ABBREVIATIONS, key=len, reverse=True
+)
+JURISDICTION_ABBREVIATION_PATTERN = re.compile(
+    r"\b(?:"
+    + "|".join(re.escape(abbr) for abbr in _JURISDICTION_ABBREVIATIONS_LONGEST_FIRST)
+    + r")\b"
+)
+
 
 def named_jurisdiction_mismatch(query: str) -> str | None:
     """The jurisdiction named in the query, if the corpus does not hold it.
 
-    Returns the matched name as it appears in the query (e.g. "New South
-    Wales"), or ``None`` when the query names no Australian jurisdiction, or
-    names one the corpus does hold (WA, or a phrase mapping to it).
+    Returns the matched text as it appears in the query, or ``None`` when the
+    query names no Australian jurisdiction, or names one the corpus holds.
     """
     match = JURISDICTION_NAME_PATTERN.search(query)
-    if match is None:
-        return None
-    code = AUSTRALIAN_JURISDICTION_NAMES[match.group(0).lower()]
+    if match is not None:
+        code = AUSTRALIAN_JURISDICTION_NAMES[match.group(0).lower()]
+    else:
+        match = JURISDICTION_ABBREVIATION_PATTERN.search(query)
+        if match is None:
+            return None
+        code = AUSTRALIAN_JURISDICTION_ABBREVIATIONS[match.group(0)]
     if code in CORPUS_JURISDICTIONS:
         return None
     return match.group(0)

@@ -123,3 +123,44 @@ def test_every_unheld_state_or_territory_is_recognised() -> None:
         "Australian Capital Territory",
     ):
         assert named_jurisdiction_mismatch(f"tenancy law in {name}") == name
+
+
+def test_every_unheld_abbreviation_is_recognised_in_running_text() -> None:
+    for abbreviation in ("NSW", "Vic", "VIC", "Qld", "QLD", "SA", "Tas", "TAS", "NT", "ACT"):
+        query = f"can a landlord in {abbreviation} terminate a periodic tenancy"
+        assert named_jurisdiction_mismatch(query) == abbreviation
+
+
+def test_every_unheld_abbreviation_is_recognised_as_a_citation_suffix() -> None:
+    for abbreviation in ("NSW", "Vic", "Qld", "SA", "Tas", "NT", "ACT"):
+        query = f"Residential Tenancies Act 2010 ({abbreviation}) s 26"
+        assert named_jurisdiction_mismatch(query) == abbreviation
+
+
+def test_wa_abbreviation_is_not_flagged() -> None:
+    assert named_jurisdiction_mismatch("what does the Residential Tenancies Act (WA) say") is None
+
+
+def test_lowercase_abbreviations_do_not_match() -> None:
+    assert named_jurisdiction_mismatch("what is the usa position on this") is None
+    assert named_jurisdiction_mismatch("isn't this covered already") is None
+    assert named_jurisdiction_mismatch("nt sure this is right") is None
+
+
+def test_the_ordinary_word_act_does_not_trigger_a_mismatch() -> None:
+    assert named_jurisdiction_mismatch("What does the Fair Work Act say?") is None
+    assert named_jurisdiction_mismatch("Act now to register the vehicle") is None
+    assert named_jurisdiction_mismatch("What does the Land Tax Assessment Act 2002 say") is None
+    assert named_jurisdiction_mismatch("must a cat be sterilised under the Cat Act 2011") is None
+
+
+def test_act_the_territory_is_still_recognised_next_to_the_word_act() -> None:
+    query = "does the Residential Tenancies Act 1997 (ACT) cover this"
+    assert named_jurisdiction_mismatch(query) == "ACT"
+
+
+def test_abbreviation_embedded_in_a_longer_word_does_not_match() -> None:
+    assert named_jurisdiction_mismatch("Tasmania is not the same as Tas") == "Tasmania"
+    assert named_jurisdiction_mismatch("the vicinity of the property") is None
+    assert named_jurisdiction_mismatch("a contact for this matter") is None
+    assert named_jurisdiction_mismatch("compact and exact obligations") is None
