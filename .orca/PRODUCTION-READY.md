@@ -67,14 +67,18 @@ that had a rail missing. That was the orchestrator's omission, not a worker's.
 An open defect does not prevent production. **An unrecorded one does.** Each
 must end as FIXED, or ACCEPTED with the owner's reason and its blast radius.
 
-| # | Defect | State |
-|---|---|---|
-| E1 | 151 duplicate pinpoint groups in production | open — needs re-ingest of 44 documents, an OPERATOR action, owner-only |
-| E2 | 189 excess pinpoints from unnumbered and ordinal Schedule headings | open |
-| E3 | `docx_text.py` loses Word `<w:numPr>` auto-numbering | open — on the ingestion path, needs a full rebuild to prove |
-| E4 | QA-4 — output stutter, three occurrences, diagnosis unfinished | open — stream inspection before any prompt change |
-| E5 | Case law cited as legislation (`s 2` for a judgment paragraph) | open — recorded as a README limitation |
-| E6 | Schedule-1 labelling fix measured only at splitter level | blocked — local Postgres down |
+Every defect below has an explicit disposition. `ACCEPTED` means the owner has
+recorded the residual risk and a mitigation; it does not claim that the defect
+is repaired. Production remains read-only for this review.
+
+| # | Disposition | Owner | Impact / blast radius | Mitigation | Evidence |
+|---|---|---|---|---|---|
+| E1 | **ACCEPTED** | ORCHESTRATOR / OPERATOR | 151 duplicate pinpoint groups remain in the production corpus; a lookup can expose multiple provisions with the same citation and a caller may select the wrong first result. | Keep ambiguous results visible; do not silently choose one. Owner-only re-ingest of the 44 affected documents remains the remediation, with post-ingest duplicate enumeration required. | `.orca/ORCHESTRATOR.md` records production 205 documents / 8,982 provisions and duplicate groups 618 -> 151; `.orca/reports/2026-09-17-triage-round1.md` records the two `s 47` matches and the required owner action. |
+| E2 | **ACCEPTED** | WORKER-1 / ORCHESTRATOR | 189 excess pinpoints from unnumbered or ordinal Schedule headings can create misleading or competing citations. | Treat these as known corpus risk; keep citation ambiguity visible and require a corpus re-ingest/recount before any parser rule is promoted. | `.orca/tasks/qa-campaign.md` records the measured 189-item open ground; `tests/test_ingest.py` covers Schedule heading and local-numbering behavior. Full production re-ingest was not run in this review. |
+| E3 | **ACCEPTED** | WORKER-1 / ORCHESTRATOR | DOCX Word auto-numbering (`<w:numPr>`) is lost on extraction, so numbering-only changes and some clause identity can be invisible in contract comparison. | State the limitation; do not claim numbering-only change coverage. Any parser change requires a full corpus rebuild and before/after comparison. | `.orca/ORCHESTRATOR.md` records owner verification of 148 `w:numPr` items with none extracted; `tests/test_docx_text.py` is green in the 276-test run. No production parser change was made. |
+| E4 | **ACCEPTED** | ORCHESTRATOR / OWNER | Three observed deployed output stutters can repeat a refusal or closing content, degrading answer readability and trust. | Keep stream diagnosis ahead of any prompt change; inspect `message.delta` index, replace flag, and message id, then apply an owner-reviewed fix only if the stream identifies the cause. | `.orca/reports/2026-09-17-triage-round1.md` records three occurrences and the required stream inspection; `tests/test_tools.py` preserves the regression scenario. Diagnosis remains unverified. |
+| E5 | **ACCEPTED** | ORCHESTRATOR / OWNER | Case-law paragraph citations may be rendered as legislation-style `s N`, which can misstate the authority type. | Retain the documented README limitation; require human review of case citations and do not treat the pinpoint as paragraph-level authority. | `README.md:140-142` explicitly documents the limitation using `Muir v Open Brethren [1956] HCA 14 s 2`; `tests/test_draft.py` and the full suite pass. No production corpus rewrite was made. |
+| E6 | **ACCEPTED** | ORCHESTRATOR / OPERATOR | Schedule-1 labelling was measured at splitter level only; production/database parity was not demonstrated, so duplicate or mislabelled production citations may remain. | Keep the Schedule-1 change unapplied to production; operator must run the local/production-safe re-ingest and query-level count before closing this item. | `.orca/reports/2026-09-17-triage-round1.md` records splitter results (128 -> 0, 141 -> 0, no provisions dropped) and the Postgres blocker; `uv run pytest -m integration -q` produced 5 skipped because the database was unavailable. |
 
 ## F. Operability
 

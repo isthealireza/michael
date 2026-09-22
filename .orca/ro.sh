@@ -14,20 +14,30 @@
 # directly to get around this.
 set -euo pipefail
 
+# Pinned, not inherited from whatever the CLI happens to be linked to. This
+# machine has two Railway accounts, and only one of them holds michael-hermes:
+# the other carries a same-named project whose single deployment failed in
+# September and never ran. `railway ssh` defaults to the linked project, so an
+# unpinned call is one `railway link` away from reading a different database -
+# or from failing in a way that reads as "production is down" rather than "you
+# are pointed somewhere else". The service name alone does not disambiguate.
+PROJECT=693389ce-128e-469f-ab3b-81901cdc4d8a
 SERVICE=michael-hermes
 ENVIRONMENT=production
 PY=/opt/michael/.venv/bin/python
 CLI=/opt/michael/.venv/bin/michael
+HERMES=/opt/hermes/.venv/bin/hermes
+LOCAL_PYTHON="${LOCAL_PYTHON:-$(command -v python || command -v python3)}"
 
 readonly_env='MICHAEL_DATABASE_URL="$MICHAEL_RO_DATABASE_URL"'
 
 case "${1:-}" in
   python)
     [ -f "${2:-}" ] || { echo "usage: .orca/ro.sh python <script.py>" >&2; exit 2; }
-    payload=$(python -c "
+    payload=$($LOCAL_PYTHON -c "
 import base64, pathlib, sys
 print(base64.b64encode(pathlib.Path(sys.argv[1]).read_bytes()).decode())" "$2")
-    MSYS_NO_PATHCONV=1 railway ssh --service "$SERVICE" --environment "$ENVIRONMENT" \
+    MSYS_NO_PATHCONV=1 railway ssh --project "$PROJECT" --service "$SERVICE" --environment "$ENVIRONMENT" \
       sh -c "$readonly_env $PY -c \"import base64;exec(base64.b64decode('$payload').decode())\"" \
       2>&1 | grep -v "Using SSH key from file"
     ;;
@@ -36,10 +46,10 @@ print(base64.b64encode(pathlib.Path(sys.argv[1]).read_bytes()).decode())" "$2")
     # Quote each argument for the REMOTE shell. "$*" flattens them, so a
     # multi-word search term arrives as separate arguments and the CLI rejects
     # it - the first thing this helper got wrong.
-    remote_args=$(python -c "
+    remote_args=$($LOCAL_PYTHON -c "
 import shlex, sys
 print(' '.join(shlex.quote(a) for a in sys.argv[1:]))" "$@")
-    MSYS_NO_PATHCONV=1 railway ssh --service "$SERVICE" --environment "$ENVIRONMENT" \
+    MSYS_NO_PATHCONV=1 railway ssh --project "$PROJECT" --service "$SERVICE" --environment "$ENVIRONMENT" \
       sh -c "$readonly_env $CLI $remote_args" 2>&1 | grep -v "Using SSH key from file"
     ;;
   agent)
@@ -70,13 +80,14 @@ print(' '.join(shlex.quote(a) for a in sys.argv[1:]))" "$@")
     #
     # THIS COSTS MONEY. Each run is about $0.01171 of real spend against the
     # owner's OpenRouter key. Do not loop it and do not re-run for polish.
-    remote_args=$(python -c "
+    remote_args=$($LOCAL_PYTHON -c "
 import shlex, sys
 print(' '.join(shlex.quote(a) for a in sys.argv[1:]))" "$@")
     # --cli is required for non-TTY Railway SSH sessions. Keep the timeout
     # inside the container: a local timeout only closes SSH and leaves the
     # remote Hermes process running with its MCP children.
-    MSYS_NO_PATHCONV=1 railway ssh --service "$SERVICE" --environment "$ENVIRONMENT"       sh -c "$readonly_env timeout 120 hermes -z $remote_args --cli" 2>&1 | grep -v "Using SSH key from file"
+    MSYS_NO_PATHCONV=1 railway ssh --project "$PROJECT" --service "$SERVICE" --environment "$ENVIRONMENT" \
+      sh -c "$readonly_env timeout 120 $HERMES -z $remote_args --cli" 2>&1 | grep -v "Using SSH key from file"
     ;;
   *)
     echo "usage: .orca/ro.sh {python <script.py> | cli <subcommand> [args] | agent <question>}" >&2
