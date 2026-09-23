@@ -2,6 +2,7 @@ import asyncio
 import json
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
+from typing import Protocol
 
 import pytest
 from starlette.testclient import TestClient
@@ -93,7 +94,7 @@ class _ScriptedUpstreamConnection:
     canned frame from a fixed script (rather than an automatic echo), and
     does NOT end the stream once the script runs out — later `send`s are
     still recorded, just with no reply. Used for the one test that needs a
-    session.create reply to actually flow through `_claim_new_session`
+    session.create reply to actually flow through `_claim_session_ids_from_reply`
     mid-conversation, so a *later* frame naming that session can be checked
     against the in-memory `owned` set alone."""
 
@@ -114,18 +115,30 @@ class _ScriptedUpstreamConnection:
         return await self._queue.get()
 
 
+class _UpstreamLike(Protocol):
+    """Structural shape shared by `_FakeUpstreamConnection` and
+    `_ScriptedUpstreamConnection`, so `_FakeConnect` can wrap either without
+    the two unrelated fakes needing a common base class."""
+
+    sent: list[str]
+
+    async def send(self, raw: str) -> None: ...
+    def __aiter__(self) -> "_UpstreamLike": ...
+    async def __anext__(self) -> str: ...
+
+
 class _FakeConnect:
     """Stands in for `websockets.connect(...)`. relay() enters/exits it
     manually (not via `async with`), so only `__aenter__`/`__aexit__` and
     being callable are needed."""
 
-    def __init__(self, upstream: _FakeUpstreamConnection) -> None:
+    def __init__(self, upstream: _UpstreamLike) -> None:
         self._upstream = upstream
 
     def __call__(self, *args: object, **kwargs: object) -> "_FakeConnect":
         return self
 
-    async def __aenter__(self) -> _FakeUpstreamConnection:
+    async def __aenter__(self) -> _UpstreamLike:
         return self._upstream
 
     async def __aexit__(self, *exc_info: object) -> None:
@@ -150,6 +163,17 @@ async def _fake_fetch_ws_ticket(config: object, http_client: object) -> str:
     return "test-ticket"
 
 
+def _enabled_user(user_id: int = 1) -> User:
+    return User(
+        id=user_id,
+        email="reader@x.com",
+        display_name="Reader",
+        password_hash="irrelevant",
+        role="chat",
+        disabled_at=None,
+    )
+
+
 def _patch_relay_success(
     monkeypatch: pytest.MonkeyPatch, owned: frozenset[str]
 ) -> _FakeUpstreamConnection:
@@ -159,6 +183,11 @@ def _patch_relay_success(
     monkeypatch.setattr(app_module.session_store, "owned_by", lambda user_id: owned)
     monkeypatch.setattr(app_module, "fetch_ws_ticket", _fake_fetch_ws_ticket)
     monkeypatch.setattr(app_module.websockets, "connect", _FakeConnect(fake_upstream))
+    # I5: relay() re-checks live account state (disabled_at) at accept time,
+    # which reaches Postgres via user_store.find_by_id. Stubbed here for the
+    # same reason _authenticate is stubbed elsewhere in this file: this suite
+    # runs with no database available.
+    monkeypatch.setattr(app_module.user_store, "find_by_id", lambda user_id: _enabled_user(user_id))
     return fake_upstream
 
 
@@ -206,6 +235,34 @@ def test_unauthenticated_root_still_redirects_once_michael_js_is_reachable(
     redirect = anon.get("/", follow_redirects=False)
     assert redirect.status_code == 303
     assert redirect.headers["location"] == "/login"
+
+
+def test_the_real_chat_page_has_no_dead_password_login_card(tmp_path: Path) -> None:
+    """C1: web/michael.html used to carry a second, pre-gate login card wired
+    to a route the gate never serves (/auth/password-login), and #thread /
+    #askArea were un-hidden ONLY by that dead handler's success branch — so a
+    signed-in user saw a password box that could never succeed and never saw
+    the question box. This reads the REAL repository file (not a tmp_path
+    stand-in) so a reintroduced login card is caught here."""
+    repo_web_root = Path(__file__).resolve().parents[2] / "web"
+    client = TestClient(build_app(secret=SECRET, upstream=UPSTREAM, web_root=repo_web_root))
+
+    response = client.get("/", cookies={COOKIE_NAME: _token()})
+
+    assert response.status_code == 200
+    assert "password-login" not in response.text
+    assert "loginCard" not in response.text
+    # The thread and composer must be visible on load, not un-hidden only by
+    # a login handler that no longer exists.
+    assert 'id="thread" class="hidden"' not in response.text
+    assert 'id="askArea"' in response.text
+    assert 'class="wrap hidden" id="askArea"' not in response.text
+
+
+def test_health_is_public_and_ok(client: TestClient) -> None:
+    response = client.get("/health")
+    assert response.status_code == 200
+    assert response.json() == {"status": "ok"}
 
 
 def test_the_ws_ticket_endpoint_is_not_proxied(client: TestClient) -> None:
@@ -328,6 +385,64 @@ def test_bad_login_pays_the_password_check_cost_for_a_disabled_account_too(
     assert checked == ["disabled-users-hash"]
 
 
+def test_two_different_forwarded_addresses_yield_two_different_addresses(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """C3: request.client.host is Railway's edge proxy — identical for every
+    caller on the internet — so the rate limit must key off the rightmost
+    (edge-appended) X-Forwarded-For hop instead. This proves two distinct
+    callers, each behind that same edge, are told apart."""
+    import michael.gate.app as app_module
+
+    seen: list[str] = []
+
+    def fake_authenticate(email: str, password: str, address: str) -> None:
+        seen.append(address)
+        return None
+
+    monkeypatch.setattr(app_module, "_authenticate", fake_authenticate)
+
+    client.post(
+        "/auth/login",
+        json={"email": "a@x.com", "password": "whatever-12345"},
+        headers={"X-Forwarded-For": "203.0.113.5"},
+    )
+    client.post(
+        "/auth/login",
+        json={"email": "a@x.com", "password": "whatever-12345"},
+        headers={"X-Forwarded-For": "198.51.100.9"},
+    )
+
+    assert len(seen) == 2
+    assert seen[0] != seen[1]
+    assert seen == ["203.0.113.5", "198.51.100.9"]
+
+
+def test_client_address_takes_the_rightmost_forwarded_hop_not_the_leftmost(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The TRAP the reviewer named explicitly: trusting the leftmost XFF entry
+    (what '--forwarded-allow-ips=*' would give uvicorn) lets an attacker
+    supply their own fabricated leading hop and impersonate any address. The
+    rightmost entry is the one the trusted edge itself appended."""
+    import michael.gate.app as app_module
+
+    seen: list[str] = []
+
+    def _record(email: str, password: str, address: str) -> None:
+        seen.append(address)
+
+    monkeypatch.setattr(app_module, "_authenticate", _record)
+
+    client.post(
+        "/auth/login",
+        json={"email": "a@x.com", "password": "whatever-12345"},
+        headers={"X-Forwarded-For": "9.9.9.9, 203.0.113.5"},
+    )
+
+    assert seen == ["203.0.113.5"]
+
+
 def test_login_with_a_non_json_body_returns_400(client: TestClient) -> None:
     """I4: a non-JSON body must not 500 an unauthenticated caller."""
     response = client.post(
@@ -342,6 +457,71 @@ def test_login_with_a_json_array_body_returns_400(client: TestClient) -> None:
         "/auth/login", content=b"[1, 2, 3]", headers={"Content-Type": "application/json"}
     )
     assert response.status_code == 400
+
+
+def test_login_success_is_logged(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    """T9: the only prior record of who signed in was nothing at all —
+    refusal used print(), and success wasn't logged anywhere."""
+    import michael.gate.app as app_module
+
+    monkeypatch.setattr(app_module, "_authenticate", lambda email, password, address: (7, "chat"))
+    with caplog.at_level("INFO", logger="michael.gate"):
+        response = client.post(
+            "/auth/login", json={"email": "reader@x.com", "password": "a-long-enough-password"}
+        )
+    assert response.status_code == 204
+    assert any(
+        "login success" in r.message and "user=7" in r.message for r in caplog.records
+    )
+
+
+def test_login_failure_is_logged_with_account_and_address(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    import michael.gate.app as app_module
+
+    monkeypatch.setattr(app_module, "_authenticate", lambda email, password, address: None)
+    with caplog.at_level("WARNING", logger="michael.gate"):
+        response = client.post(
+            "/auth/login",
+            json={"email": "attacker@x.com", "password": "wrong-password"},
+            headers={"X-Forwarded-For": "203.0.113.9"},
+        )
+    assert response.status_code == 401
+    assert any(
+        "login failed" in r.message
+        and "attacker@x.com" in r.message
+        and "203.0.113.9" in r.message
+        for r in caplog.records
+    )
+
+
+def test_relay_refusal_is_logged(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    _patch_relay_success(monkeypatch, frozenset({"owned-1"}))
+    with caplog.at_level("WARNING", logger="michael.gate"):
+        with pytest.raises(WebSocketDisconnect):
+            with client.websocket_connect("/api/ws", cookies={COOKIE_NAME: _token()}) as ws:
+                ws.send_text(json.dumps({"method": "session.list", "params": {}}))
+                ws.receive_text()
+    assert any("relay refused" in r.message for r in caplog.records)
+
+
+def test_socket_open_and_close_are_logged(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    _patch_relay_success(monkeypatch, frozenset({"owned-1"}))
+    frame = {"method": "prompt.submit", "params": {"session_id": "owned-1", "text": "hi"}}
+    with caplog.at_level("INFO", logger="michael.gate"):
+        with client.websocket_connect("/api/ws", cookies={COOKIE_NAME: _token()}) as ws:
+            ws.send_text(json.dumps(frame))
+            ws.receive_text()
+    messages = [r.message for r in caplog.records]
+    assert any("socket open" in m for m in messages)
+    assert any("socket closed" in m for m in messages)
 
 
 def test_session_cookie_is_hardened(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
@@ -362,6 +542,19 @@ def test_session_cookie_is_hardened(client: TestClient, monkeypatch: pytest.Monk
     assert "secure" in lowered
     assert "samesite=strict" in lowered
     assert "max-age=43200" in lowered
+    assert "path=/" in lowered
+
+
+def test_logout_clears_the_cookie_with_matching_attributes(client: TestClient) -> None:
+    """Minor: a delete_cookie whose Set-Cookie attributes don't match the
+    original cookie's (secure/httponly/samesite) can fail to clear it in some
+    browsers -- it describes a different cookie, not an overwrite."""
+    response = client.post("/auth/logout", cookies={COOKIE_NAME: _token()})
+    assert response.status_code == 204
+    lowered = response.headers["set-cookie"].lower()
+    assert "httponly" in lowered
+    assert "secure" in lowered
+    assert "samesite=strict" in lowered
     assert "path=/" in lowered
 
 
@@ -399,6 +592,48 @@ def test_an_expired_cookie_is_refused_by_http_and_websocket(client: TestClient) 
 # --------------------------------------------------------------------------
 
 
+def test_a_disabled_accounts_cookie_cannot_open_a_new_socket(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """I5: disable_user() was checked only at login, so a disabled account
+    kept a valid cookie for up to 12h and could still open a fresh /api/ws
+    connection with it. relay() now re-checks live account state at accept
+    time."""
+    import michael.gate.app as app_module
+
+    disabled = User(
+        id=1,
+        email="gone@x.com",
+        display_name="Gone",
+        password_hash="irrelevant",
+        role="chat",
+        disabled_at=datetime.now(UTC),
+    )
+    monkeypatch.setattr(app_module.user_store, "find_by_id", lambda user_id: disabled)
+
+    with pytest.raises(WebSocketDisconnect) as caught:
+        with client.websocket_connect("/api/ws", cookies={COOKIE_NAME: _token()}):
+            pass
+
+    assert caught.value.code == 4401
+
+
+def test_an_unknown_account_id_cannot_open_a_socket(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Belt-and-braces: a cookie naming a user_id that no longer exists at all
+    (e.g. deleted) must fail the same way as a disabled one."""
+    import michael.gate.app as app_module
+
+    monkeypatch.setattr(app_module.user_store, "find_by_id", lambda user_id: None)
+
+    with pytest.raises(WebSocketDisconnect) as caught:
+        with client.websocket_connect("/api/ws", cookies={COOKIE_NAME: _token()}):
+            pass
+
+    assert caught.value.code == 4401
+
+
 def test_the_websocket_refuses_an_unauthenticated_client(client: TestClient) -> None:
     with pytest.raises(WebSocketDisconnect) as caught:
         with client.websocket_connect("/api/ws"):
@@ -419,6 +654,36 @@ def test_an_allowed_frame_for_an_owned_session_reaches_the_fake_upstream_verbati
 
     assert echo == f"echo:{raw}"
     assert fake_upstream.sent == [raw]
+
+
+def test_a_duplicate_top_level_key_forwards_the_decided_value_not_the_raw_text(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """I4: the exact scenario the reviewer named.
+    {"method":"admin.x","method":"session.create"} is syntactically valid
+    JSON with a duplicate key; Python's json.loads keeps the LAST one, so
+    decide() evaluates this as session.create and allows it. If the gate
+    then relayed the ORIGINAL raw text (as it used to), Hermes would receive
+    the literal substring "admin.x" too — and a parser that resolves
+    duplicate keys differently (keeps the FIRST) could dispatch as admin.x
+    instead of the thing that was actually approved. Relaying
+    json.dumps(frame) instead means what is forwarded can only ever be the
+    one value decide() actually saw."""
+    fake_upstream = _patch_relay_success(monkeypatch, frozenset())
+    raw = '{"id":"x","method":"admin.x","method":"session.create","params":{"title":"t"}}'
+
+    with client.websocket_connect("/api/ws", cookies={COOKIE_NAME: _token()}) as ws:
+        ws.send_text(raw)
+        ws.receive_text()
+
+    assert len(fake_upstream.sent) == 1
+    forwarded = fake_upstream.sent[0]
+    assert "admin.x" not in forwarded
+    assert json.loads(forwarded) == {
+        "id": "x",
+        "method": "session.create",
+        "params": {"title": "t"},
+    }
 
 
 def test_a_prompt_submit_naming_an_unowned_session_is_refused_and_forwards_nothing(
@@ -506,6 +771,7 @@ def test_upstream_ticket_fetch_failure_closes_4503(
         raise RuntimeError("hermes unreachable")
 
     monkeypatch.setattr(app_module, "fetch_ws_ticket", _boom)
+    monkeypatch.setattr(app_module.user_store, "find_by_id", lambda user_id: _enabled_user(user_id))
 
     # socket.accept() has already happened by this point (unlike the 4401
     # case), so the close is only observable by actually trying to read —
@@ -527,6 +793,7 @@ def test_upstream_connect_failure_closes_4503(
 
     monkeypatch.setattr(app_module, "fetch_ws_ticket", _fake_fetch_ws_ticket)
     monkeypatch.setattr(app_module.websockets, "connect", _FailingConnect())
+    monkeypatch.setattr(app_module.user_store, "find_by_id", lambda user_id: _enabled_user(user_id))
 
     with pytest.raises(WebSocketDisconnect) as caught:
         with client.websocket_connect("/api/ws", cookies={COOKIE_NAME: _token()}) as ws:
@@ -536,12 +803,15 @@ def test_upstream_connect_failure_closes_4503(
 
 
 # --------------------------------------------------------------------------
-# _claim_new_session (Defect 2 / C3): claims both identifiers, and now
-# returns them rather than the caller re-reading owned_by() from Postgres.
+# _claim_session_ids_from_reply (Defect 2 / C3; renamed from
+# _claim_new_session — Minor: that name, its old docstring, and these tests
+# all implied "create only", when the function is equally load-bearing for
+# session.resume). Claims both identifiers, and returns them rather than the
+# caller re-reading owned_by() from Postgres.
 # --------------------------------------------------------------------------
 
 
-def test_claim_new_session_claims_both_session_identifiers(
+def test_claim_session_ids_from_reply_claims_both_session_identifiers(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """session.create returns a live session_id AND a stored_session_id, and
@@ -560,13 +830,13 @@ def test_claim_new_session_claims_both_session_identifiers(
     )
     frame = {"result": {"session_id": "live-1", "stored_session_id": "stored-1", "title": "t"}}
 
-    result = app_module._claim_new_session(frame, 42)
+    result = app_module._claim_session_ids_from_reply(frame, 42)
 
     assert claimed == [(42, "live-1", "t"), (42, "stored-1", "t")]
     assert result == frozenset({"live-1", "stored-1"})
 
 
-def test_claim_new_session_ignores_empty_or_missing_identifiers(
+def test_claim_session_ids_from_reply_ignores_empty_or_missing_identifiers(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     import michael.gate.app as app_module
@@ -581,10 +851,63 @@ def test_claim_new_session_ignores_empty_or_missing_identifiers(
     )
     frame = {"result": {"session_id": "", "stored_session_id": None, "title": "t"}}
 
-    result = app_module._claim_new_session(frame, 42)
+    result = app_module._claim_session_ids_from_reply(frame, 42)
 
     assert claimed == []
     assert result == frozenset()
+
+
+def test_a_resumed_sessions_new_live_id_becomes_usable_immediately(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The resume-case test the Minor asked for: _claim_session_ids_from_reply
+    is exactly as load-bearing for session.resume as for session.create.
+    session.resume returns a NEW live session_id for the resumed conversation
+    (web/michael.js: `state.live = again.session_id`), and the very next
+    prompt.submit names that new id. If this function only claimed
+    session.create replies, that prompt.submit would be refused as
+    "not_your_session" even though the resume itself was for an owned
+    session."""
+    import michael.gate.app as app_module
+
+    monkeypatch.setattr(
+        app_module.session_store, "owned_by", lambda user_id: frozenset({"stored-1"})
+    )
+    monkeypatch.setattr(app_module, "fetch_ws_ticket", _fake_fetch_ws_ticket)
+    monkeypatch.setattr(
+        app_module.user_store, "find_by_id", lambda user_id: _enabled_user(user_id)
+    )
+    claimed_ids: list[str] = []
+    monkeypatch.setattr(
+        app_module.session_store,
+        "claim",
+        lambda user_id, hermes_session_id, title: claimed_ids.append(hermes_session_id),
+    )
+
+    resume_reply = json.dumps({"result": {"session_id": "resumed-live-1", "title": "t"}})
+    fake_upstream = _ScriptedUpstreamConnection([resume_reply])
+    monkeypatch.setattr(app_module.websockets, "connect", _FakeConnect(fake_upstream))
+
+    resume_frame = json.dumps({"method": "session.resume", "params": {"session_id": "stored-1"}})
+    submit_frame = json.dumps(
+        {"method": "prompt.submit", "params": {"session_id": "resumed-live-1", "text": "hi"}}
+    )
+
+    with pytest.raises(WebSocketDisconnect) as caught:
+        with client.websocket_connect("/api/ws", cookies={COOKIE_NAME: _token()}) as ws:
+            ws.send_text(resume_frame)
+            ws.receive_text()  # the session.resume reply, relayed back
+            ws.send_text(submit_frame)
+            # Forces a deterministic server-initiated close for teardown —
+            # see _FakeUpstreamConnection's docstring.
+            ws.send_text(json.dumps({"method": "session.list", "params": {}}))
+            ws.receive_text()
+
+    assert caught.value.code == 4403
+    # The important assertion: prompt.submit naming the freshly resumed live
+    # id was actually FORWARDED, not refused.
+    assert fake_upstream.sent == [resume_frame, submit_frame]
+    assert claimed_ids == ["resumed-live-1"]
 
 
 def test_owned_by_is_read_once_per_connection_not_once_per_frame(
@@ -620,6 +943,7 @@ def test_owned_by_is_read_once_per_connection_not_once_per_frame(
         lambda user_id, hermes_session_id, title: claimed_ids.append(hermes_session_id),
     )
     monkeypatch.setattr(app_module, "fetch_ws_ticket", _fake_fetch_ws_ticket)
+    monkeypatch.setattr(app_module.user_store, "find_by_id", lambda user_id: _enabled_user(user_id))
 
     create_reply = json.dumps(
         {"result": {"session_id": "new-1", "stored_session_id": "stored-1", "title": "t"}}

@@ -13,12 +13,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Literal
 
-#: session.create opens a conversation. The other three act on one that already
-#: exists, and so must be checked against ownership.
-ALLOWED_METHODS = frozenset(
-    {"session.create", "session.resume", "session.status", "prompt.submit"}
-)
-
 _NEEDS_OWNED_SESSION = frozenset({"session.resume", "session.status", "prompt.submit"})
 
 #: Per-method params key allowlist. Unknown keys are refused.
@@ -28,6 +22,20 @@ _ALLOWED_PARAMS_KEYS = {
     "session.status": frozenset({"session_id"}),
     "prompt.submit": frozenset({"session_id", "text"}),
 }
+
+#: session.create opens a conversation. The other three act on one that already
+#: exists, and so must be checked against ownership. Derived from
+#: `_ALLOWED_PARAMS_KEYS` rather than listed separately: `decide()` subscripts
+#: `_ALLOWED_PARAMS_KEYS[method]` unguarded once `method in ALLOWED_METHODS` is
+#: true, so the two sets must never drift apart. Deriving one from the other
+#: makes that impossible instead of merely intended.
+ALLOWED_METHODS = frozenset(_ALLOWED_PARAMS_KEYS)
+
+#: The only top-level keys a client frame may carry. `web/michael.js` sends
+#: exactly `{id, method, params}` (`id` optional in principle, always present
+#: in practice). `decide()` used to inspect only `method` and `params`, so an
+#: extra top-level key rode along unexamined and was relayed verbatim upstream.
+_ALLOWED_TOP_LEVEL_KEYS = frozenset({"id", "method", "params"})
 
 
 @dataclass(frozen=True)
@@ -46,6 +54,9 @@ class Decision:
 def decide(frame: object, *, owned_session_ids: frozenset[str]) -> Decision:
     """Decide whether one client frame may be relayed upstream."""
     if not isinstance(frame, dict):
+        return Decision(False, "malformed_frame")
+
+    if not set(frame.keys()).issubset(_ALLOWED_TOP_LEVEL_KEYS):
         return Decision(False, "malformed_frame")
 
     method = frame.get("method")

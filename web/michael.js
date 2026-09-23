@@ -27,20 +27,6 @@ const state = { live: null, stored: null, busy: false };
 
 /* ------------------------------- transport ------------------------------- */
 
-async function api(path, body) {
-  const res = await fetch(path, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    credentials: "include",
-    body: JSON.stringify(body || {}),
-  });
-  const text = await res.text();
-  let parsed = null;
-  try { parsed = text ? JSON.parse(text) : null; } catch { /* not json */ }
-  if (!res.ok) throw new Error((parsed && parsed.detail) || `HTTP ${res.status}`);
-  return parsed;
-}
-
 function sessionTitle() {
   const when = new Date().toLocaleString("en-AU",
     { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" });
@@ -349,24 +335,6 @@ function showSession() {
 }
 
 /* --------------------------------- wiring -------------------------------- */
-
-$("loginBtn").onclick = async () => {
-  const btn = $("loginBtn");
-  btn.disabled = true;
-  $("loginStatus").textContent = "signing in…";
-  try {
-    await api("/auth/password-login",
-      { provider: "basic", username: "michael", password: $("pw").value });
-    $("loginCard").classList.add("hidden");
-    $("thread").classList.remove("hidden");
-    $("askArea").classList.remove("hidden");
-    $("q").focus();
-  } catch (err) {
-    $("loginStatus").textContent = String(err.message || err);
-    btn.disabled = false;
-  }
-};
-$("pw").addEventListener("keydown", (e) => { if (e.key === "Enter") $("loginBtn").click(); });
 
 function scrollDown() {
   const main = document.querySelector("main");

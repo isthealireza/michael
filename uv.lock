@@ -652,7 +652,7 @@ requires-dist = [
     { name = "pyyaml", specifier = ">=6.0.2,<7" },
     { name = "starlette", marker = "extra == 'gate'", specifier = ">=0.41.0,<0.48" },
     { name = "uvicorn", marker = "extra == 'gate'", specifier = ">=0.32.0,<0.40" },
-    { name = "websockets", marker = "extra == 'gate'", specifier = ">=13.0,<16" },
+    { name = "websockets", marker = "extra == 'gate'", specifier = ">=14.0,<16" },
 ]
 provides-extras = ["corpus", "mcp", "gate"]
 

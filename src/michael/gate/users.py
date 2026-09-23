@@ -64,10 +64,34 @@ def find_by_email(email: str) -> User | None:
     return _row_to_user(row) if row else None
 
 
+def find_by_id(user_id: int) -> User | None:
+    """Used to re-check `disabled_at` at points a session cookie alone cannot
+    answer -- the cookie only carries the id, not live account state (I5)."""
+    with writable() as conn, conn.cursor() as cur:
+        cur.execute(f"SELECT {_COLUMNS} FROM gate.users WHERE id = %s", (user_id,))
+        row = cur.fetchone()
+    return _row_to_user(row) if row else None
+
+
 def list_users() -> list[User]:
     with writable() as conn, conn.cursor() as cur:
         cur.execute(f"SELECT {_COLUMNS} FROM gate.users ORDER BY email")
         return [_row_to_user(row) for row in cur.fetchall()]
+
+
+def set_password(email: str, password: str) -> bool:
+    """Reset an existing account's password. False when there was no such account.
+
+    The spec says password reset happens "via CLI"; this is the store-level
+    half of that (see ``michael user password`` in cli.py).
+    """
+    password_hash = hash_password(password)
+    with writable() as conn, conn.cursor() as cur:
+        cur.execute(
+            "UPDATE gate.users SET password_hash = %s WHERE email = lower(%s)",
+            (password_hash, email),
+        )
+        return cur.rowcount > 0
 
 
 def disable_user(email: str) -> bool:

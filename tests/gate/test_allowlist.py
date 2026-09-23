@@ -153,6 +153,34 @@ def test_prompt_submit_with_extra_keys_is_refused() -> None:
     assert not d.allowed and d.reason == "malformed_frame"
 
 
+# I-3: top-level frame keys are validated too, not just params keys
+def test_an_unknown_top_level_key_is_refused() -> None:
+    """The real client sends exactly {id, method, params}. decide() used to
+    inspect only method and params, so an extra top-level key rode along
+    unexamined and was relayed to Hermes verbatim -- e.g. a "context" key
+    smuggling data the params allowlist was never asked to check."""
+    frame = {
+        "id": "x",
+        "method": "session.create",
+        "params": {},
+        "context": {"anything": "at all"},
+    }
+    d = decide(frame, owned_session_ids=OWNED)
+    assert not d.allowed and d.reason == "malformed_frame"
+
+
+def test_the_three_ordinary_top_level_keys_are_still_allowed() -> None:
+    frame = {"id": "x", "method": "session.create", "params": {"title": "t"}}
+    d = decide(frame, owned_session_ids=OWNED)
+    assert d.allowed and d.reason == "ok"
+
+
+def test_a_frame_with_no_id_is_still_allowed() -> None:
+    frame = {"method": "session.create", "params": {}}
+    d = decide(frame, owned_session_ids=OWNED)
+    assert d.allowed and d.reason == "ok"
+
+
 # M-3: cold-start case with empty owned_session_ids
 def test_prompt_submit_with_empty_owned_session_ids_is_refused() -> None:
     """A valid-format request is refused when the user owns no sessions."""

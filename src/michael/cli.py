@@ -137,6 +137,9 @@ def build_parser() -> argparse.ArgumentParser:
     user_disable = user_sub.add_parser("disable", help="disable an account")
     user_disable.add_argument("email")
 
+    user_password = user_sub.add_parser("password", help="reset an account's password")
+    user_password.add_argument("email")
+
     return parser
 
 
@@ -229,6 +232,8 @@ def _run(args: argparse.Namespace) -> int:
         case "user":
             from getpass import getpass
 
+            import psycopg
+
             from michael.gate import users as gate_users
 
             match args.user_command:
@@ -239,10 +244,10 @@ def _run(args: argparse.Namespace) -> int:
                     if password != getpass("repeat: "):
                         print("passwords did not match", file=sys.stderr)
                         return 1
-                    # Caught here rather than by adding ValueError to
-                    # EXPECTED_FAILURES: that tuple names failures the design
-                    # produces on purpose, and a bare ValueError there would
-                    # swallow genuine bugs across every other subcommand.
+                    # Caught here rather than by adding ValueError/UniqueViolation
+                    # to EXPECTED_FAILURES: that tuple names failures the design
+                    # produces on purpose, and adding either there would swallow
+                    # genuine bugs across every other subcommand.
                     try:
                         created = gate_users.create_user(
                             args.email, args.name, password, args.role
@@ -250,7 +255,29 @@ def _run(args: argparse.Namespace) -> int:
                     except ValueError as exc:
                         print(str(exc), file=sys.stderr)
                         return 1
+                    except psycopg.errors.UniqueViolation:
+                        # gate.users.email is NOT NULL UNIQUE; a duplicate
+                        # raises this rather than ValueError, so it must be
+                        # caught here too or the operator gets a raw traceback.
+                        print(f"an account already exists for {args.email}", file=sys.stderr)
+                        return 1
                     _print({"email": created.email, "role": created.role})
+                case "password":
+                    # The spec says password reset happens "via CLI"; this is
+                    # that command. Same argv-avoidance as "add" above.
+                    password = getpass("password: ")
+                    if password != getpass("repeat: "):
+                        print("passwords did not match", file=sys.stderr)
+                        return 1
+                    try:
+                        reset = gate_users.set_password(args.email, password)
+                    except ValueError as exc:
+                        print(str(exc), file=sys.stderr)
+                        return 1
+                    if not reset:
+                        print(f"no such account: {args.email}", file=sys.stderr)
+                        return 1
+                    _print({"password_reset": args.email})
                 case "list":
                     _print(
                         [

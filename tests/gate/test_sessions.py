@@ -3,12 +3,10 @@ import pytest
 pytestmark = pytest.mark.integration
 
 from michael.gate import sessions, users  # noqa: E402
-from michael.gate.schema import apply_gate_schema  # noqa: E402
 
 
 @pytest.fixture
-def two_users() -> tuple[int, int]:
-    apply_gate_schema()
+def two_users(gate_tables: None) -> tuple[int, int]:
     a = users.create_user("owner-a@example.com", "A", "a-long-enough-password", "chat")
     b = users.create_user("owner-b@example.com", "B", "a-long-enough-password", "chat")
     return a.id, b.id

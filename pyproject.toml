@@ -20,7 +20,12 @@ gate = [
     "argon2-cffi>=23.1.0,<25",
     "starlette>=0.41.0,<0.48",
     "uvicorn>=0.32.0,<0.40",
-    "websockets>=13.0,<16",
+    # Floor is 14.0, not 13.0: at 13.x, websockets.connect is the legacy
+    # client and takes `extra_headers`, not `additional_headers` (the
+    # keyword michael.gate.app's relay() actually uses). Under 13.x that
+    # TypeError is swallowed by relay()'s `except Exception` and closes
+    # every WebSocket with 4503 -- I7.
+    "websockets>=14.0,<16",
 ]
 
 [project.scripts]

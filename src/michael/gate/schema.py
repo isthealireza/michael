@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from michael.db import writable
 
-GATE_SCHEMA_SQL = """
+_TABLES_SQL = """
 CREATE SCHEMA IF NOT EXISTS gate;
 
 CREATE TABLE IF NOT EXISTS gate.users (
@@ -43,11 +43,24 @@ CREATE TABLE IF NOT EXISTS gate.login_attempts (
 
 CREATE INDEX IF NOT EXISTS login_attempts_account_idx ON gate.login_attempts (account_key, at);
 CREATE INDEX IF NOT EXISTS login_attempts_address_idx ON gate.login_attempts (address, at);
+"""
 
+#: I6: gated on `michael_ro` existing, mirroring michael/schema.py's
+#: apply_schema(). Without the guard, applying this DDL on a database that
+#: has no `michael_ro` role (e.g. a fresh local/dev Postgres) fails on the
+#: first REVOKE and rolls back the whole statement — including the CREATE
+#: TABLEs above it — so runbook Step 3 creates nothing at all.
+_REVOKES_SQL = """
 REVOKE ALL ON SCHEMA gate FROM michael_ro;
 REVOKE ALL ON ALL TABLES IN SCHEMA gate FROM michael_ro;
 ALTER DEFAULT PRIVILEGES IN SCHEMA gate REVOKE ALL ON TABLES FROM michael_ro;
 """
+
+#: The full DDL, unconditional REVOKEs included. Used by tests and by anyone
+#: wanting to see the whole picture in one string; `apply_gate_schema()` itself
+#: applies the two halves separately so the REVOKEs can be skipped when
+#: `michael_ro` does not exist yet (see `_REVOKES_SQL`'s docstring above).
+GATE_SCHEMA_SQL = _TABLES_SQL + _REVOKES_SQL
 
 
 def gate_schema_sql() -> str:
@@ -56,8 +69,16 @@ def gate_schema_sql() -> str:
 
 
 def apply_gate_schema() -> dict[str, str]:
-    """Create the gate schema. Idempotent."""
+    """Create the gate schema. Idempotent.
+
+    Revokes `michael_ro`'s access only when that role exists, so this does
+    not hard-fail (and roll back the table creation with it) on a database
+    where it has not been provisioned yet.
+    """
     with writable() as conn:
         with conn.cursor() as cur:
-            cur.execute(gate_schema_sql())
+            cur.execute(_TABLES_SQL)
+            cur.execute("SELECT 1 FROM pg_roles WHERE rolname = 'michael_ro'")
+            if cur.fetchone() is not None:
+                cur.execute(_REVOKES_SQL)
     return {"status": "applied", "schema": "gate"}
