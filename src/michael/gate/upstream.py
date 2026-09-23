@@ -8,7 +8,7 @@ so it must not leave this process.
 from __future__ import annotations
 
 import base64
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from urllib.parse import quote
 
 import httpx
@@ -25,7 +25,7 @@ WS_PATH = "/api/ws"
 class UpstreamConfig:
     base_url: str
     username: str
-    password: str
+    password: str = field(repr=False)
 
 
 def _normalised_base(config: UpstreamConfig) -> str:

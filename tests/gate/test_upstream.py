@@ -1,3 +1,4 @@
+import asyncio
 import base64
 
 import pytest
@@ -6,8 +7,33 @@ from michael.gate.upstream import (
     GATEWAY_PROTOCOL,
     UpstreamConfig,
     basic_auth_header,
+    fetch_ws_ticket,
     ws_url,
 )
+
+
+class _FakeResponse:
+    def __init__(self, payload: object) -> None:
+        self._payload = payload
+
+    def raise_for_status(self) -> None:
+        return None
+
+    def json(self) -> object:
+        return self._payload
+
+
+class _FakeClient:
+    def __init__(self, payload: object) -> None:
+        self._payload = payload
+        self.calls: list[tuple[str, dict[str, str]]] = []
+
+    async def post(
+        self, url: str, *, headers: dict[str, str], json: object
+    ) -> _FakeResponse:
+        self.calls.append((url, headers))
+        return _FakeResponse(self._payload)
+
 
 CONFIG = UpstreamConfig(
     base_url="http://michael-hermes.railway.internal:9119",
@@ -49,3 +75,29 @@ def test_trailing_slash_on_base_url_does_not_double() -> None:
 def test_an_unusable_base_url_is_refused_at_construction(bad: str) -> None:
     with pytest.raises(ValueError, match="must start with http"):
         ws_url(UpstreamConfig(base_url=bad, username="u", password="p"), "t")
+
+
+def test_repr_does_not_leak_the_password() -> None:
+    """The gate holds an all-or-nothing credential; a stray repr must not print it."""
+    assert "s3cret" not in repr(CONFIG)
+    assert "michael" in repr(CONFIG)  # the rest of the config is still useful in a log
+
+
+def test_fetch_ws_ticket_happy_path() -> None:
+    """fetch_ws_ticket uses the correct URL, header, and returns the ticket."""
+    client = _FakeClient({"ticket": "tkt-123"})
+    ticket = asyncio.run(fetch_ws_ticket(CONFIG, client))  # type: ignore[arg-type]
+
+    assert ticket == "tkt-123"
+    assert len(client.calls) == 1
+    url, headers = client.calls[0]
+    assert url == "http://michael-hermes.railway.internal:9119/api/auth/ws-ticket"
+    assert headers["Authorization"] == basic_auth_header(CONFIG)
+
+
+@pytest.mark.parametrize("bad_payload", [{}, {"ticket": ""}, {"ticket": 123}])
+def test_fetch_ws_ticket_invalid_response(bad_payload: object) -> None:
+    """fetch_ws_ticket raises ValueError if the response has no usable ticket."""
+    client = _FakeClient(bad_payload)
+    with pytest.raises(ValueError, match="no ws ticket"):
+        asyncio.run(fetch_ws_ticket(CONFIG, client))  # type: ignore[arg-type]
