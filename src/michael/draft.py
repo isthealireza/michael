@@ -279,7 +279,7 @@ def outline_without_template(
             clause_lines += [
                 f"### {index}. {label}",
                 "",
-                f"- Based on: {provision.pinpoint()}",
+                f"- Nearest retrieved provision (relevance not confirmed): {provision.pinpoint()}",
                 f'- Operative words: "{quote}"',
                 f"- Source: {provision.source_url}",
                 "- Clause to be drafted from the above. Terms not supplied: "
@@ -301,6 +301,14 @@ def outline_without_template(
         "Every clause heading above is a placeholder for drafting, not drafted text.",
         "Whether an instrument of this kind is the right vehicle at all.",
     ]
+    if provisions:
+        verify.append(
+            "Each clause's 'Nearest retrieved provision' is the closest match "
+            "retrieval found, not a confirmed authority for that clause. "
+            "Retrieval can surface a real, correctly quoted provision that is "
+            "topically unrelated to the clause it sits under - confirm each "
+            "one actually supports its clause before relying on it."
+        )
     verify += list(wrong_jurisdiction_warnings(domain=domain, provisions=provisions))
     if not provisions:
         verify.append("Nothing in this outline is grounded in a retrieved provision.")

@@ -132,6 +132,31 @@ def test_no_template_produces_a_grounded_outline_rather_than_a_refusal(
     assert "DRAFT template for review" in written
 
 
+def test_no_template_outline_never_frames_a_provision_as_grounding_a_clause(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """W3-S4: a NO-TEMPLATE outline can only ever retrieve the nearest match,
+    which may be real but topically unrelated to the clause it sits under
+    (an NDA outline citing WA settlement-agent conduct rules, say). The
+    per-clause line must not read as "Based on" - a reader who only skims
+    the clause body, not the VERIFY BEFORE USE footnote, must still see that
+    the provision is unconfirmed.
+    """
+    from michael import config
+
+    monkeypatch.setenv("MICHAEL_TEMPLATES_DIR", str(tmp_path / "templates"))
+    config.settings.cache_clear()
+
+    result = outline_without_template(
+        request="I need a shareholders deed for two founders",
+        provisions=FAIR_WORK_PROVISIONS,
+        domain="corporate",
+    )
+    assert "- Based on:" not in result.body
+    assert "Nearest retrieved provision (relevance not confirmed):" in result.body
+    assert any("confirm each" in item.lower() for item in result.verify_before_use)
+
+
 def test_the_real_casual_contract_template_is_found_and_states_what_it_is_based_on(
     real_templates: None,
 ) -> None:

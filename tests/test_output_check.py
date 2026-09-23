@@ -114,6 +114,45 @@ def test_the_required_disclaimer_is_not_reported_as_a_certification() -> None:
         assert check(body) == [], disclaimer
 
 
+def test_an_unrelated_negation_in_a_previous_sentence_does_not_hide_a_certification() -> None:
+    """W3-S1 regression: the disclaimer guard must not fire on any negation
+    it finds nearby - only on the specific frame MICHAEL.md requires,
+    directly wrapped around the certified words. A negation about something
+    else entirely, one sentence earlier, is not that frame.
+    """
+    body = CLEAN.replace(
+        "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.",
+        "There is no finding that supports the alternative view. "
+        "This clause complies with s 117.",
+    )
+    assert [f.rule for f in check(body)] == ["certification"]
+
+
+def test_an_unrelated_negation_in_the_same_sentence_does_not_hide_a_certification() -> None:
+    """W3-S1 regression, same-sentence form: the disclaiming words must flow
+    straight into the certified clause, not merely share a sentence with it.
+    """
+    body = CLEAN.replace(
+        "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.",
+        "Nothing in the earlier email is a claim that pricing was fixed; "
+        "this clause complies with s 117.",
+    )
+    assert [f.rule for f in check(body)] == ["certification"]
+
+
+def test_a_negation_in_a_previous_sentence_does_not_cross_the_sentence_boundary() -> None:
+    """W3-S2: the lookback is bounded to the sentence, not a character
+    budget. Even a disclaiming-shaped phrase in the previous sentence must
+    not suppress a certification in this one.
+    """
+    body = CLEAN.replace(
+        "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.",
+        "This is not a statement that the earlier clause was drafted badly. "
+        "This clause complies with s 117.",
+    )
+    assert [f.rule for f in check(body)] == ["certification"]
+
+
 def test_a_statement_about_the_law_is_not_a_certification() -> None:
     """Michael must still be able to say what the law requires."""
     body = CLEAN.replace(

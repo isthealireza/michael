@@ -66,19 +66,45 @@ assertion about a clause, so "an employer complies with s 117 by ..." - a
 statement about the law, which is allowed - does not trip it."""
 
 DISCLAIMS = re.compile(
-    r"\b(?:not|never|no|nor|nothing)\b[^.\n]{0,60}?"
+    r"(?:\b(?:not|never|no|nor|nothing)\b[^.\n]{0,60}?"
     r"\b(?:a|an)?\s*(?:statement|assertion|certification|claim|finding)\b"
     r"[^.\n]{0,30}?\bthat\b"
     r"|\b(?:does not|doesn't|do not|never)\s+(?:assert|certify|claim|say|state)\b"
-    r"[^.\n]{0,30}?\bthat\b",
+    r"[^.\n]{0,30}?\bthat\b)"
+    r"\s*\Z",
     re.IGNORECASE,
 )
-"""MICHAEL.md requires exactly this kind of sentence: "that is not a
+r"""MICHAEL.md requires exactly this kind of sentence: "that is not a
 statement that the clause is compliant." Read in isolation, CERTIFIES
 matches "the clause is compliant" inside it - the regex has no way to see
 the negated "statement that" in front of it. This pattern finds that
 negating frame so check() can tell "the clause is compliant" the assertion
-from "the clause is compliant" the thing someone declined to assert."""
+from "the clause is compliant" the thing someone declined to assert.
+
+The trailing `\s*\Z` is load-bearing: it is anchored against a slice that
+ends exactly where the CERTIFIES match begins, so the disclaiming frame
+must flow straight into the certified words ("... statement that [THE
+CLAUSE IS COMPLIANT]"), not merely occur somewhere earlier in the window.
+Without it, an unrelated negation - "There is no finding that supports the
+alternative view. This clause complies with s 117." - matched the pattern
+on its own "no ... finding ... that" and swallowed a genuine certification
+that had nothing to do with it. The scorer failed open on exactly the
+outputs MICHAEL.md forbids."""
+
+_SENTENCE_BREAK = re.compile(r"[.!?]|\n")
+"""Where one sentence ends and the next begins, for bounding the disclaiming
+lookback. A negation in a PREVIOUS sentence must not suppress a
+certification in this one: the guard exists to recognise one specific
+sentence shape, not to scan an arbitrary character budget that happens to
+cross into unrelated prose."""
+
+
+def _sentence_start(text: str, pos: int) -> int:
+    """Index just after the closest sentence break before `pos`, or 0."""
+    start = 0
+    for match in _SENTENCE_BREAK.finditer(text, 0, pos):
+        start = match.end()
+    return start
 
 
 @dataclass(frozen=True)
@@ -252,7 +278,7 @@ def check(text: str) -> list[Finding]:
         findings.append(Finding("notice", "no closing notice"))
 
     for certified in CERTIFIES.finditer(out):
-        preceding = out[max(0, certified.start() - 100) : certified.start()]
+        preceding = out[_sentence_start(out, certified.start()) : certified.start()]
         if DISCLAIMS.search(preceding):
             continue
         findings.append(Finding("certification", f"certifies a clause: {certified.group(0)!r}"))
