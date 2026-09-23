@@ -33,7 +33,6 @@ from michael.gate.ratelimit import is_locked_out
 from michael.gate.upstream import (
     GATEWAY_PROTOCOL,
     UpstreamConfig,
-    basic_auth_header,
     fetch_ws_ticket,
     ws_url,
 )
@@ -301,7 +300,6 @@ def build_app(*, secret: str, upstream: UpstreamConfig, web_root: Path) -> Starl
             upstream_cm = websockets.connect(
                 ws_url(upstream, ticket),
                 subprotocols=[websockets.Subprotocol(GATEWAY_PROTOCOL)],
-                additional_headers={"Authorization": basic_auth_header(upstream)},
             )
             try:
                 up = await upstream_cm.__aenter__()

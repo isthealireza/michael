@@ -1,38 +1,65 @@
 import asyncio
-import base64
 
 import pytest
 
 from michael.gate.upstream import (
     GATEWAY_PROTOCOL,
     UpstreamConfig,
-    basic_auth_header,
     fetch_ws_ticket,
+    open_upstream_session,
     ws_url,
 )
 
 
+class _FakeHTTPError(Exception):
+    """Stands in for httpx.HTTPStatusError without importing it here."""
+
+
 class _FakeResponse:
-    def __init__(self, payload: object) -> None:
+    def __init__(self, payload: object, status_code: int = 200) -> None:
         self._payload = payload
+        self.status_code = status_code
 
     def raise_for_status(self) -> None:
-        return None
+        if self.status_code >= 400:
+            raise _FakeHTTPError(f"HTTP {self.status_code}")
 
     def json(self) -> object:
         return self._payload
 
 
-class _FakeClient:
-    def __init__(self, payload: object) -> None:
+class _FakeDashboard:
+    """Models how the real Hermes dashboard actually behaves.
+
+    This matters more than it looks. The previous fake returned the ticket
+    payload for ANY url with an implied 200, so it could not tell the login
+    route from the ticket route and had no notion of a session. The gate
+    shipped sending `Authorization: Basic`, every unit test passed, and the
+    mistake only surfaced the first time a real question was asked through the
+    gate — the dashboard answered 401 and every socket closed 4503.
+
+    So: the ticket route refuses until a password-login has happened.
+    """
+
+    def __init__(self, payload: object, *, already_signed_in: bool = False) -> None:
         self._payload = payload
-        self.calls: list[tuple[str, dict[str, str]]] = []
+        self.signed_in = already_signed_in
+        self.calls: list[str] = []
+        self.login_body: object = None
 
     async def post(
-        self, url: str, *, headers: dict[str, str], json: object
+        self, url: str, *, json: object = None, headers: dict[str, str] | None = None
     ) -> _FakeResponse:
-        self.calls.append((url, headers))
-        return _FakeResponse(self._payload)
+        self.calls.append(url)
+        if url.endswith("/auth/password-login"):
+            self.login_body = json
+            self.signed_in = True
+            return _FakeResponse({}, 200)
+        if url.endswith("/api/auth/ws-ticket"):
+            if not self.signed_in:
+                return _FakeResponse({"detail": "unauthorised"}, 401)
+            return _FakeResponse(self._payload, 200)
+        return _FakeResponse({}, 404)
 
 
 CONFIG = UpstreamConfig(
@@ -44,13 +71,6 @@ CONFIG = UpstreamConfig(
 
 def test_subprotocol_matches_the_one_michael_js_requests() -> None:
     assert GATEWAY_PROTOCOL == "hermes-gateway-v1"
-
-
-def test_basic_auth_header_is_well_formed() -> None:
-    header = basic_auth_header(CONFIG)
-    assert header.startswith("Basic ")
-    decoded = base64.b64decode(header.removeprefix("Basic ")).decode()
-    assert decoded == "michael:s3cret"
 
 
 def test_ws_url_upgrades_http_to_ws() -> None:
@@ -83,21 +103,55 @@ def test_repr_does_not_leak_the_password() -> None:
     assert "michael" in repr(CONFIG)  # the rest of the config is still useful in a log
 
 
-def test_fetch_ws_ticket_happy_path() -> None:
-    """fetch_ws_ticket uses the correct URL, header, and returns the ticket."""
-    client = _FakeClient({"ticket": "tkt-123"})
+def test_a_session_is_established_before_the_ticket_is_accepted() -> None:
+    """The regression test for the defect that reached production: the ticket
+    route refuses an unauthenticated caller, so the gate must sign in first."""
+    client = _FakeDashboard({"ticket": "tkt-123"})
+
     ticket = asyncio.run(fetch_ws_ticket(CONFIG, client))  # type: ignore[arg-type]
 
     assert ticket == "tkt-123"
-    assert len(client.calls) == 1
-    url, headers = client.calls[0]
-    assert url == "http://michael-hermes.railway.internal:9119/api/auth/ws-ticket"
-    assert headers["Authorization"] == basic_auth_header(CONFIG)
+    assert client.calls == [
+        "http://michael-hermes.railway.internal:9119/api/auth/ws-ticket",
+        "http://michael-hermes.railway.internal:9119/auth/password-login",
+        "http://michael-hermes.railway.internal:9119/api/auth/ws-ticket",
+    ]
+
+
+def test_the_login_sends_the_body_the_dashboard_expects() -> None:
+    client = _FakeDashboard({"ticket": "t"})
+    asyncio.run(fetch_ws_ticket(CONFIG, client))  # type: ignore[arg-type]
+
+    assert client.login_body == {
+        "provider": "basic",
+        "username": "michael",
+        "password": "s3cret",
+    }
+
+
+def test_a_client_that_already_has_a_session_does_not_sign_in_again() -> None:
+    """One request, not two, for every turn after the first on a live client."""
+    client = _FakeDashboard({"ticket": "tkt"}, already_signed_in=True)
+
+    assert asyncio.run(fetch_ws_ticket(CONFIG, client)) == "tkt"  # type: ignore[arg-type]
+    assert client.calls == [
+        "http://michael-hermes.railway.internal:9119/api/auth/ws-ticket"
+    ]
+
+
+def test_open_upstream_session_posts_the_credential() -> None:
+    client = _FakeDashboard({})
+    asyncio.run(open_upstream_session(CONFIG, client))  # type: ignore[arg-type]
+
+    assert client.signed_in
+    assert client.calls == [
+        "http://michael-hermes.railway.internal:9119/auth/password-login"
+    ]
 
 
 @pytest.mark.parametrize("bad_payload", [{}, {"ticket": ""}, {"ticket": 123}])
 def test_fetch_ws_ticket_invalid_response(bad_payload: object) -> None:
-    """fetch_ws_ticket raises ValueError if the response has no usable ticket."""
-    client = _FakeClient(bad_payload)
+    """Raises ValueError if the response carries no usable ticket."""
+    client = _FakeDashboard(bad_payload, already_signed_in=True)
     with pytest.raises(ValueError, match="no ws ticket"):
         asyncio.run(fetch_ws_ticket(CONFIG, client))  # type: ignore[arg-type]
