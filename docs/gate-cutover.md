@@ -112,18 +112,44 @@ The three possibilities, only one of which is safe:
 - edge forwards a client-supplied `X-Forwarded-For` unmodified → the value
   is attacker-controlled and the per-address limit is bypassable.
 
-**Check it after Step 5 and before Step 6.** From two different networks
-(e.g. office wifi and a phone on mobile data), submit one failed login each,
-then against the production database:
+**Done — 2026-09-23. The check found a real defect, which is the argument for
+running it before the domain moves rather than after.**
+
+The first implementation read the rightmost `X-Forwarded-For` hop. Railway
+does not document XFF at all; its published header spec names **`X-Real-IP`**
+as the header "for identifying client's remote IP". The XFF that arrives
+carries Railway's own internal chain, so the rightmost hop is an edge POP —
+one of a handful of `152.233.33.x` addresses shared by every caller on the
+internet. That is the global lockout the fix was meant to remove, spread over
+three buckets instead of one.
+
+Measured, not argued. Five probes from a machine whose real public address is
+`124.148.255.130`:
+
+| probe | headers sent | address recorded |
+|---|---|---|
+| a | none (XFF implementation) | `152.233.33.164` — edge |
+| b | spoofed `X-Forwarded-For` (XFF impl.) | `152.233.33.162` — edge |
+| c | none (`X-Real-IP` implementation) | `124.148.255.130` — real |
+| d | spoofed `X-Real-IP: 203.0.113.99` | `124.148.255.130` — spoof ignored |
+| e | both headers spoofed | `124.148.255.130` — both ignored |
+
+Both halves therefore hold: the recorded value is the caller's own address,
+so two callers on different networks cannot share a rate-limit bucket; and
+Railway's edge overwrites a client-supplied `X-Real-IP`, so the value is not
+attacker-controlled.
+
+**Re-run this after any change to `client_address`, and after any Railway
+edge change.** From two different networks submit one failed login each, then
+against the production database:
 
 ```sql
 SELECT DISTINCT address FROM gate.login_attempts
 WHERE at > now() - interval '15 minutes';
 ```
 
-Two distinct values, each matching the real client IP, means the assumption
-holds. One value, or an address in a private range, means it does not — do
-not proceed to Step 6.
+Two distinct values, each matching the real client IP, means it still holds.
+One value, or an address in a private range, means it does not — stop.
 
 ## Rollback
 
