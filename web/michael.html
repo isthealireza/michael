@@ -2,102 +2,268 @@
 <html lang="en-AU">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>MICHAEL — Legal Research</title>
-<style>
-  :root{
-    --ink:#0f151c; --soft:#5a6673; --line:#e2e6ea; --bg:#f6f7f9; --card:#fff;
-    --navy:#1b3557; --navy-dk:#132743;
-    --cite:#0a4a63; --cite-bg:#ecf5f9; --cite-line:#b3d6e3;
-    --miss:#8a4b00; --miss-bg:#fff6e8; --miss-line:#e0a355;
-    --alarm:#7a1c1c; --alarm-bg:#fdeceb; --alarm-line:#c8504c;
-    --ask-bg:#eef1f5;
-  }
-  *{box-sizing:border-box}
-  html,body{height:100%}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font:16px/1.65 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
-    display:flex;flex-direction:column}
-  header{background:var(--navy);color:#fff;padding:18px 20px 15px;flex:0 0 auto;
-    box-shadow:0 1px 3px rgba(0,0,0,.14)}
-  .bar{max-width:880px;margin:0 auto;display:flex;align-items:baseline;
-    justify-content:space-between;gap:14px;flex-wrap:wrap}
-  h1{margin:0;font-size:27px;letter-spacing:.16em;font-weight:600}
-  .sub{font-size:12.5px;opacity:.8;margin-top:3px;letter-spacing:.01em}
-  .sess{font-size:11.5px;opacity:.72;font-variant-numeric:tabular-nums}
-  main{flex:1 1 auto;overflow-y:auto;padding:22px 20px 8px}
-  .wrap{max-width:880px;margin:0 auto}
-  footer{flex:0 0 auto;background:var(--bg);border-top:1px solid var(--line);
-    padding:14px 20px 16px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:11px;
-    padding:17px 19px;margin-bottom:16px}
-  label{display:block;font-size:13px;color:var(--soft);margin-bottom:7px}
-  textarea,input{width:100%;font:inherit;padding:11px 13px;border:1px solid var(--line);
-    border-radius:8px;background:#fff;color:var(--ink)}
-  textarea{min-height:58px;max-height:190px;resize:vertical}
-  textarea:focus,input:focus{outline:2px solid #b9cbe2;outline-offset:-1px;border-color:#9db4d0}
-  .row{display:flex;gap:10px;align-items:center;margin-top:10px}
-  button{font:inherit;font-weight:600;padding:11px 22px;border:0;border-radius:8px;
-    background:var(--navy);color:#fff;cursor:pointer}
-  button:hover:not([disabled]){background:var(--navy-dk)}
-  button[disabled]{opacity:.45;cursor:default}
-  .status{font-size:13px;color:var(--soft);flex:1}
-  .hint{font-size:11.5px;color:var(--soft);margin-top:7px}
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light">
+<title>Michael · Legal research · Palm Vision</title>
 
-  .turn{margin-bottom:20px}
-  .asked{background:var(--ask-bg);border-radius:10px;padding:12px 15px;
-    font-weight:500;white-space:pre-wrap;word-wrap:break-word}
-  .asked .who{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
-    color:var(--soft);font-weight:700;margin-bottom:4px}
-  h2{font-size:11px;letter-spacing:.11em;text-transform:uppercase;color:var(--soft);
-    margin:0 0 9px;font-weight:700}
-  .answer{white-space:pre-wrap;word-wrap:break-word}
-  /* inline, not inline-block, and wrapping allowed: a citation chip measures
-     348-387px and the page is read at phone width too. As an unwrappable
-     inline-block it ran past the viewport and was clipped, so a reader saw
-     half a pinpoint. box-decoration-break keeps the border and background
-     closed on both lines when one wraps. */
-  .cite{display:inline;background:var(--cite-bg);color:var(--cite);
-    border:1px solid var(--cite-line);border-radius:5px;padding:1px 7px;
-    font-weight:600;font-size:14.5px;
-    -webkit-box-decoration-break:clone;box-decoration-break:clone}
-  .missing{display:inline;background:var(--miss-bg);color:var(--miss);
-    border:1px solid var(--miss-line);border-radius:5px;padding:1px 8px;
-    font-weight:700;font-size:13px;
-    -webkit-box-decoration-break:clone;box-decoration-break:clone}
-  .classline{display:inline-block;margin-bottom:13px;padding:4px 10px;
-    border:1px solid var(--line);border-radius:3px;font-size:11.5px;
-    letter-spacing:.06em;text-transform:uppercase;font-weight:700}
-  .classline.late{border-color:var(--miss-line)}
-  .classline.absent{border-color:var(--alarm-line);color:var(--alarm);
-    display:block;text-transform:none;letter-spacing:0;font-size:13px}
-  .classline .flag{margin-left:9px;color:var(--miss);font-weight:600;
-    text-transform:none;letter-spacing:0}
-  .banner{background:var(--alarm-bg);border:2px solid var(--alarm-line);
-    border-radius:10px;padding:14px 17px;margin-bottom:15px}
-  .banner .h{color:var(--alarm);font-weight:800;letter-spacing:.1em;font-size:13.5px}
-  .banner .b{margin-top:5px;color:#5e1717}
-  .block{border-left:3px solid var(--line);padding:1px 0 1px 14px;margin:15px 0}
-  .block .h{font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;
-    color:var(--soft);font-weight:700;margin-bottom:3px}
-  .block.verify{border-left-color:var(--miss-line)}
-  .notice{margin-top:17px;padding-top:12px;border-top:1px solid var(--line);
-    font-size:12.5px;color:var(--soft);font-style:italic}
-  .notice.absent{color:var(--alarm);font-style:normal;font-weight:600}
-  .tools{font-size:11.5px;color:var(--soft);margin-top:9px;letter-spacing:.02em}
-  .working{display:inline-block;width:8px;height:8px;border-radius:50%;
-    background:var(--navy);margin-right:7px;animation:p 1.1s ease-in-out infinite}
-  @keyframes p{0%,100%{opacity:.25}50%{opacity:1}}
-  .hidden{display:none}
-  .empty{color:var(--soft);text-align:center;padding:34px 10px}
-  .empty .big{font-size:17px;color:var(--ink);margin-bottom:7px}
-  @media (max-width:560px){h1{font-size:23px}.card{padding:14px 15px}}
+<!--
+  Palm Vision Design System. Tokens mirror web/login.html so the two pages are
+  one surface; names match colors_and_type.css so they stay greppable.
+
+  The answer classes below are emitted by michael.js, and their colours carry
+  meaning rather than decoration:
+
+    blue   grounding — a pinpoint citation, the classification line, the
+           closing practitioner notice. The things that make an answer
+           traceable.
+    gold   a flagged gap — [MISSING], a classification line out of position,
+           VERIFY BEFORE USE, NOT COVERED. Attention, not failure.
+    red    a protocol failure — the classification line or the closing notice
+           absent altogether. Michael is required to emit both; their absence
+           is worth reporting, and the page says so.
+
+  Brand rules observed: gold highlights and rules but never fills a control;
+  black is for the company name only; square by default with 4px on controls;
+  no gradients, glassmorphism, backdrop blur or neon.
+-->
+<style>
+:root{
+  --pv-green:#2E8B57; --pv-green-dk:#1F6A40; --pv-green-tint:#EAF3EE; --pv-green-tint-2:#F4F9F6;
+  --pv-blue:#006994;  --pv-blue-dk:#00547A;  --pv-blue-tint:#E5F0F5;  --pv-blue-tint-2:#F2F8FB;
+  --pv-gold:#F4C430;  --pv-gold-dk:#C99B12;  --pv-gold-tint:#FDF6DD;
+  --pv-fg-1:#1A1A1A; --pv-fg-2:#333333; --pv-fg-3:#555555; --pv-fg-4:#777777; --pv-fg-5:#999999;
+  --pv-rule:#E2E5E2; --pv-rule-2:#EFF1EF;
+  --pv-paper:#FFFFFF; --pv-paper-warm:#FAFAF7;
+  --pv-danger:#B23A28; --pv-danger-tint:#FBF1EF;
+
+  --font-sans:'Segoe UI','Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+  --font-mono:'Consolas','IBM Plex Mono','SFMono-Regular',Menlo,'Courier New',monospace;
+  --ls-eyebrow:.18em; --ls-micro:.12em;
+  --radius-2:4px;
+  --shadow-card:0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(20,30,50,.06);
+  --ease:cubic-bezier(.22,.61,.36,1);
+  --measure:68ch;
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0; display:flex; flex-direction:column;
+  background:var(--pv-paper-warm); color:var(--pv-fg-2);
+  font-family:var(--font-sans); font-size:16px; line-height:1.65;
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+.hidden{display:none}
+
+/* ─── Header: the brand's green cover device, compressed to a bar ───────── */
+header{background:var(--pv-green); color:#fff; flex:none}
+.bar{
+  max-width:1080px; margin:0 auto; padding:14px 24px;
+  display:flex; align-items:center; gap:16px;
+}
+.bar svg{display:block; flex:none}
+.bar h1{
+  margin:0; font-size:15px; font-weight:700; letter-spacing:var(--ls-micro);
+  text-transform:uppercase; color:#fff; line-height:1.2;
+}
+.sub{font-size:12.5px; color:rgba(255,255,255,.78); line-height:1.35}
+.sess{
+  margin-left:auto; font-family:var(--font-mono); font-size:11.5px;
+  letter-spacing:var(--ls-micro); color:var(--pv-gold); white-space:nowrap;
+}
+@media (max-width:640px){
+  .bar{padding:12px 16px; gap:12px}
+  .sub{display:none}
+}
+
+/* ─── Thread ───────────────────────────────────────────────────────────── */
+main{flex:1; overflow-y:auto}
+.wrap{max-width:1080px; margin:0 auto; padding:32px 24px 40px}
+@media (max-width:640px){ .wrap{padding:20px 16px 28px} }
+
+.empty{max-width:var(--measure); padding:8px 0 0; color:var(--pv-fg-3)}
+.empty .big{
+  font-size:2rem; line-height:1.15; letter-spacing:-.01em; font-weight:700;
+  color:var(--pv-green); margin-bottom:12px;
+}
+.empty .big + div{font-size:15px}
+
+.turn{margin-bottom:32px; max-width:var(--measure)}
+
+/* The reader's question. Green tint with a green rule — structure, not alarm. */
+.asked{
+  background:var(--pv-green-tint); border-left:2px solid var(--pv-green);
+  padding:14px 18px; border-radius:0 var(--radius-2) var(--radius-2) 0;
+  color:var(--pv-fg-1); white-space:pre-wrap;
+}
+.asked .who{
+  font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
+  text-transform:uppercase; color:var(--pv-green); margin-bottom:6px;
+}
+
+/* Michael's answer. Cards may lift; documents stay flat. */
+.card{
+  background:var(--pv-paper); border:1px solid var(--pv-rule);
+  border-radius:var(--radius-2); box-shadow:var(--shadow-card);
+  padding:22px 24px;
+}
+@media (max-width:640px){ .card{padding:18px 16px} }
+.card h2{
+  margin:0 0 4px; font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
+  text-transform:uppercase; color:var(--pv-blue);
+}
+.answer,.body{white-space:pre-wrap; word-wrap:break-word}
+
+/* ─── Grounding (blue) ─────────────────────────────────────────────────── */
+/* A pinpoint citation: the thing that makes an answer checkable. */
+.cite{
+  background:var(--pv-blue-tint); color:var(--pv-blue-dk);
+  border-bottom:1px solid #B9D5E2; border-radius:2px;
+  padding:1px 4px; font-weight:600;
+}
+/* RESEARCH / DRAFT / BOTH — required as the first line of every output. */
+.classline{
+  font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
+  text-transform:uppercase; color:var(--pv-blue);
+  padding-bottom:10px; margin-bottom:14px; border-bottom:1px solid var(--pv-rule-2);
+}
+/* The closing practitioner notice. Quiet, but it must be visible. */
+.notice{
+  margin-top:18px; padding:12px 16px;
+  background:var(--pv-blue-tint-2); border-left:2px solid var(--pv-blue);
+  border-radius:0 var(--radius-2) var(--radius-2) 0;
+  font-size:13.5px; line-height:1.5; color:var(--pv-fg-3);
+}
+
+/* ─── Flagged gaps (gold) ──────────────────────────────────────────────── */
+/* [MISSING: ...] — a gap Michael declared rather than invented around. */
+.missing{
+  background:var(--pv-gold-tint); color:var(--pv-gold-dk);
+  border-bottom:1px solid #E8CF7A; border-radius:2px;
+  padding:1px 4px; font-weight:700;
+}
+/* Present, but not where the rules require it. */
+.classline.late{color:var(--pv-gold-dk)}
+.classline .flag{
+  margin-left:10px; padding:2px 7px; border-radius:2px;
+  background:var(--pv-gold-tint); color:var(--pv-gold-dk);
+  font-size:10px; letter-spacing:var(--ls-micro);
+}
+/* NOT COVERED, or a turn that produced no answer. */
+.banner{
+  border:1px solid var(--pv-rule); border-left:2px solid var(--pv-gold);
+  background:var(--pv-paper-warm); border-radius:0 var(--radius-2) var(--radius-2) 0;
+  padding:14px 18px; margin-bottom:16px;
+}
+.banner .h{
+  font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
+  text-transform:uppercase; color:var(--pv-gold-dk); margin-bottom:6px;
+}
+.banner .b{color:var(--pv-fg-2); font-size:15px}
+/* OPEN ITEMS / VERIFY BEFORE USE. */
+.block{
+  margin-top:18px; padding:14px 18px;
+  border:1px solid var(--pv-rule); border-left:2px solid var(--pv-green);
+  background:var(--pv-green-tint-2); border-radius:0 var(--radius-2) var(--radius-2) 0;
+}
+.block .h{
+  font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
+  text-transform:uppercase; color:var(--pv-green); margin-bottom:6px;
+}
+.block.verify{border-left-color:var(--pv-gold); background:var(--pv-gold-tint)}
+.block.verify .h{color:var(--pv-gold-dk)}
+
+/* ─── Protocol failures (red) ──────────────────────────────────────────── */
+/* Michael is required to emit both of these. Absence is worth reporting, and
+   the copy in michael.js says so; the colour should not soften that. */
+.classline.absent,.notice.absent{
+  color:var(--pv-danger); background:var(--pv-danger-tint);
+  border-left:2px solid var(--pv-danger); border-bottom:0;
+  padding:12px 16px; border-radius:0 var(--radius-2) var(--radius-2) 0;
+  font-weight:600; text-transform:none; letter-spacing:0; font-size:13.5px;
+  line-height:1.5;
+}
+.classline.absent{margin-bottom:14px}
+.notice.absent{margin-top:18px}
+
+/* ─── Tool trace and progress ──────────────────────────────────────────── */
+.tools{
+  margin-top:14px; padding-top:12px; border-top:1px solid var(--pv-rule-2);
+  font-family:var(--font-mono); font-size:11.5px; letter-spacing:var(--ls-micro);
+  color:var(--pv-fg-4);
+}
+.working{
+  display:inline-block; width:13px; height:13px; vertical-align:-1px;
+  border:2px solid var(--pv-green-tint); border-top-color:var(--pv-green);
+  border-radius:50%; animation:spin .7s linear infinite;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* ─── Composer ─────────────────────────────────────────────────────────── */
+footer{
+  flex:none; background:var(--pv-paper); border-top:1px solid var(--pv-rule);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+footer .wrap{padding:18px 24px}
+@media (max-width:640px){ footer .wrap{padding:14px 16px} }
+footer label{
+  display:block; margin-bottom:7px;
+  font-size:12px; font-weight:700; letter-spacing:var(--ls-eyebrow);
+  text-transform:uppercase; color:var(--pv-fg-4);
+  transition:color .18s var(--ease);
+}
+footer .wrap:focus-within label{color:var(--pv-blue)}
+.field{position:relative}
+textarea{
+  display:block; width:100%; font:inherit; font-size:16px; line-height:1.55;
+  color:var(--pv-fg-1); background:var(--pv-paper);
+  border:1px solid var(--pv-rule); border-radius:var(--radius-2);
+  padding:12px 14px; min-height:76px; max-height:200px; resize:vertical;
+  transition:border-color .18s var(--ease);
+}
+textarea::placeholder{color:var(--pv-fg-5)}
+textarea:hover{border-color:#CFD5CF}
+textarea:focus{outline:none; border-color:var(--pv-green)}
+/* The brand's emphasis mark as the focus device, same as the sign-in page. */
+.field::after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
+  background:var(--pv-gold); border-radius:0 0 var(--radius-2) var(--radius-2);
+  transform:scaleX(0); transform-origin:left; transition:transform .24s var(--ease);
+  pointer-events:none;
+}
+.field:focus-within::after{transform:scaleX(1)}
+
+.row{display:flex; align-items:center; gap:14px; margin-top:12px; flex-wrap:wrap}
+button{
+  font:inherit; font-size:15px; font-weight:700; letter-spacing:.02em;
+  color:#fff; background:var(--pv-green); border:0; border-radius:var(--radius-2);
+  min-height:46px; padding:0 22px; cursor:pointer;
+  transition:background-color .18s var(--ease);
+}
+button:hover:not(:disabled){background:var(--pv-green-dk)}
+button:focus-visible{outline:2px solid var(--pv-blue); outline-offset:2px}
+button:disabled{background:#8FB9A2; cursor:default}
+.status{font-size:13.5px; color:var(--pv-fg-4)}
+.hint{margin-top:10px; font-size:12.5px; color:var(--pv-fg-5); line-height:1.5}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+}
 </style>
 </head>
 <body>
+
 <header><div class="bar">
+  <svg viewBox="0 0 60 60" width="30" height="30" role="img" aria-label="Palm Vision mark">
+    <text x="0" y="50" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+          font-weight="700" font-size="56" letter-spacing="-2" fill="#FFFFFF">P</text>
+    <circle cx="50" cy="14" r="6" fill="#F4C430"></circle>
+    <path d="M 6 50 Q 26 60 46 50" fill="none" stroke="rgba(255,255,255,0.7)"
+          stroke-width="4" stroke-linecap="round"></path>
+  </svg>
   <div>
-    <h1>MICHAEL</h1>
+    <h1>Michael</h1>
     <div class="sub">Legal research and drafting — Western Australia and Commonwealth</div>
   </div>
   <div class="sess" id="sess"></div>
@@ -115,7 +281,9 @@
 
 <footer><div class="wrap" id="askArea">
   <label for="q">Your question</label>
-  <textarea id="q" placeholder="What must an entity do when it becomes aware of an eligible data breach?"></textarea>
+  <div class="field">
+    <textarea id="q" placeholder="What must an entity do when it becomes aware of an eligible data breach?"></textarea>
+  </div>
   <div class="row">
     <button id="askBtn">Ask Michael</button>
     <span class="status" id="status"></span>
@@ -123,6 +291,7 @@
   <div class="hint">Enter to send · Shift+Enter for a new line ·
     Internal research only. Not legal advice.</div>
 </div></footer>
+
 <script src="michael.js"></script>
 </body>
 </html>

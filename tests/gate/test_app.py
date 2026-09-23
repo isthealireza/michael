@@ -306,6 +306,44 @@ def test_the_real_login_page_keeps_the_palm_vision_brand_rules() -> None:
     assert "font-size:16px" in field_rule.replace(" ", "")
 
 
+def test_the_chat_page_keeps_its_answer_states_visually_distinct() -> None:
+    """michael.js emits these classes to mark how much an answer can be
+    trusted, and the page's colours carry that meaning: blue for grounding
+    (a pinpoint citation, the classification line, the closing notice), gold
+    for a declared gap, red for a protocol failure — Michael is required to
+    emit a classification line and a closing notice, and their absence is the
+    reader's signal to report the output.
+
+    A later pass that harmonises these into one accent colour would leave the
+    page looking tidier and saying less, and nothing else would catch it."""
+    page = (
+        Path(__file__).resolve().parents[2] / "web" / "michael.html"
+    ).read_text(encoding="utf-8")
+    css = page.split("<style>", 1)[1].split("</style>", 1)[0].replace(" ", "").replace("\n", "")
+
+    def rule(selector: str) -> str:
+        assert selector in css, f"{selector} is no longer styled"
+        return css.split(selector, 1)[1].split("}", 1)[0]
+
+    # Grounding reads blue; a declared gap reads gold. They must not collapse
+    # into each other — one says "checkable", the other says "not supplied".
+    assert "--pv-blue" in rule(".cite{")
+    assert "--pv-gold" in rule(".missing{")
+
+    # A missing classification line or closing notice is a protocol failure,
+    # not a stylistic variant of the present case.
+    failures = rule(".classline.absent,.notice.absent{")
+    assert "--pv-danger" in failures
+    assert "--pv-gold" not in failures and "--pv-blue" not in failures
+
+    # VERIFY BEFORE USE is the strongest "check this before relying on it",
+    # so it is gold rather than the green of an ordinary block.
+    assert "--pv-gold" in rule(".block.verify{")
+
+    # 16px, or iOS zooms the viewport when the reader taps the question box.
+    assert "font-size:16px" in rule("textarea{")
+
+
 def test_health_is_public_and_ok(client: TestClient) -> None:
     response = client.get("/health")
     assert response.status_code == 200
