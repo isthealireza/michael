@@ -75,7 +75,11 @@
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%}
 body{
-  margin:0; display:flex; flex-direction:column;
+  /* The chrome floats over the conversation rather than bracketing it, so
+     content passes beneath the glass — which is the only way a translucent
+     material reads as one. `main` stays the scroll container because
+     michael.js scrolls it by `main.scrollTop`. */
+  margin:0; position:relative; overflow:hidden;
   background:var(--pv-paper); color:var(--pv-fg-2);
   font-family:var(--font-sans); font-size:1rem; line-height:1.7;
   letter-spacing:var(--track-body);
@@ -88,8 +92,16 @@ body{
   overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
 }
 
-/* ─── Header ───────────────────────────────────────────────────────────── */
-header{flex:none; background:var(--pv-paper); border-bottom:2px solid var(--pv-gold)}
+/* ─── Header: a translucent material, not an opaque strip ──────────────── */
+header{
+  position:fixed; top:0; left:0; right:0; z-index:10;
+  background:rgba(255,255,255,.72);
+  -webkit-backdrop-filter:blur(20px) saturate(180%);
+  backdrop-filter:blur(20px) saturate(180%);
+  /* Smaller surface, lighter material: less blur and no shadow than the
+     composer below, which is the heavier of the two. */
+  border-bottom:2px solid rgba(244,196,48,.85);
+}
 .bar{
   max-width:var(--column); margin:0 auto; padding:var(--s-3) var(--s-5);
   display:flex; align-items:center; gap:.7rem;
@@ -107,9 +119,25 @@ header{flex:none; background:var(--pv-paper); border-bottom:2px solid var(--pv-g
 @media (max-width:40rem){ .bar{padding:var(--s-2) var(--s-4); gap:.55rem} .sub{display:none} }
 
 /* ─── Conversation ─────────────────────────────────────────────────────── */
-main{flex:1; overflow-y:auto; overscroll-behavior:contain}
-.wrap{max-width:var(--column); margin:0 auto; padding:var(--s-6) var(--s-5) var(--s-8)}
-@media (max-width:40rem){ .wrap{padding:var(--s-5) var(--s-4) var(--s-6)} }
+/* Fills the viewport under the floating chrome. The wrap's padding clears
+   both bars, measured at runtime because the composer grows with the
+   question — a fixed inset would clip it the moment someone writes two
+   lines. */
+main{
+  position:absolute; inset:0; overflow-y:auto; overscroll-behavior:contain;
+  -webkit-overflow-scrolling:touch;
+}
+.wrap{
+  max-width:var(--column); margin:0 auto;
+  padding:calc(var(--header-h,3.6rem) + var(--s-5)) var(--s-5)
+          calc(var(--footer-h,7rem) + var(--s-6));
+}
+@media (max-width:40rem){
+  .wrap{
+    padding:calc(var(--header-h,3.2rem) + var(--s-4)) var(--s-4)
+            calc(var(--footer-h,6.5rem) + var(--s-5));
+  }
+}
 
 .empty{padding:var(--s-8) 0 0; max-width:34em}
 .empty .big{
@@ -228,8 +256,16 @@ main{flex:1; overflow-y:auto; overscroll-behavior:contain}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* ─── Composer ─────────────────────────────────────────────────────────── */
+/* The larger surface, so it reads as the thicker material: stronger blur and
+   a shadow the header does not carry. The bright top edge is light catching
+   the material's leading edge. */
 footer{
-  flex:none; background:var(--pv-paper); border-top:1px solid var(--pv-rule-2);
+  position:fixed; bottom:0; left:0; right:0; z-index:10;
+  background:rgba(255,255,255,.76);
+  -webkit-backdrop-filter:blur(28px) saturate(180%);
+  backdrop-filter:blur(28px) saturate(180%);
+  border-top:1px solid rgba(255,255,255,.7);
+  box-shadow:0 -1px 0 rgba(20,30,50,.06), 0 -12px 28px rgba(20,30,50,.05);
   padding-bottom:env(safe-area-inset-bottom);
 }
 footer .wrap{padding:var(--s-3) var(--s-5) var(--s-4)}
@@ -291,13 +327,26 @@ textarea::placeholder{color:var(--pv-fg-5)}
   }
   .turn{animation:none}
 }
-/* No translucency is used here, so this signal costs nothing to honour —
-   but the rule is declared so a future translucent surface cannot forget it. */
+/* Frostier and solid: raise the background to opaque and drop the blur.
+   A reader who asks for less transparency gets a real surface, not a
+   slightly-less-see-through one. */
 @media (prefers-reduced-transparency:reduce){
-  .composer,.card,header,footer{backdrop-filter:none}
+  header,footer{
+    -webkit-backdrop-filter:none; backdrop-filter:none;
+    background:var(--pv-paper);
+  }
+  header{border-bottom-color:var(--pv-gold)}
+  footer{border-top:1px solid var(--pv-rule); box-shadow:none}
 }
 /* Near-solid backgrounds with defined, contrasting borders. */
 @media (prefers-contrast:more){
+  /* Near-solid backgrounds with a defined border, per Apple: a translucent
+     chrome over moving content is the first thing to fail at high contrast. */
+  header,footer{
+    background:var(--pv-paper);
+    -webkit-backdrop-filter:none; backdrop-filter:none;
+  }
+  footer{border-top:1px solid var(--pv-fg-3); box-shadow:none}
   .composer{border-color:var(--pv-fg-3)}
   .asked{border:1px solid var(--pv-green)}
   .cite{border-bottom-width:2px}
@@ -364,16 +413,31 @@ textarea::placeholder{color:var(--pv-fg-5)}
     q.style.height = "auto";
     q.style.height = Math.min(q.scrollHeight, capPx()) + "px";
   };
-  q.addEventListener("input", grow);
+  /* The chrome floats over the conversation, so the thread has to be told how
+     much room to leave. Measured rather than assumed: the composer grows with
+     the question, and a fixed inset would hide the newest reply behind the
+     glass exactly when a long question is on screen. */
+  var header = document.querySelector("header");
+  var footer = document.querySelector("footer");
+  var root = document.documentElement;
+  var measure = function () {
+    if (header) root.style.setProperty("--header-h", header.offsetHeight + "px");
+    if (footer) root.style.setProperty("--footer-h", footer.offsetHeight + "px");
+  };
+  var sync = function () { grow(); measure(); };
+
+  q.addEventListener("input", sync);
   /* michael.js clears the box by assigning to .value, which fires no event
      and does not touch the attribute — so re-measure just after the two
      things that cause a submit. */
   var btn = document.getElementById("askBtn");
-  if (btn) btn.addEventListener("click", function () { setTimeout(grow, 0); });
+  if (btn) btn.addEventListener("click", function () { setTimeout(sync, 0); });
   q.addEventListener("keydown", function (e) {
-    if (e.key === "Enter" && !e.shiftKey) setTimeout(grow, 0);
+    if (e.key === "Enter" && !e.shiftKey) setTimeout(sync, 0);
   });
-  grow();
+  addEventListener("resize", measure);
+  if (window.ResizeObserver && footer) new ResizeObserver(measure).observe(footer);
+  sync();
 })();
 </script>
 </body>
