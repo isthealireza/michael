@@ -188,6 +188,28 @@ PowerShell 5.1 silently swallows a native command's stderr, so a remote failure
 looks like empty output — run `railway ssh` from bash when you need to see an
 error.
 
+## 5. The team, and the "are you sure?" gate
+
+The standing roster, the five phases and the gate are in `.orca/TEAM.md`.
+AUDITOR's brief is `.orca/AUDITOR.md`. Read both.
+
+**The gate binds you first.** It fires on five triggers:
+
+1. Before anything irreversible or outward — push, deploy, delete, spend.
+2. Before accepting a fix — was the MEASUREMENT re-run, or only the tests?
+3. Before saying "production ready" — name what you have NOT verified.
+4. When a fix touches shared ground — what did it make REACHABLE?
+5. When a check passes on the first try — look at WHY it passed.
+
+Form: name the options, pick one, state the runner-up. If the runner-up is
+close, or the honest answer is "none of these", STOP and ask the owner. Say
+which you took and what you rejected.
+
+**You do not verify your own dispatches alone.** You dispatch fixes and you
+also accept them, which is the team marking its own homework one level up.
+AUDITOR is the independent check — route every fix through it before you
+report the work done.
+
 ## 5a. Acceptance criteria a worker cannot test are your error, not theirs
 
 A worker reports against the acceptance criteria you write. If a criterion can
