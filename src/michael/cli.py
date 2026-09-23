@@ -123,6 +123,19 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ingest_file.add_argument("--snapshot-date")
 
+    user = sub.add_parser("user", help="manage michael-gate accounts")
+    user_sub = user.add_subparsers(dest="user_command", required=True)
+
+    user_add = user_sub.add_parser("add", help="create an account")
+    user_add.add_argument("email")
+    user_add.add_argument("--name", required=True, help="display name")
+    user_add.add_argument("--role", required=True, choices=["admin", "chat"])
+
+    user_sub.add_parser("list", help="list accounts")
+
+    user_disable = user_sub.add_parser("disable", help="disable an account")
+    user_disable.add_argument("email")
+
     return parser
 
 
@@ -208,6 +221,48 @@ def _run(args: argparse.Namespace) -> int:
                     snapshot_date=args.snapshot_date,
                 )
             )
+        case "user":
+            from getpass import getpass
+
+            from michael.gate import users as gate_users
+
+            match args.user_command:
+                case "add":
+                    # Never taken as an argv argument: it would land in the
+                    # operator's shell history and in the process table.
+                    password = getpass("password: ")
+                    if password != getpass("repeat: "):
+                        print("passwords did not match", file=sys.stderr)
+                        return 1
+                    # Caught here rather than by adding ValueError to
+                    # EXPECTED_FAILURES: that tuple names failures the design
+                    # produces on purpose, and a bare ValueError there would
+                    # swallow genuine bugs across every other subcommand.
+                    try:
+                        created = gate_users.create_user(
+                            args.email, args.name, password, args.role
+                        )
+                    except ValueError as exc:
+                        print(str(exc), file=sys.stderr)
+                        return 1
+                    _print({"email": created.email, "role": created.role})
+                case "list":
+                    _print(
+                        [
+                            {
+                                "email": u.email,
+                                "name": u.display_name,
+                                "role": u.role,
+                                "disabled": u.disabled_at is not None,
+                            }
+                            for u in gate_users.list_users()
+                        ]
+                    )
+                case "disable":
+                    if not gate_users.disable_user(args.email):
+                        print(f"no such active account: {args.email}", file=sys.stderr)
+                        return 1
+                    _print({"disabled": args.email})
         case _:  # pragma: no cover - argparse rejects anything else
             return 2
     return 0
