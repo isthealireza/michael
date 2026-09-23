@@ -59,6 +59,28 @@ known-first-party = ["michael", "tests"]
 
 [tool.ruff.format]
 line-ending = "lf"
+# The formatter does not own prose. Ruff reads Python fences inside Markdown,
+# and a fence in a spec or plan is an illustration, not a module: it is
+# routinely a fragment, and the formatter reformats a fragment as though it
+# were a whole statement. On one plan document that rewrites
+#     elements_file=_path("MICHAEL_ELEMENTS_FILE", "elements.yaml"),
+# - a keyword argument, shown as one - into
+#     elements_file = (_path("MICHAEL_ELEMENTS_FILE", "elements.yaml"),)
+# which is a tuple assignment and no longer the thing the document says. The
+# rest of what it wants to change is the same class of edit: rewrapping code
+# that was wrapped by hand to make a point in the surrounding paragraph.
+#
+# The same hazard reaches test data: tests/fixtures/contracts holds contract
+# documents as Markdown, and a fixture the formatter may rewrite is not a
+# fixture.
+#
+# So `ruff format .` is now safe to run from the repository root. Scoped to
+# the format section, and by file type rather than by directory, so it stays
+# narrow: excluding "docs" under [tool.ruff] extend-exclude would take the
+# lint rules off any real Python living there too. (`ruff check` reports "No
+# Python files found" for a .md path at 0.16.7 - it does not read fences at
+# all - so nothing is lost on the lint side today either way.)
+exclude = ["**/*.md"]
 
 [tool.mypy]
 python_version = "3.13"
