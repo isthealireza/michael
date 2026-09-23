@@ -1529,6 +1529,38 @@ def test_a_single_long_stub_does_not_defeat_headings_only_detection() -> None:
     assert reason is not None, "a single padded-out stub must not exempt a headings-only page"
 
 
+def test_a_genuine_three_provision_act_is_not_flagged_by_the_tightened_length_check() -> None:
+    """The false positive the W1-S4 fix would have caused without the size gate.
+
+    Corporations (Taxing) Act 1990 (WA), verbatim and complete, is real law:
+    a short title, a commencement clause, and ONE substantive section - which
+    is exactly the shape of the vast majority of three-provision Acts, and
+    has exactly one long provision by that shape alone. Measured against the
+    full 205-document production corpus (read-only), applying the "two long
+    provisions" tightening from W1-S4 at the 3-provision floor flagged this
+    real Act and one other (a Town Planning by-law) as false positives - so
+    the tightened check only applies from
+    HEADINGS_ONLY_PROPORTIONAL_MIN_PROVISIONS provisions up; below that, the
+    original max/min ratio - which this Act clears at 2.72 - still governs.
+    """
+    text = (
+        "1. Short title\n"
+        "This Act may be cited as the Corporations (Taxing) Act 1990.\n"
+        "\n"
+        "2. Commencement\n"
+        "This Act shall come into operation on the day on which it receives the Royal Assent.\n"
+        "\n"
+        "3. Imposition of tax\n"
+        "To the extent that any fee, contribution, or levy referred to in Part 7 of the "
+        "Corporations (Western Australia) Act 1990 may be a tax, this Act imposes the fee, "
+        "contribution, or levy.\n"
+    )
+    provisions = split_sections(text)
+    assert len(provisions) == 3
+    assert all("(1)" not in p.text for p in provisions)
+    assert detect_headings_only(provisions) is None, "a real short Act must not be flagged"
+
+
 def test_seed_from_corpus_does_not_lose_other_documents_when_one_is_refused(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
