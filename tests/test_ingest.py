@@ -1046,11 +1046,17 @@ def test_fewer_than_three_provisions_is_never_flagged() -> None:
 class _FakeCursor:
     """Enough of a psycopg cursor for `_write` to run against, nothing more."""
 
-    def __init__(self) -> None:
+    def __init__(self, conn: _FakeConnection | None = None) -> None:
         self._last_sql = ""
+        self._conn = conn
 
     def execute(self, query: str, params: object = None) -> None:
         self._last_sql = query
+        if self._conn is not None and "INSERT INTO documents" in query:
+            # Index 2 is the citation, in the order _write passes them:
+            # jurisdiction, title, citation, source_url, ... Recording it is
+            # what lets a test ask whether a document row survived.
+            self._conn.written.append(str(params[2]) if isinstance(params, tuple) else "?")
 
     def fetchone(self) -> dict[str, int] | None:
         if "INSERT INTO documents" in self._last_sql:
@@ -1065,11 +1071,31 @@ class _FakeCursor:
 
 
 class _FakeConnection:
+    def __init__(self) -> None:
+        self.written: list[str] = []
+
     def cursor(self) -> _FakeCursor:
-        return _FakeCursor()
+        return _FakeCursor(self)
 
     def commit(self) -> None:
         pass
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        """A SAVEPOINT, modelled rather than stubbed.
+
+        psycopg issues `conn.transaction()` inside an open transaction as a
+        SAVEPOINT: what the block wrote is undone if the block raises. A fake
+        that merely yielded would let the savepoint test pass whether or not
+        `seed_from_corpus` rolls anything back, which is a test that cannot
+        fail on the thing it is for.
+        """
+        mark = len(self.written)
+        try:
+            yield
+        except BaseException:
+            del self.written[mark:]
+            raise
 
     def __enter__(self) -> _FakeConnection:
         return self
@@ -1617,3 +1643,74 @@ def test_seed_from_corpus_does_not_lose_other_documents_when_one_is_refused(
     assert citations == ["Alpha Act 2000 (WA)", "Charlie Act 2000 (Cth)"], (
         f"the refusal in the middle of the batch must not lose the documents around it: {citations}"
     )
+
+
+def test_a_refusal_after_the_document_row_is_written_leaves_no_half_document(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """W1-S3, the part the `continue` alone does not cover.
+
+    Catching `IngestionError` and carrying on is only safe while every such
+    error is raised before the document's first write. That is true today, but
+    it is a property of `ingest_document`'s control flow, not of this loop, and
+    nothing pinned it. Add one refusal after the document row is written - a
+    dimension check on `embed()` is the obvious future one - and `continue`
+    steps over a half-written document that the enclosing `with writable()`
+    then commits: a row with some of its provisions, no error, no log.
+
+    So this test raises exactly that error, from `embed`, after the document
+    INSERT has run. The savepoint is what makes the row disappear again.
+    """
+    conn = _FakeConnection()
+
+    @contextmanager
+    def _shared_writable(*, connect_timeout: int = 10) -> Iterator[_FakeConnection]:
+        yield conn
+
+    monkeypatch.setattr(ingest, "writable", _shared_writable)
+    monkeypatch.setattr(schema, "writable", _shared_writable)
+
+    def _embed_failing_on_bravo(texts: list[str], **kw: object) -> list[list[float]]:
+        if any("Bravo" in text for text in texts):
+            raise IngestionError("embedding returned the wrong dimension")
+        return [[0.0] * 8 for _ in texts]
+
+    monkeypatch.setattr(ingest, "embed", _embed_failing_on_bravo)
+
+    act = "1. Short title\nThis Act may be cited as the {name}.\n"
+    records = [
+        ("wa", "Alpha Act 2000 (WA)", "alpha", "Alpha Act 2000"),
+        ("wa", "Bravo Act 2000 (WA)", "bravo", "Bravo Act 2000"),
+        ("commonwealth", "Charlie Act 2000 (Cth)", "charlie", "Charlie Act 2000"),
+    ]
+
+    class _FakeStream:
+        def __iter__(self) -> Iterator[dict[str, object]]:
+            return iter(
+                [
+                    {
+                        "jurisdiction": where,
+                        "type": "primary_legislation",
+                        "text": act.format(name=name),
+                        "citation": citation,
+                        "url": f"https://legislation.wa.gov.au/{slug}",
+                        "date": "2020-01-01",
+                    }
+                    for where, citation, slug, name in records
+                ]
+            )
+
+    monkeypatch.setitem(
+        sys.modules, "datasets", SimpleNamespace(load_dataset=lambda *a, **kw: _FakeStream())
+    )
+
+    results = ingest.seed_from_corpus(jurisdictions=("wa", "commonwealth"))
+
+    assert [r.citation for r in results] == ["Alpha Act 2000 (WA)", "Charlie Act 2000 (Cth)"], (
+        "a failure mid-batch must not lose the documents around it"
+    )
+    assert "Bravo Act 2000 (WA)" not in conn.written, (
+        "the failed document's row was written and never rolled back - the batch "
+        f"would commit a document with no provisions: {conn.written}"
+    )
+    assert conn.written == ["Alpha Act 2000 (WA)", "Charlie Act 2000 (Cth)"], conn.written

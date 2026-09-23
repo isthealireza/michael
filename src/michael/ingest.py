@@ -816,9 +816,7 @@ def detect_headings_only(provisions: list[Provision]) -> str | None:
     else:
         if max(lengths) / minimum >= HEADINGS_ONLY_MAX_LENGTH_RATIO:
             return None
-        variation_detail = (
-            f"below the {HEADINGS_ONLY_MAX_LENGTH_RATIO} floor for genuine variation"
-        )
+        variation_detail = f"below the {HEADINGS_ONLY_MAX_LENGTH_RATIO} floor for genuine variation"
     spread = max(lengths) / minimum
     return (
         f"{len(provisions)} provisions, none with {MIN_MARKERS_PER_PROVISION}+ "
@@ -1200,29 +1198,44 @@ def seed_from_corpus(
             body = str(record["text"]).encode("utf-8")
             citation = str(record["citation"])
             try:
-                result = ingest_document(
-                    jurisdiction=str(record["jurisdiction"]),
-                    title=str(record["title"]),
-                    citation=citation,
-                    source_url=str(record["source_url"]),
-                    snapshot_date=record["snapshot_date"],  # type: ignore[arg-type]
-                    sha256=hashlib.sha256(body).hexdigest(),
-                    doc_type=str(record["doc_type"]),
-                    text=str(record["text"]),
-                    conn=conn,
-                )
+                # One savepoint per document. Every refusal reachable today is
+                # raised before this document's first write - _validate, the
+                # empty split, the headings-only check, and the one raise
+                # inside the write path, which is reached only when the
+                # document INSERT hit ON CONFLICT DO NOTHING and therefore
+                # wrote nothing either. So `continue` below is safe as the code
+                # stands, and the savepoint changes nothing today.
+                #
+                # It is here because that safety is a property of the current
+                # control flow rather than of this loop, and nothing pins it:
+                # add one IngestionError after the document row is written -
+                # a dimension check on embed() is the obvious future one - and
+                # `continue` would step over a half-written document that the
+                # enclosing `with writable()` then COMMITS. A row with some of
+                # its provisions, no error, no log. The savepoint makes the
+                # rollback structural, so this loop no longer depends on an
+                # invariant held somewhere else.
+                with conn.transaction():
+                    result = ingest_document(
+                        jurisdiction=str(record["jurisdiction"]),
+                        title=str(record["title"]),
+                        citation=citation,
+                        source_url=str(record["source_url"]),
+                        snapshot_date=record["snapshot_date"],  # type: ignore[arg-type]
+                        sha256=hashlib.sha256(body).hexdigest(),
+                        doc_type=str(record["doc_type"]),
+                        text=str(record["text"]),
+                        conn=conn,
+                    )
             except IngestionError as exc:
-                # A refusal - headings-only, or no text to ingest - is raised
-                # by ingest_document itself, before it ever writes a row for
-                # THIS document, so the shared transaction carries no partial
-                # state to roll back. Before this fix, letting the exception
-                # propagate out of the loop meant one refused document (a
+                # Refusing one document must not lose the rest. Before this
+                # fix, letting the exception propagate out of the loop meant a
                 # single headings-only page found anywhere in a multi-hundred
-                # document batch) aborted the "with writable()" block without
-                # a commit, discarding every other document already ingested
-                # in that same run. Refusing one document must not lose the
-                # rest, so this is caught and logged, and the batch continues.
-                # (W1-S3.)
+                # document batch aborted the "with writable()" block without a
+                # commit, discarding every other document already ingested in
+                # that same run. The savepoint above has already undone
+                # whatever this document wrote, so the batch continues on a
+                # clean transaction. (W1-S3.)
                 _log_refusal(url=str(record["source_url"]), reason=f"{citation}: {exc}")
                 continue
             results.append(result)
