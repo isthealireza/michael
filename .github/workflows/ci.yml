@@ -50,8 +50,15 @@ jobs:
       - name: Set up Python
         run: uv python install 3.13
 
+      # --extra gate is not optional here even though the extra is: michael-gate
+      # is the only service on the internet, mypy type-checks src/michael/gate
+      # and tests/gate covers it, and without argon2-cffi, starlette and
+      # websockets installed mypy reports the gate's own password helpers as
+      # returning Any and cannot find websockets at all. That failure stopped
+      # the job at its first step, which is why nothing after mypy - pytest,
+      # the integration suite, ruff - had ever run in CI.
       - name: Install dependencies
-        run: uv sync --extra mcp --group dev
+        run: uv sync --extra mcp --extra gate --group dev
 
       # A GitHub Actions service container starts before `actions/checkout`
       # runs, so an initdb-style volume mount of db/init (which would need
