@@ -62,8 +62,19 @@ and over the public internet with SSL that dominates the runtime.
 
 ### What has been verified, and when
 
-**2026-09-23 — 20 passed, 131 deselected, 433.78s.** First execution of
-these tests against any live database.
+**2026-09-23 — two consecutive clean runs**, back to back against the same
+database with no manual cleanup between them:
+
+| run | result | duration |
+|---|---|---|
+| 1 | 20 passed, 131 deselected | 433.78s |
+| 2 | 20 passed, 131 deselected | 450.96s |
+
+The first execution of these tests against any live database. Two runs
+matter rather than one: the suite was previously non-idempotent — the same
+fixed-email user was created in every test against a `NOT NULL UNIQUE`
+column, so a second run could not have passed. Two clean runs is the
+evidence that the `gate_tables` truncation fixture actually works.
 
 The headline result: `test_recent_attempts_excludes_an_attempt_older_than_
 the_window` **passes**. `michael.gate.users.recent_attempts` binds a Python
