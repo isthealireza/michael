@@ -400,5 +400,5 @@ $("q").addEventListener("keydown", (e) => {
  * is a no-op there and changes nothing about how the page behaves. Exports
  * the real functions the tests exercise, not a reimplementation of them. */
 if (typeof module !== "undefined") {
-  module.exports = { renderAnswer, headingMatch, NOT_COVERED, toolLabel, inline, esc, connect };
+  module.exports = { renderAnswer, headingMatch, NOT_COVERED, toolLabel, inline, esc, connect, CITATION };
 }

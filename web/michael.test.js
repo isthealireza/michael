@@ -42,7 +42,7 @@ global.document = {
 // plain Node has no such global, so the stub needs one too.
 global.location = { protocol: "https:", host: "gate.example.test" };
 
-const { renderAnswer, headingMatch, NOT_COVERED, toolLabel, connect } = require("./michael.js");
+const { renderAnswer, headingMatch, NOT_COVERED, toolLabel, connect, CITATION } = require("./michael.js");
 
 /* ---------------------------------------------------------------------- */
 /* W-1: the exact regression shape - a refusal that MENTIONS the block     */
@@ -209,5 +209,56 @@ test("connect() does not request a ws ticket — the gate authenticates the sock
   } finally {
     global.fetch = originalFetch;
     global.WebSocket = originalWebSocket;
+  }
+});
+
+/* MICHAEL.md tells Michael exactly how to write a citation, and this file's
+ * CITATION pattern is what decides whether that shape is marked on screen for
+ * the reader. They are two halves of one contract held in two files, and the
+ * first real question asked through the gate showed what happens when they
+ * drift: Michael cited "(s 26WL)" with the Act named a sentence earlier, every
+ * pinpoint in a 2,952-character answer went unmarked, and the answer looked
+ * unsourced to the person relying on it.
+ *
+ * So the prompt's own worked examples are run against the real pattern here.
+ * If either side changes without the other, this fails. */
+test("MICHAEL.md's citation examples are the shape the page actually marks", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const prompt = fs.readFileSync(path.join(__dirname, "..", "MICHAEL.md"), "utf8");
+
+  const section = prompt.split("## Citation form")[1];
+  assert.ok(section, "MICHAEL.md no longer has a 'Citation form' section");
+
+  // Every line the prompt offers as correct must match, whole.
+  const rights = [...section.matchAll(/^\s*right:\s*(.+)$/gm)].map((m) => m[1].trim());
+  assert.ok(rights.length > 0, "no 'right:' examples found to check");
+  for (const line of rights) {
+    CITATION.lastIndex = 0;
+    assert.ok(CITATION.exec(line), `MICHAEL.md offers this as correct but the page would not mark it: ${line}`);
+  }
+
+  // And every line it calls wrong must not be marked, or the guidance is moot.
+  const wrongs = [...section.matchAll(/^\s*wrong:\s*(.+)$/gm)].map((m) => m[1].trim());
+  assert.ok(wrongs.length > 0, "no 'wrong:' examples found to check");
+  for (const line of wrongs) {
+    CITATION.lastIndex = 0;
+    const hit = CITATION.exec(line);
+    assert.ok(
+      !hit || hit[0].trim() !== line,
+      `MICHAEL.md calls this wrong but the page marks it in full: ${line}`,
+    );
+  }
+
+  // The four indented specimens at the top of the section are the canonical
+  // forms; each must match in full, snapshot included.
+  const specimens = [...section.matchAll(/^ {4}([A-Z][^\n]*\(snapshot \d{4}-\d{2}-\d{2}\))$/gm)]
+    .map((m) => m[1].trim())
+    .filter((s) => !s.startsWith("wrong") && !s.startsWith("right"));
+  assert.ok(specimens.length >= 4, `expected the canonical specimens, found ${specimens.length}`);
+  for (const line of specimens) {
+    CITATION.lastIndex = 0;
+    const hit = CITATION.exec(line);
+    assert.equal(hit && hit[0], line, `specimen is not matched whole: ${line}`);
   }
 });

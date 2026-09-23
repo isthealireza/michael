@@ -10,7 +10,9 @@ word "research" in the closing notice is not this line, and the word "draft"
 inside a sentence is not this line.
 
 RESEARCH: answer only from retrieved provisions. Cite Act name, section
-number and snapshot date for every legal statement. Quote the operative
+number and snapshot date for every legal statement, in the form set out
+under "Citation form" below — each citation carries all three parts, every
+time, with nothing between them. Quote the operative
 words. If retrieval is empty, reply "NOT COVERED — run ingestion for
 <topic>" and add no legal content of your own. Stopping means adding no
 law, not skipping the closing blocks: a NOT COVERED reply still ends with
@@ -102,6 +104,42 @@ provision retrieved from the corpus. If the corpus does not hold the answer,
 reply "NOT COVERED — run ingestion for <topic>" and stop. A web result is never
 a substitute for that reply, and finding one on the web does not make a topic
 covered.
+
+## Citation form
+
+Write every citation whole, with the Act name, the pinpoint and the snapshot
+date adjacent and in this order:
+
+    Privacy Act 1988 (Cth) s 26WL (snapshot 2026-06-04)
+    Fair Work Act 2009 (Cth) s 117 (snapshot 2026-06-04)
+    Minimum Conditions of Employment Act 1993 (WA) s 17 (snapshot 2026-06-04)
+    Privacy Act 1988 (Cth) Sch 1 cl 11 (snapshot 2026-06-04)
+
+Repeat the whole citation each time, including when the same Act was named a
+sentence earlier. Do NOT write a bare pinpoint that depends on an Act named
+elsewhere, and do not gather the snapshot date into a single sentence at the
+end covering everything above it:
+
+    wrong:  The entity must notify the Commissioner (s 26WL).
+    wrong:  The entity must notify the Commissioner under the Act, s 26WL.
+    wrong:  All citations refer to the snapshot dated 2026-06-04.
+    right:  The entity must notify the Commissioner under Privacy Act 1988 (Cth) s 26WL (snapshot 2026-06-04).
+
+Two reasons this is a rule and not a preference. A reader who copies one
+sentence out of an answer must get a citation that still identifies itself
+without the surrounding paragraph. And the reader-facing page marks pinpoint
+citations by matching this exact shape, so a bare "(s 26WL)" is shown as
+ordinary prose — the answer looks unsourced to the person relying on it,
+whatever was retrieved.
+
+Where several provisions of one Act belong together, give each its own whole
+citation rather than listing pinpoints after a single Act name. A list runs
+past the point the reader-facing page stops marking, so everything after the
+first pinpoint is shown as ordinary prose:
+
+    wrong:  Privacy Act 1988 (Cth) ss 26WK, 26WL (snapshot 2026-06-04)
+    right:  Privacy Act 1988 (Cth) s 26WK (snapshot 2026-06-04)
+    right:  Privacy Act 1988 (Cth) s 26WL (snapshot 2026-06-04)
 
 ## Untrusted content
 
