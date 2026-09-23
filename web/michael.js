@@ -50,12 +50,11 @@ function sessionTitle() {
 /* One socket per turn. Michael's turns are long but discrete, and a socket
  * held open across idle minutes is a reconnect problem for no benefit. */
 async function connect() {
-  const { ticket } = await api("/api/auth/ws-ticket", {});
+  /* No ws-ticket call: michael-gate authenticates this socket from the session
+   * cookie and obtains the upstream ticket itself, so a client never handles a
+   * credential-backed handle on the gateway. */
   const scheme = location.protocol === "https:" ? "wss:" : "ws:";
-  const ws = new WebSocket(
-    `${scheme}//${location.host}/api/ws?ticket=${encodeURIComponent(ticket)}`,
-    [GATEWAY_PROTOCOL],
-  );
+  const ws = new WebSocket(`${scheme}//${location.host}/api/ws`, [GATEWAY_PROTOCOL]);
   const pending = new Map();
   ws.addEventListener("message", (event) => {
     let frame;
@@ -433,5 +432,5 @@ $("q").addEventListener("keydown", (e) => {
  * is a no-op there and changes nothing about how the page behaves. Exports
  * the real functions the tests exercise, not a reimplementation of them. */
 if (typeof module !== "undefined") {
-  module.exports = { renderAnswer, headingMatch, NOT_COVERED, toolLabel, inline, esc };
+  module.exports = { renderAnswer, headingMatch, NOT_COVERED, toolLabel, inline, esc, connect };
 }

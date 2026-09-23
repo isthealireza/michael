@@ -38,7 +38,11 @@ global.document = {
   createElement() { return makeElement(); },
 };
 
-const { renderAnswer, headingMatch, NOT_COVERED, toolLabel } = require("./michael.js");
+// connect() reads location.protocol / location.host to build the ws(s):// URL;
+// plain Node has no such global, so the stub needs one too.
+global.location = { protocol: "https:", host: "gate.example.test" };
+
+const { renderAnswer, headingMatch, NOT_COVERED, toolLabel, connect } = require("./michael.js");
 
 /* ---------------------------------------------------------------------- */
 /* W-1: the exact regression shape - a refusal that MENTIONS the block     */
@@ -178,4 +182,32 @@ test("toolLabel drops an unrecognised tool name rather than showing it raw", () 
   assert.equal(toolLabel("mcp__michael__tool_describe"), null);
   assert.equal(toolLabel(""), null);
   assert.equal(toolLabel(undefined), null);
+});
+
+/* ---------------------------------------------------------------------- */
+/* Gate integration: the page must not fetch a ws-ticket itself. The gate  */
+/* authenticates the socket from the session cookie and fetches the       */
+/* upstream ticket on the server side.                                    */
+/* ---------------------------------------------------------------------- */
+
+test("connect() does not request a ws ticket — the gate authenticates the socket", async () => {
+  const fetched = [];
+  const originalFetch = global.fetch;
+  const originalWebSocket = global.WebSocket;
+  global.fetch = async (path) => {
+    fetched.push(String(path));
+    return { ok: true, text: async () => '{"ticket":"t"}' };
+  };
+  // Never opens: the stub records the URL and stays silent, so connect()'s
+  // open handler never fires and the promise never settles. Only the calls
+  // made before that point are under test here.
+  global.WebSocket = function (url) { this.url = url; this.addEventListener = () => {}; };
+  try {
+    await Promise.race([connect(), new Promise((r) => setTimeout(r, 50))]);
+    assert.ok(!fetched.some((p) => p.includes("ws-ticket")),
+      `expected no ws-ticket call, got ${JSON.stringify(fetched)}`);
+  } finally {
+    global.fetch = originalFetch;
+    global.WebSocket = originalWebSocket;
+  }
 });
