@@ -95,11 +95,32 @@ def set_password(email: str, password: str) -> bool:
 
 
 def disable_user(email: str) -> bool:
-    """Mark the account disabled. False when there was no such account."""
+    """Mark the account disabled.
+
+    False means nothing changed, which covers both "no such account" and
+    "already disabled" — the caller cannot tell those apart from the return
+    value alone, and the CLI's message ("no such active account") says so.
+    """
     with writable() as conn, conn.cursor() as cur:
         cur.execute(
             "UPDATE gate.users SET disabled_at = now() "
             "WHERE email = lower(%s) AND disabled_at IS NULL",
+            (email,),
+        )
+        return cur.rowcount > 0
+
+
+def enable_user(email: str) -> bool:
+    """Clear the disabled mark. False when nothing changed.
+
+    Disabling is reversible on purpose: the common reason to disable an
+    account is a suspicion, and an operator who cannot undo one is an operator
+    who hesitates to use it.
+    """
+    with writable() as conn, conn.cursor() as cur:
+        cur.execute(
+            "UPDATE gate.users SET disabled_at = NULL "
+            "WHERE email = lower(%s) AND disabled_at IS NOT NULL",
             (email,),
         )
         return cur.rowcount > 0

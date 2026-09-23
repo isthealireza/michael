@@ -98,19 +98,17 @@ changed since; passing once is not a standing guarantee.
 ## Precondition — verify the client address is real
 
 `michael.gate.app.client_address` derives the rate-limit key from the
-**rightmost** `X-Forwarded-For` hop. That is correct only if Railway's edge
-appends exactly one hop, and nothing in the test suite can check that —
-`TestClient` verifies the parsing rule, not Railway's behaviour.
+`X-Real-IP` header. Whether that is the caller's own address cannot be settled
+by the test suite: `TestClient` verifies the parsing rule, not Railway's
+behaviour, so the header has to be checked against production.
 
-The three possibilities, only one of which is safe:
+Two ways it can be wrong, and both matter:
 
-- edge appends one hop → correct;
-- edge appends two (an internal router in front of the app) → the rightmost
-  value is a constant internal address, `ADDRESS_LIMIT` becomes a single
-  global counter, and 20 failed logins from anyone lock out every account
-  for everyone, indefinitely;
-- edge forwards a client-supplied `X-Forwarded-For` unmodified → the value
-  is attacker-controlled and the per-address limit is bypassable.
+- the value is shared infrastructure rather than the caller → `ADDRESS_LIMIT`
+  becomes a near-global counter, and failed logins from anyone lock out
+  accounts for everyone;
+- the value is caller-supplied → the per-address limit is bypassable by
+  sending a header.
 
 **Done — 2026-09-23. The check found a real defect, which is the argument for
 running it before the domain moves rather than after.**
@@ -281,28 +279,37 @@ credential, urgent access removal), the reliable action is rotating
 `GATE_SECRET`, which invalidates every session for every user at once — a
 blunter tool, used deliberately for that reason.
 
-## Known gap — the "admin" role enforces nothing
+## The administrator role
 
-Say this plainly, because it is easy to read the code and assume otherwise:
-**`role` is decorative.** `gate.users.role` is `CHECK`-constrained to
-`'admin'` or `'chat'` at the database level, it is carried in `User`, and it
-is minted into the session cookie by `michael.gate.cookies.mint`. That is the
-entire extent of what it does. It is not read, checked, or branched on by any
-route, any authorization decision, or any part of `michael.gate.app` — an
-`admin` cookie and a `chat` cookie authorize identically everywhere in this
-service. There is no admin-only capability in `michael-gate` for the role to
-gate access to.
+`role` is enforced. `gate.users.role` is `CHECK`-constrained to `'admin'` or
+`'chat'`, carried in the session cookie, and read by the gate's administrative
+routes:
 
-Consequently: **Step 5 above proves an admin account can chat. It proves
-nothing about administration**, because there is no administrative surface
-here to exercise — no user management, no session management, no dashboard
-access — through the gate. If a future plan treats "an admin account signed
-in successfully" as evidence that admin-specific access controls work, that
-plan's premise is false and must be corrected before it is acted on, not
-worked around by adding checks to this runbook.
+| Route | Who |
+|---|---|
+| `GET /admin` | admin only — the accounts console |
+| `POST /admin/users/enabled` | admin only — disable or re-enable one account |
 
-Designing and implementing real authorization for `admin` is out of scope
-for a fix wave and deliberately not attempted here (see the review this
-document responds to, finding I-2). Anyone relying on `role` for anything
-beyond bookkeeping should treat that as an open design task, not a shipped
-control.
+A signed-in **chat** user gets `404`, not `403`: telling them the route exists
+and is forbidden discloses the shape of the administrative surface to exactly
+the population the gate exists to keep away from it. An anonymous caller is
+redirected to `/login`. The role is trusted only because the cookie is signed
+— editing `chat` to `admin` in a cookie fails signature verification and the
+caller is treated as anonymous, which is asserted by test.
+
+An administrator cannot disable their own account. The console would
+otherwise offer a one-click way to lock the last door from the inside, and
+re-opening it needs shell access to the container.
+
+**What the role still does NOT grant: access to the Hermes dashboard.** After
+Step 6 the dashboard is reachable only on Railway's private network. If you
+need it, the recovery path is the Rollback section above — re-generate the
+`michael-hermes` domain from Railway's own control plane, which takes about
+ten seconds and does not depend on this service being healthy. That is the
+real escape hatch, and it is why dashboard proxying was not built into the
+gate: it would re-expose, to a signed-in administrator over the public
+internet, the whole surface this service exists to close.
+
+So Step 5 should now exercise both paths: sign in as the admin account, ask a
+question, **and** open `/admin` and confirm the accounts list renders.
+

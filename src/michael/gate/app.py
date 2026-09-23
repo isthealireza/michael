@@ -19,7 +19,14 @@ import websockets
 from starlette.applications import Starlette
 from starlette.concurrency import run_in_threadpool
 from starlette.requests import Request
-from starlette.responses import FileResponse, JSONResponse, RedirectResponse, Response
+from starlette.responses import (
+    FileResponse,
+    HTMLResponse,
+    JSONResponse,
+    PlainTextResponse,
+    RedirectResponse,
+    Response,
+)
 from starlette.routing import Route, WebSocketRoute
 from starlette.staticfiles import StaticFiles
 from starlette.websockets import WebSocket, WebSocketDisconnect
@@ -36,6 +43,7 @@ from michael.gate.upstream import (
     fetch_ws_ticket,
     ws_url,
 )
+from michael.gate.users import User
 
 #: mypy --strict enables no_implicit_reexport, which otherwise flags these
 #: three re-aliased/whole-module imports as "not explicitly exported" the
@@ -66,6 +74,82 @@ _DUMMY_PASSWORD_HASH = hash_password(secrets.token_urlsafe(32))
 #: `gate/Dockerfile` already copies the whole of `web/`, so it ships with the
 #: image the same way `michael.html` and `michael.js` do.
 LOGIN_PAGE_FILE = "login.html"
+
+#: Small enough to keep beside the code it serves, unlike the chat and sign-in
+#: pages. Palm Vision palette, flat — no blur here: this is an operator tool,
+#: not a surface anyone is meant to enjoy looking at.
+ADMIN_PAGE = """<!doctype html><html lang="en-AU"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow"><title>Accounts · Michael</title>
+<style>
+:root{--g:#2E8B57;--gd:#1F6A40;--b:#006994;--gold:#F4C430;--d:#B23A28;
+ --fg:#333;--fg2:#555;--fg3:#777;--rule:#E2E5E2;--paper:#FAFAF7}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--fg);
+ font:16px/1.6 'Segoe UI','Open Sans',Helvetica,Arial,sans-serif}
+header{background:#fff;border-bottom:2px solid var(--gold);padding:14px 20px}
+.bar{max-width:60rem;margin:0 auto;display:flex;align-items:baseline;gap:12px}
+h1{margin:0;font-size:15px;letter-spacing:.01em;color:var(--g)}
+.eb{font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--b)}
+a{color:var(--b)}
+main{max-width:60rem;margin:0 auto;padding:28px 20px}
+table{width:100%;border-collapse:collapse;background:#fff;border:1px solid var(--rule)}
+th{text-align:left;font-size:11px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;
+ color:var(--fg3);padding:10px 14px;border-bottom:1px solid var(--rule)}
+td{padding:11px 14px;border-bottom:1px solid #EFF1EF;font-size:14.5px}
+tr:last-child td{border-bottom:0}
+.email{font-weight:600;color:#1A1A1A}
+.role{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+ padding:2px 7px;border-radius:2px}
+.role-admin{background:#EAF3EE;color:var(--gd)}
+.role-chat{background:#E5F0F5;color:#00547A}
+.state{font-size:13px;font-weight:600}
+.state.on{color:var(--gd)} .state.off{color:var(--d)}
+.act{text-align:right}
+button{font:inherit;font-size:13px;font-weight:700;color:#fff;background:var(--g);
+ border:0;border-radius:4px;padding:7px 12px;min-height:36px;cursor:pointer}
+button:hover:not(:disabled){background:var(--gd)}
+button:disabled{background:#C7D9CE;cursor:default}
+.none{color:var(--fg3)}
+#msg{margin:0 0 16px;padding:10px 14px;font-size:14px;font-weight:600;display:none;
+ border-left:2px solid var(--d);background:#FBF1EF;color:var(--d)}
+#msg.on{display:block}
+.note{margin-top:20px;font-size:13px;color:var(--fg3);line-height:1.55}
+</style></head><body>
+<header><div class="bar"><h1>Michael</h1><span class="eb">Accounts</span>
+<span style="margin-left:auto"><a href="/">Back to chat</a></span></div></header>
+<main>
+<p id="msg" role="alert"></p>
+<table><thead><tr><th>Email</th><th>Name</th><th>Role</th><th>State</th><th></th></tr></thead>
+<tbody><!--ROWS--></tbody></table>
+<p class="note">Disabling an account refuses its next sign-in and its next
+socket. An already-open socket is re-checked only when it reconnects, so a
+signed-in reader may finish the turn in flight. Passwords are reset from the
+command line: <code>michael user password &lt;email&gt;</code>.</p>
+</main>
+<script>
+document.querySelector('table').addEventListener('click', async (ev) => {
+  const btn = ev.target.closest('button[data-email]');
+  if (!btn) return;
+  const msg = document.getElementById('msg');
+  msg.classList.remove('on');
+  btn.disabled = true;
+  try {
+    const r = await fetch('/admin/users/enabled', {
+      method: 'POST', headers: {'Content-Type': 'application/json'},
+      credentials: 'same-origin',
+      body: JSON.stringify({email: btn.dataset.email, enabled: btn.dataset.enable === '1'}),
+    });
+    if (r.ok) { location.reload(); return; }
+    let detail = 'That did not work.';
+    try { const b = await r.json(); if (b && b.detail) detail = b.detail; } catch {}
+    msg.textContent = detail; msg.classList.add('on'); btn.disabled = false;
+  } catch {
+    msg.textContent = 'Could not reach the server.'; msg.classList.add('on');
+    btn.disabled = false;
+  }
+});
+</script></body></html>"""
 
 
 def client_address(request: Request) -> str:
@@ -193,6 +277,45 @@ def _claim_session_ids_from_reply(frame: object, user_id: int) -> frozenset[str]
     return frozenset(ids)
 
 
+def _esc(value: object) -> str:
+    """Escape for HTML text and double-quoted attributes alike.
+
+    Email and display name are operator-supplied but arrive from a database,
+    and the console that shows them is the one surface an administrator reads
+    while signed in as an administrator. Rendering either raw would make
+    `michael user add '<img onerror=...>' ...` a stored cross-site script
+    aimed squarely at the only privileged session in the system.
+    """
+    return (
+        str(value)
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace('"', "&quot;")
+    )
+
+
+def _render_admin(accounts: list[User]) -> str:
+    """The administrator console: the accounts, and the one write that matters."""
+    rows = []
+    for account in accounts:
+        disabled = account.disabled_at is not None
+        rows.append(
+            "<tr>"
+            f'<td class="email">{_esc(account.email)}</td>'
+            f"<td>{_esc(account.display_name)}</td>"
+            f'<td><span class="role role-{_esc(account.role)}">{_esc(account.role)}</span></td>'
+            f'<td><span class="state {"off" if disabled else "on"}">'
+            f'{"disabled" if disabled else "active"}</span></td>'
+            f'<td class="act"><button type="button" data-email="{_esc(account.email)}" '
+            f'data-enable="{"1" if disabled else "0"}">'
+            f'{"Re-enable" if disabled else "Disable"}</button></td>'
+            "</tr>"
+        )
+    body = "".join(rows) or '<tr><td colspan="5" class="none">No accounts yet.</td></tr>'
+    return ADMIN_PAGE.replace("<!--ROWS-->", body)
+
+
 def build_app(*, secret: str, upstream: UpstreamConfig, web_root: Path) -> Starlette:
     def _session(request: Request) -> tuple[int, str] | None:
         token = request.cookies.get(COOKIE_NAME)
@@ -208,6 +331,76 @@ def build_app(*, secret: str, upstream: UpstreamConfig, web_root: Path) -> Starl
 
     async def login_page(request: Request) -> Response:
         return FileResponse(web_root / LOGIN_PAGE_FILE)
+
+    def _admin(request: Request) -> tuple[int, str] | None:
+        """The session, but only when it carries the admin role.
+
+        Returns None for a chat user as well as for an anonymous one, and the
+        callers below answer both the same way. Telling a signed-in chat user
+        that a route exists but is not theirs discloses the shape of the
+        administrative surface to exactly the population the gate exists to
+        keep away from it.
+        """
+        session = _session(request)
+        if session is None or session[1] != "admin":
+            return None
+        return session
+
+    async def admin_console(request: Request) -> Response:
+        if _admin(request) is None:
+            # 404, not 403: see _admin. An anonymous caller is redirected so a
+            # bookmarked /admin still leads somewhere useful.
+            if _session(request) is None:
+                return RedirectResponse("/login", status_code=303)
+            return PlainTextResponse("Not Found", status_code=404)
+        accounts = await run_in_threadpool(user_store.list_users)
+        return HTMLResponse(_render_admin(accounts))
+
+    async def admin_set_enabled(request: Request) -> Response:
+        """Disable or re-enable one account. The only privileged write."""
+        session = _admin(request)
+        if session is None:
+            if _session(request) is None:
+                return RedirectResponse("/login", status_code=303)
+            return PlainTextResponse("Not Found", status_code=404)
+        actor_id, _ = session
+
+        try:
+            body = await request.json()
+        except (ValueError, json.JSONDecodeError):
+            return JSONResponse({"detail": "expected a JSON body"}, status_code=400)
+        if not isinstance(body, dict):
+            return JSONResponse({"detail": "expected a JSON object"}, status_code=400)
+
+        email = str(body.get("email", "")).strip()
+        enabled = body.get("enabled")
+        if not email or not isinstance(enabled, bool):
+            return JSONResponse(
+                {"detail": "email and enabled are required"}, status_code=400
+            )
+
+        target = await run_in_threadpool(user_store.find_by_email, email)
+        if target is None:
+            return JSONResponse({"detail": "no such account"}, status_code=404)
+        # An administrator who disables their own account has locked the last
+        # door behind themselves, and re-opening it needs shell access to the
+        # container. Refuse rather than let the console do that silently.
+        if target.id == actor_id and not enabled:
+            return JSONResponse(
+                {"detail": "an administrator cannot disable their own account"},
+                status_code=409,
+            )
+
+        action = user_store.enable_user if enabled else user_store.disable_user
+        changed = await run_in_threadpool(action, email)
+        logger.info(
+            "admin %s account=%s by=%s changed=%s",
+            "enabled" if enabled else "disabled",
+            target.email,
+            actor_id,
+            changed,
+        )
+        return JSONResponse({"email": target.email, "enabled": enabled, "changed": changed})
 
     async def chat_script(request: Request) -> Response:
         # Referenced by web/michael.html as a page-relative "michael.js", which
@@ -432,6 +625,8 @@ def build_app(*, secret: str, upstream: UpstreamConfig, web_root: Path) -> Starl
         Route("/auth/login", login, methods=["POST"]),
         Route("/auth/logout", logout, methods=["POST"]),
         Route("/health", health),
+        Route("/admin", admin_console),
+        Route("/admin/users/enabled", admin_set_enabled, methods=["POST"]),
         WebSocketRoute("/api/ws", relay),
     ]
     app = Starlette(routes=routes)

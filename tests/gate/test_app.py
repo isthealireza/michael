@@ -1073,3 +1073,182 @@ def test_owned_by_is_read_once_per_connection_not_once_per_frame(
     assert fake_upstream.sent == [create_frame, submit_frame]
     assert claimed_ids == ["new-1", "stored-1"]
     assert owned_by_calls == 1
+
+
+# --------------------------------------------------------------------------
+# The admin role. Until this existed, `role` was minted into the cookie,
+# carried through every request, and read by nothing: `admin` and `chat` were
+# the same account with a different label, and the cutover runbook's Step 5
+# ("sign in as the admin and ask a question") proved nothing about admin
+# capability because it exercised the chat path.
+# --------------------------------------------------------------------------
+
+
+def _admin_token() -> str:
+    return mint(1, "admin", secret=SECRET, now=datetime.now(UTC))
+
+
+def test_a_chat_user_cannot_see_that_the_admin_console_exists(
+    client: TestClient,
+) -> None:
+    """404 rather than 403. A signed-in chat user told "forbidden" has learned
+    the administrative surface is there and what it is called; that is exactly
+    the population the gate exists to keep away from it."""
+    response = client.get("/admin", cookies={COOKIE_NAME: _token()})
+    assert response.status_code == 404
+
+
+def test_a_chat_user_cannot_change_an_account(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import michael.gate.app as app_module
+
+    called: list[str] = []
+    monkeypatch.setattr(
+        app_module.user_store, "disable_user", lambda email: called.append(email) or True
+    )
+
+    response = client.post(
+        "/admin/users/enabled",
+        json={"email": "victim@x.com", "enabled": False},
+        cookies={COOKIE_NAME: _token()},
+    )
+
+    assert response.status_code == 404
+    assert called == [], "a chat user reached the account store"
+
+
+def test_an_anonymous_caller_is_sent_to_sign_in(client: TestClient) -> None:
+    response = client.get("/admin", follow_redirects=False)
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login"
+
+
+def test_an_admin_sees_the_accounts(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import michael.gate.app as app_module
+
+    monkeypatch.setattr(
+        app_module.user_store,
+        "list_users",
+        lambda: [_enabled_user(1), User(2, "b@x.com", "B", "h", "chat", datetime.now(UTC))],
+    )
+
+    response = client.get("/admin", cookies={COOKIE_NAME: _admin_token()})
+
+    assert response.status_code == 200
+    assert "reader@x.com" in response.text
+    assert "b@x.com" in response.text
+    assert "disabled" in response.text  # the second account's state
+
+
+def test_an_admin_can_disable_and_re_enable_an_account(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    import michael.gate.app as app_module
+
+    disabled: list[str] = []
+    enabled: list[str] = []
+    monkeypatch.setattr(app_module.user_store, "find_by_email", lambda e: _enabled_user(7))
+    monkeypatch.setattr(
+        app_module.user_store, "disable_user", lambda e: disabled.append(e) or True
+    )
+    monkeypatch.setattr(
+        app_module.user_store, "enable_user", lambda e: enabled.append(e) or True
+    )
+    cookies = {COOKIE_NAME: _admin_token()}
+
+    off = client.post(
+        "/admin/users/enabled", json={"email": "reader@x.com", "enabled": False}, cookies=cookies
+    )
+    on = client.post(
+        "/admin/users/enabled", json={"email": "reader@x.com", "enabled": True}, cookies=cookies
+    )
+
+    assert off.status_code == 200 and on.status_code == 200
+    assert disabled == ["reader@x.com"]
+    assert enabled == ["reader@x.com"]
+
+
+def test_an_admin_cannot_disable_their_own_account(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """The console would otherwise offer a one-click way to lock the last door
+    from the inside; re-opening it needs shell access to the container."""
+    import michael.gate.app as app_module
+
+    called: list[str] = []
+    monkeypatch.setattr(app_module.user_store, "find_by_email", lambda e: _enabled_user(1))
+    monkeypatch.setattr(
+        app_module.user_store, "disable_user", lambda e: called.append(e) or True
+    )
+
+    response = client.post(
+        "/admin/users/enabled",
+        json={"email": "reader@x.com", "enabled": False},
+        cookies={COOKIE_NAME: _admin_token()},  # same user id (1)
+    )
+
+    assert response.status_code == 409
+    assert called == [], "the gate disabled the acting administrator"
+
+
+def test_the_console_escapes_an_account_name(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A display name is operator-supplied and reaches the one privileged
+    session in the system. Rendering it raw makes `michael user add` a stored
+    cross-site script aimed at the administrator."""
+    import michael.gate.app as app_module
+
+    hostile = '<img src=x onerror="alert(1)">'
+    monkeypatch.setattr(
+        app_module.user_store,
+        "list_users",
+        lambda: [User(3, "x@x.com", hostile, "h", "chat", None)],
+    )
+
+    response = client.get("/admin", cookies={COOKIE_NAME: _admin_token()})
+
+    assert response.status_code == 200
+    assert hostile not in response.text
+    assert "&lt;img" in response.text
+
+
+def test_a_forged_admin_role_in_a_cookie_is_refused(client: TestClient) -> None:
+    """The role is trusted only because the cookie is signed. Editing `chat` to
+    `admin` must not promote the session."""
+    import base64
+    import json as jsonlib
+
+    token = _token()  # role: chat
+    body, _, signature = token.partition(".")
+    claims = jsonlib.loads(base64.urlsafe_b64decode(body + "=" * (-len(body) % 4)))
+    assert claims["role"] == "chat"
+    claims["role"] = "admin"
+    forged_body = (
+        base64.urlsafe_b64encode(
+            jsonlib.dumps(claims, separators=(",", ":"), sort_keys=True).encode()
+        )
+        .decode("ascii")
+        .rstrip("=")
+    )
+
+    response = client.get(
+        "/admin",
+        cookies={COOKIE_NAME: f"{forged_body}.{signature}"},
+        follow_redirects=False,
+    )
+
+    # Not even 404-as-a-chat-user: the signature no longer matches the edited
+    # body, so verify() returns None and this is an anonymous caller.
+    assert response.status_code == 303
+    assert response.headers["location"] == "/login"
+
+    # And the console itself was never rendered. Asserting the status alone
+    # would pass if a later change made /admin 200 for everyone and merely
+    # redirected afterwards.
+    followed = client.get("/admin", cookies={COOKIE_NAME: f"{forged_body}.{signature}"})
+    assert "Accounts" not in followed.text
+    assert "reader@x.com" not in followed.text
