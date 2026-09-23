@@ -8,26 +8,30 @@
 <title>Sign in · Michael · Palm Vision</title>
 
 <!--
-  Palm Vision Design System. Tokens copied from colors_and_type.css rather than
-  linked: this is a single standalone page on the public internet, and a second
-  render-blocking request buys nothing. Names match the source so the two stay
-  greppable against each other.
+  Palm Vision supplies the palette, the mark and the type. Apple supplies the
+  material and the craft.
 
-  Brand rules observed, from SKILL.md's "do not violate" list:
-    · Black (#000) is for the company NAME only. Body copy is #333.
-    · Gold is a highlighter, never a fill. It appears here as the focus rule,
-      the sun in the mark, and the sanctioned sun-circle motif. No gold buttons.
-    · Square by default; inputs and buttons take 4px.
-    · No gradients, no glassmorphism, no backdrop blur, no neon, no shadow stacks.
-    · No emoji. No exclamation marks.
-    · Australian/British spelling.
+  DELIBERATE SUSPENSION: Palm Vision's do-not-violate list names glassmorphism
+  and backdrop blur. Both are used here, at the user's explicit request, after
+  the trade-off was put to them. The tests that previously asserted their
+  absence were narrowed rather than deleted — everything else on that list
+  still binds and is still enforced: gold highlights but never fills, black is
+  for the company name only, no gradients, 4-6px corners.
+
+  Glass needs something behind it or it is only a tinted rectangle. The card
+  floats over the brand's green field with the gold sun motif behind it, so
+  the blur has real colour and a real edge to work with.
+
+  Apple's craft, as on the chat page: size-specific tracking, rem spacing so a
+  larger text setting scales the layout, feedback on the press rather than the
+  release, critically damped settles, and the three accessibility signals —
+  reduced motion, reduced transparency and increased contrast — each handled.
 -->
 <style>
 :root{
   --pv-green:#2E8B57; --pv-green-dk:#1F6A40; --pv-green-tint:#EAF3EE;
   --pv-blue:#006994;  --pv-blue-dk:#00547A;
-  --pv-gold:#F4C430;  --pv-gold-dk:#C99B12;
-  --pv-ink:#000000;
+  --pv-gold:#F4C430;  --pv-gold-dk:#C99B12;  --pv-gold-tint:#FDF6DD;
   --pv-fg-1:#1A1A1A; --pv-fg-2:#333333; --pv-fg-3:#555555; --pv-fg-4:#777777; --pv-fg-5:#999999;
   --pv-rule:#E2E5E2; --pv-rule-2:#EFF1EF;
   --pv-paper:#FFFFFF; --pv-paper-warm:#FAFAF7;
@@ -36,265 +40,297 @@
   --font-sans:'Segoe UI','Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
   --font-mono:'Consolas','IBM Plex Mono','SFMono-Regular',Menlo,'Courier New',monospace;
 
-  --ls-eyebrow:.18em; --ls-micro:.12em;
-  --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-6:1.5rem;
-  --space-8:2rem; --space-10:2.5rem; --space-12:3rem; --space-16:4rem;
-  --radius-2:4px;
-  --ease:cubic-bezier(.22,.61,.36,1);
+  --track-display:-.021em; --track-heading:-.011em; --track-body:0;
+  --track-eyebrow:.16em; --track-mono:.1em;
+
+  --s-1:.25rem; --s-2:.5rem; --s-3:.75rem; --s-4:1rem;
+  --s-5:1.25rem; --s-6:1.5rem; --s-8:2rem; --s-10:2.5rem; --s-12:3rem;
+
+  --radius-2:4px; --radius-3:6px;
+  --settle:cubic-bezier(.32,.72,0,1); --settle-ms:400ms;
+  --press:cubic-bezier(.4,0,.6,1); --press-ms:90ms;
 }
 
 *,*::before,*::after{box-sizing:border-box}
-html{font-family:var(--font-sans);color:var(--pv-fg-2)}
+html{font-family:var(--font-sans)}
 body{
-  margin:0; min-height:100svh; background:var(--pv-paper-warm);
-  font-size:15px; line-height:1.55; color:var(--pv-fg-2);
+  margin:0; min-height:100svh; position:relative; overflow-x:hidden;
+  background:var(--pv-green); color:var(--pv-fg-2);
+  font-size:1rem; line-height:1.6; letter-spacing:var(--track-body);
+  font-optical-sizing:auto;
   -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+  display:flex; flex-direction:column;
 }
 
-/* ─── Layout ─────────────────────────────────────────────────────────────
-   Two panels. The green block is the brand's cover device; the cream side
-   carries the form. Below 960px they stack and the cover compresses to a
-   band, so the form is above the fold on a phone. */
-.shell{display:grid; grid-template-columns:minmax(0,46fr) minmax(0,54fr); min-height:100svh}
-@media (max-width:960px){ .shell{grid-template-columns:1fr} }
+/* ─── The field the glass sits on ──────────────────────────────────────── */
+/* Solid brand shapes, no gradients: a cream block and the sanctioned gold
+   sun-circle, positioned so the card's blur has both a colour change and an
+   edge to refract rather than one flat tone. */
+.field-bg{position:fixed; inset:0; overflow:hidden; pointer-events:none}
+.field-bg .cream{
+  position:absolute; right:-12vw; top:-20vh; width:62vw; height:150vh;
+  background:var(--pv-paper-warm); transform:rotate(9deg);
+}
+.field-bg .sun{
+  position:absolute; width:19rem; height:19rem; border-radius:50%;
+  background:var(--pv-gold); opacity:.5;
+  right:14vw; top:18vh;
+}
+.field-bg .sun.small{
+  width:7rem; height:7rem; right:42vw; top:auto; bottom:12vh; opacity:.32;
+}
+@media (max-width:52rem){
+  .field-bg .cream{right:-30vw; top:38vh; width:150vw; height:120vh; transform:rotate(-7deg)}
+  .field-bg .sun{width:12rem; height:12rem; right:-2rem; top:8vh}
+  .field-bg .sun.small{width:5rem; height:5rem; right:auto; left:-1rem; bottom:26vh}
+}
 
-/* ─── Cover panel ──────────────────────────────────────────────────────── */
-.cover{
-  position:relative; overflow:hidden; background:var(--pv-green); color:#fff;
-  padding:var(--space-16) clamp(var(--space-8),5vw,var(--space-16));
-  display:flex; flex-direction:column; justify-content:space-between; gap:var(--space-12);
+/* ─── Brand block ──────────────────────────────────────────────────────── */
+.brandbar{
+  position:relative; z-index:2; flex:none;
+  padding:var(--s-8) clamp(var(--s-5),5vw,var(--s-12)) 0;
+  display:flex; align-items:center; gap:var(--s-3);
 }
-/* The one sanctioned decorative motif: a soft gold sun-circle, upper right. */
-.cover::after{
-  content:""; position:absolute; top:clamp(28px,6vw,64px); right:clamp(28px,6vw,64px);
-  width:14px; height:14px; border-radius:50%; background:var(--pv-gold);
-  box-shadow:0 0 0 4px rgba(244,196,48,.18); pointer-events:none;
-}
-.brand{display:flex; align-items:center; gap:var(--space-3)}
-.brand svg{display:block; flex:none}
-.brand-name{
-  font-size:13px; font-weight:700; letter-spacing:var(--ls-micro);
+.brandbar svg{display:block; flex:none}
+.brandbar span{
+  font-size:.79rem; font-weight:700; letter-spacing:var(--track-mono);
   text-transform:uppercase; color:#fff;
 }
-.cover-body{max-width:34ch}
+
+/* ─── Centre stage ─────────────────────────────────────────────────────── */
+.stage{
+  position:relative; z-index:2; flex:1;
+  display:grid; grid-template-columns:1fr minmax(0,26rem); gap:var(--s-10);
+  align-items:center;
+  padding:var(--s-8) clamp(var(--s-5),5vw,var(--s-12)) var(--s-10);
+  max-width:74rem; margin:0 auto; width:100%;
+}
+@media (max-width:52rem){
+  .stage{grid-template-columns:1fr; gap:var(--s-6); padding:var(--s-6) var(--s-5) var(--s-8)}
+}
+
+/* No measure on the block: `ch` here resolves against the block's own 1rem,
+   which would squeeze the 4rem display headline to the width of body copy.
+   The measure belongs on the paragraph that needs one. */
+.pitch{color:#fff; max-width:32rem}
 .eyebrow{
-  font-size:12px; font-weight:700; letter-spacing:var(--ls-eyebrow);
-  text-transform:uppercase; margin:0 0 var(--space-4);
+  font-size:.75rem; font-weight:700; letter-spacing:var(--track-eyebrow);
+  text-transform:uppercase; margin:0 0 var(--s-3); color:var(--pv-gold);
 }
-.cover .eyebrow{color:var(--pv-gold)}
 .display{
-  margin:0; font-size:clamp(2.5rem,6vw,3.125rem); line-height:1.05;
-  letter-spacing:-.02em; font-weight:700; color:#fff;
+  margin:0; font-size:clamp(2.75rem,7vw,4rem); line-height:1.02;
+  letter-spacing:var(--track-display); font-weight:700; color:#fff;
 }
-.rule-gold{width:56px; height:2px; background:var(--pv-gold); margin:var(--space-6) 0; border:0}
-.lead{margin:0; font-size:17px; line-height:1.55; color:rgba(255,255,255,.88)}
-.cover-foot{display:flex; flex-wrap:wrap; gap:var(--space-2) var(--space-4); align-items:baseline}
-.pillars{
-  margin:0; font-size:12px; font-weight:600; letter-spacing:var(--ls-micro);
-  text-transform:uppercase; color:rgba(255,255,255,.72);
-}
-.index{
-  font-family:var(--font-mono); font-size:12px; letter-spacing:var(--ls-micro);
-  color:var(--pv-gold);
-}
-/* On a phone the cover compresses to a band. The lead paragraph and the
-   pillars line are context, not instruction — kept on the desktop split where
-   there is room, dropped here so the first field sits near the top of the
-   screen instead of below the fold. */
-@media (max-width:960px){
-  .cover{
-    padding:var(--space-8) var(--space-6) var(--space-6);
-    gap:var(--space-4); min-height:auto;
-  }
-  .cover::after{top:var(--space-8); right:var(--space-6); width:10px; height:10px}
-  .cover-foot,.lead{display:none}
-  .cover-body{max-width:none}
-  .display{font-size:2.25rem}
-  .eyebrow{margin-bottom:var(--space-2)}
-  .rule-gold{margin:var(--space-4) 0 0}
-  .panel{padding:var(--space-10) var(--space-6) var(--space-12)}
-  .h1{font-size:1.625rem}
-  .sub{margin-bottom:var(--space-8)}
+.rule-gold{width:3.5rem; height:2px; background:var(--pv-gold); margin:var(--s-5) 0; border:0}
+.lead{margin:0; max-width:38ch; font-size:1.02rem; line-height:1.55; color:rgba(255,255,255,.9)}
+@media (max-width:52rem){
+  .pitch{max-width:none}
+  .lead{display:none}
+  .rule-gold{margin:var(--s-4) 0 0}
 }
 
-/* ─── Form panel ───────────────────────────────────────────────────────── */
-.panel{
-  display:flex; align-items:center; justify-content:center;
-  padding:var(--space-16) clamp(var(--space-6),5vw,var(--space-16));
-  background:var(--pv-paper-warm);
+/* ─── The glass card ───────────────────────────────────────────────────── */
+/* The one translucent surface. Everything inside it is solid, because a light
+   material stacked on a light material stops being readable. */
+.card{
+  background:rgba(255,255,255,.74);
+  -webkit-backdrop-filter:blur(30px) saturate(180%);
+  backdrop-filter:blur(30px) saturate(180%);
+  border:1px solid rgba(255,255,255,.55);
+  border-radius:12px;
+  box-shadow:0 1px 0 rgba(255,255,255,.5) inset,
+             0 18px 50px rgba(12,30,20,.22);
+  padding:var(--s-8) var(--s-8) var(--s-6);
 }
-.form-wrap{width:100%; max-width:392px}
-.panel .eyebrow{color:var(--pv-blue)}
+@media (max-width:52rem){ .card{padding:var(--s-6) var(--s-5)} }
+
+/* Vibrancy: over a translucent surface, text carries more contrast and a
+   touch more weight than it would on solid paper. */
+.card .eyebrow{color:var(--pv-blue-dk)}
 .h1{
-  margin:0 0 var(--space-3); font-size:2rem; line-height:1.15; letter-spacing:-.01em;
-  font-weight:700; color:var(--pv-green);
+  margin:0 0 var(--s-2); font-size:1.5rem; line-height:1.2;
+  letter-spacing:var(--track-heading); font-weight:700; color:var(--pv-green-dk);
 }
-.sub{margin:0 0 var(--space-10); color:var(--pv-fg-3); font-size:15px}
+.sub{margin:0 0 var(--s-6); color:var(--pv-fg-2); font-size:.94rem}
 
-/* Field. The label sits above the control and the gold rule is the focus
-   device — the brand's emphasis mark, animated rather than invented. */
-.field{position:relative; margin-bottom:var(--space-6)}
-.field label{
-  display:block; margin-bottom:var(--space-2);
-  font-size:13px; font-weight:600; color:var(--pv-fg-3);
-  transition:color .18s var(--ease);
+.fieldrow{position:relative; margin-bottom:var(--s-5)}
+.fieldrow label{
+  display:block; margin-bottom:var(--s-2);
+  font-size:.79rem; font-weight:700; color:var(--pv-fg-2);
+  letter-spacing:.01em; transition:color var(--press-ms) var(--press);
 }
-.field:focus-within label{color:var(--pv-blue)}
+.fieldrow:focus-within label{color:var(--pv-blue-dk)}
 .control{position:relative; display:flex; align-items:stretch}
-.field input{
+.fieldrow input{
   width:100%; font:inherit; font-size:16px; /* 16px: stops iOS zooming on focus */
   color:var(--pv-fg-1); background:var(--pv-paper);
   border:1px solid var(--pv-rule); border-radius:var(--radius-2);
-  padding:13px var(--space-4); min-height:48px;
-  transition:border-color .18s var(--ease), background-color .18s var(--ease);
+  padding:.8rem var(--s-4); min-height:3rem;
+  transition:border-color var(--press-ms) var(--press);
 }
-.field input::placeholder{color:var(--pv-fg-5)}
-.field input:hover{border-color:#CFD5CF}
-.field input:focus{outline:none; border-color:var(--pv-green)}
-.field input[aria-invalid="true"]{border-color:var(--pv-danger)}
-/* The animated gold rule. Sits under the control, scales in from the left. */
+.fieldrow input::placeholder{color:var(--pv-fg-5)}
+.fieldrow input:hover{border-color:#CFD5CF}
+.fieldrow input:focus{outline:none; border-color:var(--pv-green)}
+.fieldrow input[aria-invalid="true"]{border-color:var(--pv-danger)}
 .control::after{
   content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
   background:var(--pv-gold); border-radius:0 0 var(--radius-2) var(--radius-2);
-  transform:scaleX(0); transform-origin:left; transition:transform .24s var(--ease);
-  pointer-events:none;
+  transform:scaleX(0); transform-origin:left;
+  transition:transform var(--settle-ms) var(--settle); pointer-events:none;
 }
-.field:focus-within .control::after{transform:scaleX(1)}
-.field input[type=password], .field input.has-toggle{padding-right:76px}
+.fieldrow:focus-within .control::after{transform:scaleX(1)}
+.fieldrow input.has-toggle{padding-right:4.75rem}
 
 .toggle{
-  position:absolute; right:4px; top:50%; transform:translateY(-50%);
-  /* 44px: the smallest target a thumb hits reliably. The control is 52px, so
-     this fits inside it without crowding the text. */
-  min-height:44px; min-width:44px; padding:0 var(--space-3);
-  font:inherit; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
-  color:var(--pv-blue); background:transparent; border:0; border-radius:var(--radius-2);
-  cursor:pointer;
+  position:absolute; right:2px; top:50%; transform:translateY(-50%);
+  min-height:44px; min-width:44px; padding:0 var(--s-3);
+  font:inherit; font-size:.72rem; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase;
+  color:var(--pv-blue-dk); background:transparent; border:0;
+  border-radius:var(--radius-2); cursor:pointer;
+  -webkit-tap-highlight-color:transparent;
 }
-.toggle:hover{color:var(--pv-blue-dk); background:var(--pv-green-tint)}
+.toggle:hover{color:var(--pv-blue); background:var(--pv-green-tint)}
+.toggle:active{transform:translateY(-50%) scale(.94)}
 .toggle:focus-visible{outline:2px solid var(--pv-blue); outline-offset:1px}
 
-.hint{
-  display:none; margin-top:var(--space-2); font-size:13px; color:var(--pv-gold-dk);
-  font-weight:600;
-}
+.hint{display:none; margin-top:var(--s-2); font-size:.79rem; color:var(--pv-gold-dk); font-weight:700}
 .hint.on{display:block}
 
 .alert{
-  display:none; margin-bottom:var(--space-6); padding:var(--space-3) var(--space-4);
+  display:none; margin-bottom:var(--s-5); padding:.7rem var(--s-4);
   border-left:2px solid var(--pv-danger); background:#FBF1EF;
-  color:var(--pv-danger); font-size:14px; font-weight:600;
+  color:var(--pv-danger); font-size:.87rem; font-weight:600;
   border-radius:0 var(--radius-2) var(--radius-2) 0;
 }
 .alert.on{display:block}
 
 .submit{
-  width:100%; min-height:52px; margin-top:var(--space-2);
-  font:inherit; font-size:15px; font-weight:700; letter-spacing:.02em;
-  color:#fff; background:var(--pv-green);
-  border:0; border-radius:var(--radius-2); cursor:pointer;
-  display:inline-flex; align-items:center; justify-content:center; gap:10px;
-  transition:background-color .18s var(--ease);
+  width:100%; min-height:3.25rem; margin-top:var(--s-2);
+  font:inherit; font-size:.97rem; font-weight:700; letter-spacing:.02em;
+  color:#fff; background:var(--pv-green); border:0; border-radius:var(--radius-2);
+  cursor:pointer; -webkit-tap-highlight-color:transparent;
+  display:inline-flex; align-items:center; justify-content:center; gap:.6rem;
+  transition:background-color var(--press-ms) var(--press),
+             transform var(--press-ms) var(--press);
 }
 .submit:hover:not(:disabled){background:var(--pv-green-dk)}
+/* Feedback on the press, not the release. */
+.submit:active:not(:disabled){transform:scale(.985); background:var(--pv-green-dk)}
 .submit:focus-visible{outline:2px solid var(--pv-blue); outline-offset:2px}
 .submit:disabled{background:#8FB9A2; cursor:default}
 .spinner{
-  width:15px; height:15px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
-  border-radius:50%; animation:spin .7s linear infinite; display:none;
+  width:.95rem; height:.95rem; border:2px solid rgba(255,255,255,.4);
+  border-top-color:#fff; border-radius:50%; animation:spin .7s linear infinite; display:none;
 }
 .submit.busy .spinner{display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .legal{
-  margin:var(--space-10) 0 0; padding-top:var(--space-6);
-  border-top:1px solid var(--pv-rule-2);
-  font-size:13px; line-height:1.5; color:var(--pv-fg-4);
+  margin:var(--s-6) 0 0; padding-top:var(--s-5);
+  border-top:1px solid rgba(20,30,50,.12);
+  font-size:.79rem; line-height:1.5; color:var(--pv-fg-3);
 }
-.legal strong{color:var(--pv-fg-3); font-weight:600}
+.legal strong{color:var(--pv-fg-1); font-weight:700}
 
-/* Respect the reader's motion preference. Everything below is decoration. */
+/* ─── The three accessibility signals ──────────────────────────────────── */
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
-  .control::after{transition:none}
+  *,*::before,*::after{
+    animation-duration:.01ms !important; animation-iteration-count:1 !important;
+    transition-duration:.01ms !important;
+  }
+}
+/* A reader who asks for less transparency gets a real surface: opaque card,
+   no blur, and the decorative field behind it removed so contrast is plain. */
+@media (prefers-reduced-transparency:reduce){
+  .card{
+    background:var(--pv-paper); -webkit-backdrop-filter:none; backdrop-filter:none;
+    border-color:var(--pv-rule); box-shadow:0 12px 32px rgba(12,30,20,.18);
+  }
+  .field-bg .sun{display:none}
+}
+@media (prefers-contrast:more){
+  .card{
+    background:var(--pv-paper); -webkit-backdrop-filter:none; backdrop-filter:none;
+    border:2px solid var(--pv-green-dk); box-shadow:none;
+  }
+  .field-bg .sun{display:none}
+  .fieldrow input{border-color:var(--pv-fg-3)}
+  .fieldrow label,.sub,.legal{color:var(--pv-fg-1)}
 }
 </style>
 </head>
 <body>
-<main class="shell">
 
-  <!-- Cover block — the brand's solid green device. -->
-  <section class="cover">
-    <div class="brand">
-      <svg viewBox="0 0 60 60" width="40" height="40" role="img" aria-label="Palm Vision mark">
-        <text x="0" y="50" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
-              font-weight="700" font-size="56" letter-spacing="-2" fill="#FFFFFF">P</text>
-        <circle cx="50" cy="14" r="6" fill="#F4C430"></circle>
-        <path d="M 6 50 Q 26 60 46 50" fill="none" stroke="rgba(255,255,255,0.7)"
-              stroke-width="4" stroke-linecap="round"></path>
-      </svg>
-      <span class="brand-name">Palm Vision Pty Ltd</span>
-    </div>
+<div class="field-bg" aria-hidden="true">
+  <div class="cream"></div>
+  <div class="sun"></div>
+  <div class="sun small"></div>
+</div>
 
-    <div class="cover-body">
-      <p class="eyebrow">Internal legal research</p>
-      <h1 class="display">Michael</h1>
-      <hr class="rule-gold">
-      <p class="lead">
-        Research and drafting support for Australian employment and privacy
-        matters, grounded in the legislation it cites.
-      </p>
-    </div>
+<div class="brandbar">
+  <svg viewBox="0 0 60 60" width="34" height="34" role="img" aria-label="Palm Vision mark">
+    <text x="0" y="50" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+          font-weight="700" font-size="56" letter-spacing="-2" fill="#FFFFFF">P</text>
+    <circle cx="50" cy="14" r="6" fill="#F4C430"></circle>
+    <path d="M 6 50 Q 26 60 46 50" fill="none" stroke="rgba(255,255,255,0.7)"
+          stroke-width="4" stroke-linecap="round"></path>
+  </svg>
+  <span>Palm Vision Pty Ltd</span>
+</div>
 
-    <div class="cover-foot">
-      <p class="pillars">Stability · Vision · Adaptability</p>
-      <span class="index">01 / ACCESS</span>
-    </div>
-  </section>
+<main class="stage">
 
-  <!-- Form panel -->
-  <section class="panel">
-    <div class="form-wrap">
-      <p class="eyebrow">Sign in</p>
-      <h2 class="h1">Account access</h2>
-      <p class="sub">Use the address your administrator registered.</p>
+  <div class="pitch">
+    <p class="eyebrow">Internal legal research</p>
+    <h1 class="display">Michael</h1>
+    <hr class="rule-gold">
+    <p class="lead">
+      Research and drafting support for Australian employment and privacy
+      matters, grounded in the legislation it cites.
+    </p>
+  </div>
 
-      <div id="alert" class="alert" role="alert" aria-live="polite"></div>
+  <section class="card">
+    <p class="eyebrow">Sign in</p>
+    <h2 class="h1">Account access</h2>
+    <p class="sub">Use the address your administrator registered.</p>
 
-      <form id="form" novalidate>
-        <div class="field">
-          <label for="email">Email address</label>
-          <div class="control">
-            <input id="email" name="email" type="email" inputmode="email"
-                   autocomplete="username" autocapitalize="none" spellcheck="false"
-                   required placeholder="name@palm.vu" aria-describedby="alert">
-          </div>
+    <div id="alert" class="alert" role="alert" aria-live="polite"></div>
+
+    <form id="form" novalidate>
+      <div class="fieldrow">
+        <label for="email">Email address</label>
+        <div class="control">
+          <input id="email" name="email" type="email" inputmode="email"
+                 autocomplete="username" autocapitalize="none" spellcheck="false"
+                 required placeholder="name@palm.vu" aria-describedby="alert">
         </div>
+      </div>
 
-        <div class="field">
-          <label for="password">Password</label>
-          <div class="control">
-            <input id="password" name="password" type="password" class="has-toggle"
-                   autocomplete="current-password" required
-                   placeholder="••••••••••••" aria-describedby="caps alert">
-            <button type="button" id="reveal" class="toggle"
-                    aria-pressed="false" aria-controls="password">Show</button>
-          </div>
-          <p id="caps" class="hint">Caps Lock is on.</p>
+      <div class="fieldrow">
+        <label for="password">Password</label>
+        <div class="control">
+          <input id="password" name="password" type="password" class="has-toggle"
+                 autocomplete="current-password" required
+                 placeholder="............" aria-describedby="caps alert">
+          <button type="button" id="reveal" class="toggle"
+                  aria-pressed="false" aria-controls="password">Show</button>
         </div>
+        <p id="caps" class="hint">Caps Lock is on.</p>
+      </div>
 
-        <button type="submit" id="submit" class="submit">
-          <span class="spinner" aria-hidden="true"></span>
-          <span id="submit-label">Sign in</span>
-        </button>
-      </form>
+      <button type="submit" id="submit" class="submit">
+        <span class="spinner" aria-hidden="true"></span>
+        <span id="submit-label">Sign in</span>
+      </button>
+    </form>
 
-      <p class="legal">
-        <strong>Internal research only.</strong> Michael is not a lawyer and does
-        not give legal advice. Every output requires review by an admitted
-        Australian legal practitioner before use.
-      </p>
-    </div>
+    <p class="legal">
+      <strong>Internal research only.</strong> Michael is not a lawyer and does
+      not give legal advice. Every output requires review by an admitted
+      Australian legal practitioner before use.
+    </p>
   </section>
 
 </main>
@@ -322,8 +358,7 @@ function clearError() {
 
 [email, password].forEach((el) => el.addEventListener("input", clearError));
 
-/* Reveal. aria-pressed carries the state for assistive technology; the label
-   says what the next press does. */
+/* aria-pressed carries the state; the label says what the next press does. */
 reveal.addEventListener("click", () => {
   const shown = password.type === "text";
   password.type = shown ? "password" : "text";
@@ -332,7 +367,7 @@ reveal.addEventListener("click", () => {
   password.focus();
 });
 
-/* Caps Lock is the single most common cause of a login that "should" work.
+/* Caps Lock is the most common cause of a login that "should" work.
    getModifierState is unavailable on some soft keyboards, hence the guard. */
 function capsCheck(event) {
   const on = typeof event.getModifierState === "function" && event.getModifierState("CapsLock");

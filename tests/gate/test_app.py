@@ -287,8 +287,17 @@ def test_the_real_login_page_keeps_the_palm_vision_brand_rules() -> None:
     left to memory. Source: the design system's SKILL.md."""
     page = (Path(__file__).resolve().parents[2] / "web" / "login.html").read_text(encoding="utf-8")
 
-    # "No gradients, no glassmorphism, no backdrop blur, no neon."
-    for banned in ("linear-gradient", "radial-gradient", "backdrop-filter", "blur("):
+    # NOTE ON WHAT THIS NO LONGER ASSERTS. Until 2026-09-23 this also required
+    # the absence of `backdrop-filter` and `blur(`. The user asked for a glass
+    # treatment after the conflict with the brand's do-not-violate list was put
+    # to them twice, so that is a decision they made rather than something that
+    # slipped through, and the assertion was narrowed rather than deleted. The
+    # rest of the list still binds and is still checked below. If the brand is
+    # ever reasserted over the material, restore the two banned strings here.
+
+    # "No gradients." Never suspended: a gradient is a different thing from a
+    # translucent material, and nothing on this page needs one.
+    for banned in ("linear-gradient", "radial-gradient"):
         assert banned not in page, f"{banned} violates a Palm Vision do-not-violate rule"
 
     # "Gold is a highlighter, never a fill." The primary action is green; a
@@ -300,10 +309,16 @@ def test_the_real_login_page_keeps_the_palm_vision_brand_rules() -> None:
     # "Black is for the company NAME only." Body copy is #333.
     assert "color:#000" not in page.replace(" ", "")
 
-    # Inputs must stay at 16px or iOS zooms the viewport on focus, which on a
-    # split-screen layout throws the reader into a half-scrolled page.
-    field_rule = page.split(".field input{", 1)[1].split("}", 1)[0]
+    # Inputs must stay at 16px or iOS zooms the viewport on focus, which throws
+    # the reader into a half-scrolled page mid sign-in.
+    field_rule = page.split(".fieldrow input{", 1)[1].split("}", 1)[0]
     assert "font-size:16px" in field_rule.replace(" ", "")
+
+    # A translucent surface that ignores the reader's transparency and contrast
+    # settings is the failure mode glass actually has, so both are required
+    # once blur is in use.
+    assert "prefers-reduced-transparency" in page
+    assert "prefers-contrast" in page
 
 
 def test_the_chat_page_keeps_its_answer_states_visually_distinct() -> None:
