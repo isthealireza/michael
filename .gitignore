@@ -30,3 +30,7 @@ backups/
 
 # Orchestrator transient inbox dumps
 .orca/*.json
+
+# Subagent-driven-development scratch: ledgers, briefs, review packages.
+# Git history is the real record; this is working state for one plan run.
+.superpowers/
