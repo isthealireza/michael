@@ -249,9 +249,7 @@ def _run(args: argparse.Namespace) -> int:
                     # produces on purpose, and adding either there would swallow
                     # genuine bugs across every other subcommand.
                     try:
-                        created = gate_users.create_user(
-                            args.email, args.name, password, args.role
-                        )
+                        created = gate_users.create_user(args.email, args.name, password, args.role)
                     except ValueError as exc:
                         print(str(exc), file=sys.stderr)
                         return 1

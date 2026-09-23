@@ -150,8 +150,6 @@ def recent_attempts(account_key: str, address: str) -> tuple[list[Attempt], list
         if str(r["account_key"]) == account_key.lower()
     ]
     by_address = [
-        Attempt(at=r["at"], outcome=str(r["outcome"]))
-        for r in rows
-        if str(r["address"]) == address
+        Attempt(at=r["at"], outcome=str(r["outcome"])) for r in rows if str(r["address"]) == address
     ]
     return account, by_address

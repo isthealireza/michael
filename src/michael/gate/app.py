@@ -306,10 +306,10 @@ def _render_admin(accounts: list[User]) -> str:
             f"<td>{_esc(account.display_name)}</td>"
             f'<td><span class="role role-{_esc(account.role)}">{_esc(account.role)}</span></td>'
             f'<td><span class="state {"off" if disabled else "on"}">'
-            f'{"disabled" if disabled else "active"}</span></td>'
+            f"{'disabled' if disabled else 'active'}</span></td>"
             f'<td class="act"><button type="button" data-email="{_esc(account.email)}" '
             f'data-enable="{"1" if disabled else "0"}">'
-            f'{"Re-enable" if disabled else "Disable"}</button></td>'
+            f"{'Re-enable' if disabled else 'Disable'}</button></td>"
             "</tr>"
         )
     body = "".join(rows) or '<tr><td colspan="5" class="none">No accounts yet.</td></tr>'
@@ -375,9 +375,7 @@ def build_app(*, secret: str, upstream: UpstreamConfig, web_root: Path) -> Starl
         email = str(body.get("email", "")).strip()
         enabled = body.get("enabled")
         if not email or not isinstance(enabled, bool):
-            return JSONResponse(
-                {"detail": "email and enabled are required"}, status_code=400
-            )
+            return JSONResponse({"detail": "email and enabled are required"}, status_code=400)
 
         target = await run_in_threadpool(user_store.find_by_email, email)
         if target is None:
@@ -450,9 +448,7 @@ def build_app(*, secret: str, upstream: UpstreamConfig, web_root: Path) -> Starl
         # the cookie actually set can fail to clear it in some browsers —
         # mismatched attributes describe a different cookie, not an
         # overwrite of the existing one.
-        response.delete_cookie(
-            COOKIE_NAME, path="/", secure=True, httponly=True, samesite="strict"
-        )
+        response.delete_cookie(COOKIE_NAME, path="/", secure=True, httponly=True, samesite="strict")
         return response
 
     async def health(request: Request) -> Response:
@@ -493,9 +489,7 @@ def build_app(*, secret: str, upstream: UpstreamConfig, web_root: Path) -> Starl
                 # bug in the gate. Fail closed with no detail rather than let
                 # the exception escape into the ASGI server and log a full
                 # traceback per attempt.
-                logger.warning(
-                    "could not obtain an upstream ticket for user=%s", payload.user_id
-                )
+                logger.warning("could not obtain an upstream ticket for user=%s", payload.user_id)
                 await socket.close(code=4503)
                 return
 
@@ -506,9 +500,7 @@ def build_app(*, secret: str, upstream: UpstreamConfig, web_root: Path) -> Starl
             try:
                 up = await upstream_cm.__aenter__()
             except Exception:
-                logger.warning(
-                    "could not reach the upstream gateway for user=%s", payload.user_id
-                )
+                logger.warning("could not reach the upstream gateway for user=%s", payload.user_id)
                 await socket.close(code=4503)
                 return
 

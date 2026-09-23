@@ -40,8 +40,7 @@ class UpstreamConfig:
 def _normalised_base(config: UpstreamConfig) -> str:
     if not config.base_url.startswith(("http://", "https://")):
         raise ValueError(
-            f"upstream base_url must start with http:// or https://, "
-            f"got {config.base_url!r}"
+            f"upstream base_url must start with http:// or https://, got {config.base_url!r}"
         )
     return config.base_url.rstrip("/")
 
