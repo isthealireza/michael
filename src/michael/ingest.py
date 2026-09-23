@@ -36,8 +36,18 @@ from michael.sources import SourceRefused, check_url, fetch, host_of, log_attemp
 #: suffixes ("15", "15A", "23AB"), followed by a heading on the same line.
 #: Deliberately conservative - a line that does not look like this stays inside
 #: the preceding section rather than starting a spurious one.
+#: The heading capture has no upper bound on length. It used to be capped at
+#: 150 characters after the first ("[^\n]{0,150}"), but the cap did not make
+#: long headings safer to reject - the "$" anchor under re.MULTILINE already
+#: requires the WHOLE line to match, so a heading-shaped line is bounded by
+#: its own newline whatever its length. All the cap did was make the pattern
+#: fail to match a genuine heading whenever the heading text itself ran past
+#: 150 characters (a long title is common in WA regulations and Fair Work
+#: Act divisions), and a heading the pattern does not match is not "kept as
+#: a heading" - it is silently absorbed into the body of the PREVIOUS
+#: section, with no warning. (W1-S2.)
 SECTION_RE = re.compile(
-    r"^[ \t]*(?P<number>\d{1,4}[A-Z]{0,3})[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]{0,150})$",
+    r"^[ \t]*(?P<number>\d{1,4}[A-Z]{0,3})[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]*)$",
     re.MULTILINE,
 )
 
@@ -67,6 +77,41 @@ HEADINGS_ONLY_MIN_PROVISIONS = 3
 #:     1990 (WA) is the closest real case).
 #: 1.5 sits with margin below both real cases and above the fixture.
 HEADINGS_ONLY_MAX_LENGTH_RATIO = 1.5
+
+#: A provision needs at least this many subsection markers, not just one, to
+#: count as showing real operative structure. A lone "(1)" - a footnote
+#: marker, a list label, any decorative digit in parentheses - satisfies
+#: SUBSECTION_MARKER_RE on its own and, before this fix, that single match
+#: anywhere in the document was enough to disable detect_headings_only for
+#: the whole thing. Real subsections run in sequence within one provision -
+#: "(1)" is followed by "(2)" - so requiring two catches that shape without
+#: punishing genuine structure, which is never a single isolated marker.
+MIN_MARKERS_PER_PROVISION = 2
+
+#: How many provisions must clear HEADINGS_ONLY_MAX_LENGTH_RATIO (measured
+#: against the document's shortest provision) before the length spread counts
+#: as genuine variation. One is not enough: a stub set generated from a
+#: template is uniform except for whichever single provision was padded out -
+#: by an attacker or by accident - and before this fix that one outlier alone
+#: pushed max/min past the ratio and passed the whole document. Requiring a
+#: second long provision is what makes the check resistant to a single
+#: outlier at either end.
+HEADINGS_ONLY_MIN_LONG_PROVISIONS = 2
+
+#: The tightened, "more than one long provision" length check only applies
+#: from this many provisions up. Below it, the plain max/min ratio - the
+#: original, calibrated check - applies instead. Measured against the full
+#: 205-document production corpus: applying HEADINGS_ONLY_MIN_LONG_PROVISIONS
+#: at the floor of HEADINGS_ONLY_MIN_PROVISIONS (3) produced two real false
+#: positives - Corporations (Taxing) Act 1990 (WA) and a Town Planning
+#: by-law - because a genuine three-provision Act is overwhelmingly "short
+#: title, commencement, one substantive section": exactly one long provision,
+#: by its own shape, indistinguishable at that size from the attack this
+#: tightening targets. 5 is the smallest size at which "several short stubs
+#: plus one padded one" (the attack) and "several genuinely-varied real
+#: sections" stop looking the same on this measure; re-running the same
+#: 205-document measurement at 5 found no false positives.
+HEADINGS_ONLY_PROPORTIONAL_MIN_PROVISIONS = 5
 
 #: Lines that carry no operative text: structural headings, page numbers, blanks.
 STRUCTURAL_PREFIXES = (
@@ -703,19 +748,39 @@ def detect_headings_only(provisions: list[Provision]) -> str | None:
     genuinely short real sections (a one-sentence "Short title" clause is
     common and legitimate). Two structural signals instead, both required:
 
-    1. **Zero subsection structure across the whole document.** Not "few" -
-       many short, genuine WA Acts have entire sections written as a single
-       flowing paragraph with no ``(1)``/``(2)`` markers at all (pre-1900
-       Imperial Acts adopted into WA law, one-clause validation Acts). A
-       document-wide *zero* is the signal, not a proportion below some
-       threshold - a false positive here loses law, which is worse than
-       missing a defect.
-    2. **Suspiciously uniform provision lengths.** A real document without
-       subsection markers still has a short title next to a substantive
-       section - lengths vary by several times over. A stub set generated
-       from a template does not: every provision comes out close to the same
-       length. See :data:`HEADINGS_ONLY_MAX_LENGTH_RATIO` for how this was
-       calibrated against the full production corpus.
+    1. **No provision with genuine subsection structure, anywhere in the
+       document.** Not "few" - many short, genuine WA Acts have entire
+       sections written as a single flowing paragraph with no
+       ``(1)``/``(2)`` markers at all (pre-1900 Imperial Acts adopted into WA
+       law, one-clause validation Acts). "Genuine" means at least
+       :data:`MIN_MARKERS_PER_PROVISION` markers in the SAME provision, not
+       just one anywhere in the document. A single ``(1)`` proves nothing on
+       its own - it is exactly what a footnote marker or a list label looks
+       like - but real subsections come in a run: ``(1)`` is followed by
+       ``(2)``, and so on, inside one provision's own text. Before this
+       fix, any single marker anywhere disabled the check for the WHOLE
+       document, which made the defect reachable by accident: one
+       decorative "(1)" anywhere in a headings-only page was enough to wave
+       it through. (W1-S5.)
+    2. **More than one disproportionately long provision - once there are
+       enough provisions for that to be a meaningful question.** A stub set
+       generated from a template is uniform except for whatever one
+       provision an attacker (or a copy-paste accident) padded out, so
+       requiring at least two long provisions, not merely a high max/min
+       ratio, is what makes this resistant to that single outlier. Before
+       this fix, one disproportionately long stub alone pushed the ratio
+       past :data:`HEADINGS_ONLY_MAX_LENGTH_RATIO` and passed the whole
+       document. (W1-S4.) This tightened check applies only from
+       :data:`HEADINGS_ONLY_PROPORTIONAL_MIN_PROVISIONS` provisions up:
+       measured against the full production corpus, applying it at the
+       floor of 3 flagged two real documents outright - Corporations
+       (Taxing) Act 1990 (WA) (ratio 2.72, exactly the case
+       :data:`HEADINGS_ONLY_MAX_LENGTH_RATIO` was calibrated against) and a
+       Town Planning by-law - because a genuine three-provision Act is
+       overwhelmingly "short title, commencement, ONE substantive section",
+       which has only one long provision by its very shape and is not
+       distinguishable from the attack at that size. Below the floor, the
+       plain max/min ratio - the original, calibrated check - still applies.
 
     Both signals must hold, so a document is never flagged on either alone:
     a real short Act (signal 1 true, signal 2 false because it still varies)
@@ -728,19 +793,38 @@ def detect_headings_only(provisions: list[Provision]) -> str | None:
     """
     if len(provisions) < HEADINGS_ONLY_MIN_PROVISIONS:
         return None
-    with_marker = sum(1 for p in provisions if SUBSECTION_MARKER_RE.search(p.text))
+    with_marker = sum(
+        1
+        for p in provisions
+        if len(SUBSECTION_MARKER_RE.findall(p.text)) >= MIN_MARKERS_PER_PROVISION
+    )
     if with_marker > 0:
         return None
     lengths = [len(p.text) for p in provisions]
-    spread = max(lengths) / min(lengths)
-    if spread >= HEADINGS_ONLY_MAX_LENGTH_RATIO:
-        return None
+    minimum = min(lengths)
+    if len(lengths) >= HEADINGS_ONLY_PROPORTIONAL_MIN_PROVISIONS:
+        long_provisions = sum(
+            1 for length in lengths if length / minimum >= HEADINGS_ONLY_MAX_LENGTH_RATIO
+        )
+        if long_provisions >= HEADINGS_ONLY_MIN_LONG_PROVISIONS:
+            return None
+        variation_detail = (
+            f"and only {long_provisions} provision(s) reaching the "
+            f"{HEADINGS_ONLY_MAX_LENGTH_RATIO} floor for genuine variation, below "
+            f"the {HEADINGS_ONLY_MIN_LONG_PROVISIONS} needed"
+        )
+    else:
+        if max(lengths) / minimum >= HEADINGS_ONLY_MAX_LENGTH_RATIO:
+            return None
+        variation_detail = (
+            f"below the {HEADINGS_ONLY_MAX_LENGTH_RATIO} floor for genuine variation"
+        )
+    spread = max(lengths) / minimum
     return (
-        f"{len(provisions)} provisions, none containing a (1)/(2) subsection "
-        f"marker, with body lengths ranging only {min(lengths)}-{max(lengths)} "
-        f"chars (ratio {spread:.2f}, below the {HEADINGS_ONLY_MAX_LENGTH_RATIO} "
-        "floor for genuine variation) - reads as headings with summary text, "
-        "not operative provisions."
+        f"{len(provisions)} provisions, none with {MIN_MARKERS_PER_PROVISION}+ "
+        "subsection markers in one provision, with body lengths ranging only "
+        f"{minimum}-{max(lengths)} chars (ratio {spread:.2f}, {variation_detail}) - "
+        "reads as headings with summary text, not operative provisions."
     )
 
 
@@ -975,7 +1059,19 @@ def extract_text(body: bytes, *, content_type: str = "", origin: str = "") -> st
         return text
 
     try:
-        text = body.decode("utf-8")
+        # utf-8-sig, not utf-8: a Windows-authored source can carry a UTF-8
+        # BOM (EF BB BF) at byte 0. Decoded as plain utf-8 that BOM survives
+        # into the text as U+FEFF, sitting in front of the document's own
+        # first character - which is usually the first section heading.
+        # SECTION_RE anchors "^" at the true start of the line, so a BOM
+        # there means the first heading never matches at all: find_body_start
+        # then finds the SECOND heading as if it were the first, and every
+        # line up to it - including the real section 1, heading and all -
+        # is cut away as if it were front matter. utf-8-sig strips a leading
+        # BOM if present and decodes identically to utf-8 if it is not, so
+        # this is a strict improvement with no other document affected.
+        # (W1-S1.)
+        text = body.decode("utf-8-sig")
     except UnicodeDecodeError as exc:
         raise IngestionError(
             f"{where}: body is neither DOCX nor UTF-8 text. Convert it before ingesting."
@@ -1102,11 +1198,12 @@ def seed_from_corpus(
     with writable() as conn:
         for record in normalise_corpus_records(stream, wanted, wanted_types):
             body = str(record["text"]).encode("utf-8")
-            results.append(
-                ingest_document(
+            citation = str(record["citation"])
+            try:
+                result = ingest_document(
                     jurisdiction=str(record["jurisdiction"]),
                     title=str(record["title"]),
-                    citation=str(record["citation"]),
+                    citation=citation,
                     source_url=str(record["source_url"]),
                     snapshot_date=record["snapshot_date"],  # type: ignore[arg-type]
                     sha256=hashlib.sha256(body).hexdigest(),
@@ -1114,7 +1211,21 @@ def seed_from_corpus(
                     text=str(record["text"]),
                     conn=conn,
                 )
-            )
+            except IngestionError as exc:
+                # A refusal - headings-only, or no text to ingest - is raised
+                # by ingest_document itself, before it ever writes a row for
+                # THIS document, so the shared transaction carries no partial
+                # state to roll back. Before this fix, letting the exception
+                # propagate out of the loop meant one refused document (a
+                # single headings-only page found anywhere in a multi-hundred
+                # document batch) aborted the "with writable()" block without
+                # a commit, discarding every other document already ingested
+                # in that same run. Refusing one document must not lose the
+                # rest, so this is caught and logged, and the batch continues.
+                # (W1-S3.)
+                _log_refusal(url=str(record["source_url"]), reason=f"{citation}: {exc}")
+                continue
+            results.append(result)
             if limit is not None and len(results) >= limit:
                 break
         conn.commit()

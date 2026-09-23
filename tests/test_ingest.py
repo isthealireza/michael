@@ -7,10 +7,12 @@ never open a socket - to prove the audit trail without needing Postgres.
 from __future__ import annotations
 
 import json
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 from datetime import UTC, date, datetime
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -22,6 +24,7 @@ from michael.ingest import (
     _opening_schedule,
     _validate,
     detect_headings_only,
+    extract_text,
     normalise_corpus_records,
     schedule_spans,
     snapshot_date_of,
@@ -1000,8 +1003,8 @@ imposed and paid under regulations made under the Curriculum Council Act 1997.
 
 
 def test_a_document_with_subsection_markers_anywhere_is_never_flagged() -> None:
-    """One provision with real subsection structure is enough to clear the
-    whole document - the rule only fires on a document-wide zero."""
+    """One provision with real subsection structure - a run of two or more
+    markers in the SAME provision - is enough to clear the whole document."""
     provisions = [
         Provision(section_number="1", heading="A", text="1 A\nShort.", char_start=0, char_end=10),
         Provision(section_number="2", heading="B", text="2 B\nShort.", char_start=10, char_end=20),
@@ -1422,3 +1425,163 @@ def test_a_bare_notes_line_does_not_suppress_the_document() -> None:
     )
     numbers = [p.section_number for p in ingest.split_sections(text)]
     assert numbers == ["1", "2"], numbers
+
+
+# --- Round 2: W1-S1 through W1-S5 -----------------------------------------
+
+
+def test_a_leading_utf8_bom_does_not_delete_the_first_section() -> None:
+    """A BOM (EF BB BF) at byte 0, decoded naively, sits in front of the
+    document's first character as U+FEFF. SECTION_RE's "^" anchor does not
+    match through it, so the first heading fails to match at all and
+    find_body_start treats the SECOND heading as if it were the first,
+    cutting the real section 1 - heading and all - away as front matter.
+    Every Windows-authored source can carry a BOM this way. (W1-S1.)
+    """
+    body = b"\xef\xbb\xbf" + SAMPLE.encode("utf-8")
+    text = extract_text(body)
+    numbers = [p.section_number for p in split_sections(text)]
+    assert numbers == ["1", "15A", "23AB"], numbers
+
+
+def test_a_heading_longer_than_the_old_150_char_cap_is_still_split() -> None:
+    """A heading whose own text runs past 150 characters used to fail
+    SECTION_RE outright - the pattern required the WHOLE line to match, so a
+    longer heading was not truncated, it simply never matched, and the
+    section it belonged to was silently absorbed into the PREVIOUS
+    provision's body. (W1-S2.)
+    """
+    long_heading = "A" + "b" * 160  # 161 chars, past the old 151-char cap
+    text = (
+        "1 Short title\n"
+        "This Act may be cited as the Long Heading Act 2000.\n"
+        f"2 {long_heading}\n"
+        "This section has a very long heading indeed.\n"
+    )
+    provisions = {p.section_number: p for p in split_sections(text)}
+    assert "2" in provisions, "the long heading was absorbed into the previous section"
+    assert provisions["2"].heading == long_heading
+    assert "Long Heading Act 2000" not in provisions["2"].text
+
+
+def test_a_single_decorative_marker_does_not_defeat_headings_only_detection() -> None:
+    """One "(1)" anywhere used to satisfy the marker test and disable the
+    detector for the WHOLE document - exactly what a footnote marker or a
+    list label looks like, not evidence of real subsection structure.
+    (W1-S5.)
+    """
+    text = (
+        "26WA Guide to this Part\n"
+        "This Part sets out a scheme for notification of eligible data "
+        "breaches under this Act. (1)\n"
+        "\n"
+        "26WB Entity\n"
+        "For the purposes of this Part, entity includes a person who is a "
+        "file number recipient.\n"
+        "\n"
+        "26WC Deemed holding of information\n"
+        "See the compiled version of this Act for the full text of this "
+        "provision.\n"
+    )
+    provisions = split_sections(text)
+    assert len(provisions) == 3
+    markers = sum(1 for p in provisions if "(1)" in p.text)
+    assert markers == 1, "fixture must carry exactly one marker"
+    reason = detect_headings_only(provisions)
+    assert reason is not None, "a single decorative marker must not exempt a headings-only page"
+
+
+def test_a_single_long_stub_does_not_defeat_headings_only_detection() -> None:
+    """One disproportionately long stub used to push max/min past the
+    uniformity ratio and pass the whole document - the uniformity check
+    needs MORE THAN ONE provision to break the pattern, not just one.
+    (W1-S4.)
+    """
+    text = (
+        "1 Guide to Part A\n"
+        "This Part sets out preliminary matters relevant to the scheme in general terms.\n"
+        "\n"
+        "2 Guide to Part B\n"
+        "This Part sets out notification matters relevant to the scheme in general terms.\n"
+        "\n"
+        "3 Guide to Part C\n"
+        "This Part sets out enforcement matters relevant to the scheme in general terms.\n"
+        "\n"
+        "4 Guide to Part D\n"
+        "This Part sets out review matters relevant to the scheme in general terms overall.\n"
+        "\n"
+        "5 Guide to Part E\n"
+        "This Part sets out, at considerable and repetitive length so as to be "
+        "disproportionately long compared with every other guide provision in this "
+        "document, a general summary of the miscellaneous matters that the scheme "
+        "addresses without actually stating any operative rule at all, merely "
+        "restating in different words that this Part exists and that its heading "
+        "describes its general subject matter in the broadest possible terms.\n"
+    )
+    provisions = split_sections(text)
+    assert len(provisions) == 5
+    assert all("(1)" not in p.text for p in provisions)
+    lengths = [len(p.text) for p in provisions]
+    assert max(lengths) / min(lengths) >= ingest.HEADINGS_ONLY_MAX_LENGTH_RATIO, (
+        "fixture must clear the old, single-pair ratio on its own"
+    )
+    reason = detect_headings_only(provisions)
+    assert reason is not None, "a single padded-out stub must not exempt a headings-only page"
+
+
+def test_seed_from_corpus_does_not_lose_other_documents_when_one_is_refused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A single headings-only refusal, mid-stream, must not roll back the batch.
+
+    Before this fix, every document in a `seed_from_corpus` run shared one
+    transaction, and an `IngestionError` (a headings-only refusal, or no text
+    to ingest) was left to propagate out of the loop: the
+    `with writable() as conn:` block then exited on the exception without
+    ever reaching `conn.commit()`, discarding every document already ingested
+    earlier in that same run - however many there were. (W1-S3.)
+    """
+    _stub_database(monkeypatch)
+
+    good_act = "1. Short title\nThis Act may be cited as the {name}.\n"
+
+    class _FakeStream:
+        def __iter__(self) -> Iterator[dict[str, object]]:
+            return iter(
+                [
+                    {
+                        "jurisdiction": "wa",
+                        "type": "primary_legislation",
+                        "text": good_act.format(name="Alpha Act 2000"),
+                        "citation": "Alpha Act 2000 (WA)",
+                        "url": "https://legislation.wa.gov.au/alpha",
+                        "date": "2020-01-01",
+                    },
+                    {
+                        "jurisdiction": "wa",
+                        "type": "primary_legislation",
+                        "text": REALISTIC_HEADINGS_ONLY,
+                        "citation": "Headings Only Act 2000 (WA)",
+                        "url": "https://legislation.wa.gov.au/headings-only",
+                        "date": "2020-01-01",
+                    },
+                    {
+                        "jurisdiction": "commonwealth",
+                        "type": "primary_legislation",
+                        "text": good_act.format(name="Charlie Act 2000"),
+                        "citation": "Charlie Act 2000 (Cth)",
+                        "url": "https://legislation.gov.au/charlie",
+                        "date": "2020-01-01",
+                    },
+                ]
+            )
+
+    fake_datasets_module = SimpleNamespace(load_dataset=lambda *a, **kw: _FakeStream())
+    monkeypatch.setitem(sys.modules, "datasets", fake_datasets_module)
+
+    results = ingest.seed_from_corpus(jurisdictions=("wa", "commonwealth"))
+
+    citations = [r.citation for r in results]
+    assert citations == ["Alpha Act 2000 (WA)", "Charlie Act 2000 (Cth)"], (
+        f"the refusal in the middle of the batch must not lose the documents around it: {citations}"
+    )
