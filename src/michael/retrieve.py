@@ -261,7 +261,10 @@ SELECT p.id AS provision_id, p.document_id, p.section_number, p.heading, p.text,
        d.sha256, d.doc_type
   FROM provisions p
   JOIN documents d ON d.id = p.document_id
- WHERE upper(p.section_number) = upper(%(section)s)
+ WHERE (
+         upper(p.section_number) = upper(%(section)s)
+         OR (%(schedule_sibling)s::text IS NOT NULL AND p.section_number ~* %(schedule_sibling)s)
+       )
    AND (%(act_phrase)s::text IS NULL OR d.citation ILIKE '%%' || %(act_phrase)s || '%%')
  ORDER BY d.citation, p.heading, p.id
 """
@@ -277,25 +280,48 @@ def _section_lookup(query: str, *, routing: Routing) -> RetrievalResult | None:
     The hybrid path still applies its own threshold and can still say NOT
     COVERED correctly if the section genuinely is not in the corpus.
 
+    A bare number ("47A") and a Schedule clause sharing that same number
+    ("Sch 1 cl 47A") are different strings in ``section_number``, but they
+    are both real, distinct candidates a reader asking for "s 47A" could
+    mean - ``ingest.py`` numbers a Schedule clause from the enclosing
+    Schedule, not the Act, precisely so that collision is common, not rare
+    (measured: 329 plain-numbered provisions across 35 documents share a bare
+    number with a Schedule clause of the same document). A lookup keyed only
+    on the exact string a user happened to type therefore either hides a real
+    second meaning behind a false ``total_matches: 1`` (W2-S2), or - when an
+    Act name narrows the search to the one Act whose "s 47A" is filed as a
+    Schedule clause and nothing else - finds nothing at all even though the
+    provision is right there under its Schedule-clause name (W2-S1). So a
+    bare-number query also matches any ``Sch N cl <number>`` sibling, and a
+    Schedule-clause query (already a specific, unambiguous string) does not
+    grow this second arm - there is no bare-number sibling to a citation that
+    already names its Schedule.
+
     A pinpoint that resolves to more than one provision (a known corpus
     defect: duplicate-pinpoint groups, tracked separately and not fixable
-    here without a re-ingest) is returned as **every** matching row, never
-    truncated to ``top_k`` - each carries its own heading and text, so the
-    caller can tell them apart. Silently returning only the first few, or
-    only ``top_k`` of them, would be exactly the kind of guess this project
-    does not make: an identifier lookup that hides how many rows share the
-    identifier is no more honest than one that hides the identifier did not
-    match at all. ``total_matches`` on the result records the true count so a
-    caller can render "N provisions share this pinpoint" even though nothing
-    here is cut.
+    here without a re-ingest; now also including the case above) is returned
+    as **every** matching row, never truncated to ``top_k`` - each carries its
+    own heading and text, so the caller can tell them apart. Silently
+    returning only the first few, or only ``top_k`` of them, would be exactly
+    the kind of guess this project does not make: an identifier lookup that
+    hides how many rows share the identifier is no more honest than one that
+    hides the identifier did not match at all. ``total_matches`` on the
+    result records the true count so a caller can render "N provisions share
+    this pinpoint" even though nothing here is cut.
     """
     section = extract_section_number(query)
     if section is None:
         return None
     act_phrase = extract_act_phrase(query)
+    schedule_sibling = None
+    if not section.upper().startswith("SCH "):
+        schedule_sibling = rf"^Sch \S+ cl {re.escape(section)}$"
 
     with readonly() as conn, conn.cursor() as cur:
-        cur.execute(SECTION_LOOKUP_SQL, {"section": section, "act_phrase": act_phrase})
+        cur.execute(
+            SECTION_LOOKUP_SQL,
+            {"section": section, "act_phrase": act_phrase, "schedule_sibling": schedule_sibling},
+        )
         rows = cur.fetchall()
 
     if not rows:

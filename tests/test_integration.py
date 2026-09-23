@@ -51,6 +51,31 @@ UNRELATED_TEXT = """FIXTURE MARINE NAVIGATION ACT 2000
     and must record the hours during which the light was shown.
 """
 
+# W2-S1/W2-S2: a Schedule clause sharing its bare number with the Act's own
+# section 200 above (clause 200 - the shape that hid a real second provision
+# behind a false total_matches:1, W2-S2), plus one with a number the Act uses
+# nowhere else (clause 82 - the shape a direct lookup narrowed to this Act's
+# name could not find at all, because the Schedule clause is stored as
+# "Sch 1 cl 82", not "82", W2-S1). A dedicated citation, not
+# FIXTURE_TEXT's, because the persistent local test database carries
+# leftover documents from earlier sessions under that citation and this test
+# needs an exact, known count.
+SCHEDULE_COLLISION_TEXT = """FIXTURE SCHEDULE COLLISION ACT 2026
+
+200 Minimum standards
+    (1) The minimum standards in this Part apply to a casual worker in the
+    same way as they apply to any other worker, except as expressly provided.
+
+Schedule 1—Transitional provisions
+
+200 Application of amendments
+    This clause shares its bare number with section 200 above and is a real,
+    distinct provision, not a duplicate.
+
+82 Savings
+    This clause's number is not used anywhere else in this Act.
+"""
+
 
 def fake_embedding(text: str) -> list[float]:
     """Deterministic bag-of-words hash, L2-normalised.
@@ -101,6 +126,73 @@ def michael_db(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
         )
     schema.refresh_corpus_stats()
     yield
+
+
+@pytest.fixture
+def michael_db_with_schedule_collision(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """Same corpus as :func:`michael_db`, plus a Schedule clause colliding with
+    a plain section number - see :data:`SCHEDULE_COLLISION_TEXT`."""
+    from michael import config, embeddings, ingest, schema
+
+    monkeypatch.setenv("EMBEDDING_DIM", str(DIM))
+    monkeypatch.setenv("EMBEDDING_API_KEY", "stubbed-for-integration-tests")
+    config.settings.cache_clear()
+
+    try:
+        with psycopg.connect(config.settings().database_url, connect_timeout=3):
+            pass
+    except psycopg.Error as exc:
+        pytest.skip(f"michael-postgres is not reachable: {exc}")
+
+    monkeypatch.setattr(embeddings, "embed", lambda texts, **kw: [fake_embedding(t) for t in texts])
+    monkeypatch.setattr(ingest, "embed", lambda texts, **kw: [fake_embedding(t) for t in texts])
+    monkeypatch.setattr("michael.retrieve.embed_one", lambda text, **kw: fake_embedding(text))
+
+    schema.apply_schema()
+    ingest.ingest_document(
+        jurisdiction="commonwealth",
+        title="Fixture Schedule Collision Act 2026 (Cth-Test)",
+        citation="Fixture Schedule Collision Act 2026 (Cth-Test)",
+        source_url="https://www.legislation.gov.au/fixture",
+        snapshot_date=date(2026, 7, 1),
+        sha256=hashlib.sha256(SCHEDULE_COLLISION_TEXT.encode("utf-8")).hexdigest(),
+        doc_type="act",
+        text=SCHEDULE_COLLISION_TEXT,
+    )
+    schema.refresh_corpus_stats()
+    yield
+
+
+def test_a_bare_number_lookup_also_finds_its_schedule_clause_sibling(
+    michael_db_with_schedule_collision: None,
+) -> None:
+    """W2-S2: a bare-number identifier lookup must not report a false
+    total_matches:1 when a Schedule clause of the same document shares that
+    number - both are real, distinct provisions."""
+    from michael import tools
+
+    payload = tools.search_provisions("s 200 of the Fixture Schedule Collision Act")
+    assert payload["identifier_lookup"] is True
+    assert payload["total_matches"] == 2
+    assert payload["ambiguous_pinpoint"] is True
+    section_numbers = {p["section_number"] for p in payload["provisions"]}
+    assert section_numbers == {"200", "Sch 1 cl 200"}
+
+
+def test_an_act_qualified_bare_number_resolves_to_its_schedule_clause(
+    michael_db_with_schedule_collision: None,
+) -> None:
+    """W2-S1: "s 82 of <Act>" must resolve even though this Act has no plain
+    section 82 - only a Schedule clause carrying that number. Previously the
+    exact-string lookup, narrowed by the Act name, matched nothing and fell
+    through to an unreliable hybrid-search guess."""
+    from michael import retrieve
+
+    result = retrieve.search("s 82 of the Fixture Schedule Collision Act")
+    assert result.covered
+    assert result.identifier_lookup
+    assert result.total_matches == 1
+    assert result.provisions[0].section_number == "Sch 1 cl 82"
 
 
 def test_a_matching_query_returns_provisions_with_full_metadata(michael_db: None) -> None:
