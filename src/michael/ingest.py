@@ -461,7 +461,18 @@ APPARATUS_OPENERS = re.compile(
     # 1988 (WA) lists a bare "Notes" line in its contents immediately before
     # the body, and matching that suppressed the entire document, all eight
     # provisions of it.
-    r"^(?:column\s+1\b|notes?\b[^\n]*for this section\s*:|notes?[ \t]*:[ \t]*$)",
+    # The noun is not always "section". Offshore Minerals Act 2003 (WA) heads
+    # most of its note blocks "Notes for this subsection:" and Supreme Court
+    # (Fees) Regulations 2002 (WA) heads each fee row's "Notes for this item:".
+    # Hardcoding "section" left both unrecognised - 79 excess pinpoints
+    # between them, the two largest remaining groups in the corpus - so the
+    # noun is now any single word. The colon is what still separates a note
+    # opener from a contents row, and it carries more weight than ever now
+    # that the noun no longer narrows the match: a bare "Notes" line in
+    # Chattel Securities Regulations 1988 (WA) sits in its contents block
+    # immediately before the body, and matching that suppressed the entire
+    # document, all eight provisions of it.
+    r"^(?:column\s+1\b|notes?\b[^\n]*for this \w+[ \t]*:|notes?[ \t]*:[ \t]*$)",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -757,12 +768,20 @@ def split_sections(text: str) -> list[Provision]:
         # text, and "enclosing" below is a strict "<" on position.
         schedules = [(-1, opening_schedule), *schedules]
     apparatus = apparatus_rows(text, matches)
+
+    # Which heading candidates survive, decided BEFORE any boundary is drawn.
+    # A row rejected here is not a provision, and a provision must therefore
+    # run THROUGH it to the next surviving heading. Ending a provision at the
+    # next candidate instead - which is what this did - left every rejected
+    # row's text in no provision at all: apparatus_rows' own docstring says
+    # such a row "is part of a real section and stays in that section's text",
+    # and it did not. Measured on Supreme Court (Fees) Regulations 2002 (WA),
+    # whose Schedule 1 is one long run of fee items and their note blocks:
+    # 32,362 characters - the whole fee schedule - sat past the last provision
+    # in no provision at all, unreachable by any search.
+    kept: list[int] = []
     for index, match in enumerate(matches):
         start = match.start()
-        end = matches[index + 1].start() if index + 1 < len(matches) else len(text)
-        body = text[start:end]
-        if len(body.strip()) < MIN_PROVISION_CHARS:
-            continue
         # Belt and braces: a contents entry anywhere - a second contents table,
         # a per-Part list - is never stored as a provision.
         previous_line, next_line = _adjacent_lines(text, start)
@@ -776,6 +795,15 @@ def split_sections(text: str) -> list[Provision]:
         # An item of an in-body table or note block is part of its section,
         # not a provision of its own.
         if start in apparatus:
+            continue
+        kept.append(index)
+
+    for position, index in enumerate(kept):
+        match = matches[index]
+        start = match.start()
+        end = matches[kept[position + 1]].start() if position + 1 < len(kept) else len(text)
+        body = text[start:end]
+        if len(body.strip()) < MIN_PROVISION_CHARS:
             continue
         number = match.group("number").strip()
         # A clause inside a Schedule is cited as a clause of that Schedule, not

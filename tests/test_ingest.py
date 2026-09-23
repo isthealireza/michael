@@ -1837,3 +1837,126 @@ def test_the_relabelled_clauses_keep_the_shape_retrieval_looks_for() -> None:
         for p in split_sections(text):
             if p.section_number.startswith("Sch"):
                 assert re.fullmatch(r"Sch \S+ cl \S+", p.section_number), p.section_number
+
+
+def test_a_note_block_headed_for_this_subsection_is_not_a_second_section_one() -> None:
+    """Reduced from Offshore Minerals Act 2003 (WA), verbatim shape.
+
+    The opener that already existed hardcoded the noun - "Notes for this
+    SECTION:" - and the Act heads most of its note blocks "Notes for this
+    subsection:". Those went unrecognised, so their items were split off as
+    sections numbered from 1: 65 excess pinpoints in this document alone, the
+    largest remaining group in the corpus, and 32 provisions all citing s 1
+    where only the first is the Short title.
+    """
+    text = (
+        "1. Short title\n"
+        "This Act may be cited as the Offshore Minerals Act 2003.\n"
+        "\n"
+        "12. Application of Act\n"
+        "This Act applies to offshore mining beyond the baseline of "
+        "Australia's territorial sea.\n"
+        "Notes for this subsection:\n"
+        "1. So far as the agreement relates to petroleum, it is reflected in "
+        "the Petroleum (Submerged Lands) Act 1982.\n"
+        "2. The Seas and Submerged Lands Act 1973 declares the sovereignty.\n"
+        "\n"
+        "13. Crown to be bound\n"
+        "This Act binds the Crown.\n"
+    )
+    numbers = [p.section_number for p in ingest.split_sections(text)]
+    assert numbers.count("1") == 1, numbers
+    assert "12" in numbers and "13" in numbers
+
+
+def test_a_note_block_headed_for_this_item_is_not_a_second_clause_one() -> None:
+    """Reduced from Supreme Court (Fees) Regulations 2002 (WA).
+
+    A fee table's rows each carry "Notes for this item:" - the same mechanism,
+    a third noun - and each note run restarted at 1 inside Schedule 1, so six
+    provisions ended up cited "Sch 1 cl 1".
+    """
+    text = (
+        "1. Citation\n"
+        "These regulations are the Supreme Court (Fees) Regulations 2002.\n"
+        "\n"
+        "4. Fees payable\n"
+        "The fees set out in Schedule 1 are payable.\n"
+        "Notes for this item:\n"
+        "1. No fee is payable if the proceedings are of an interlocutory "
+        "nature.\n"
+        "2. The fee is to be paid in respect of the number of hearing days.\n"
+        "\n"
+        "5. Waiver of fees\n"
+        "The registrar may waive a fee.\n"
+    )
+    numbers = [p.section_number for p in ingest.split_sections(text)]
+    assert numbers.count("1") == 1, numbers
+    assert "4" in numbers and "5" in numbers
+
+
+def test_the_note_opener_still_needs_its_colon_after_widening_the_noun() -> None:
+    """The Chattel Securities guard, restated against the wider pattern.
+
+    Widening "for this section:" to any noun makes the colon the only thing
+    left separating a note opener from a contents row, so it is asserted
+    directly rather than left to the end-to-end tests.
+    """
+    from michael.ingest import APPARATUS_OPENERS
+
+    for opener in (
+        "Notes for this section:",
+        "Notes for this subsection:",
+        "Notes for this item:",
+        "Notes for this clause:",
+        "Note:",
+        "Notes:",
+    ):
+        assert APPARATUS_OPENERS.match(opener), opener
+    for not_an_opener in (
+        "Notes",
+        "Notes for this section",
+        "Noted for the record",
+        "Note that the fee is payable",
+    ):
+        assert not APPARATUS_OPENERS.match(not_an_opener), not_an_opener
+
+
+def test_a_suppressed_row_stays_in_its_section_rather_than_falling_out_of_the_corpus() -> None:
+    """apparatus_rows says an in-body row "is part of a real section and stays
+    in that section's text". It did not.
+
+    A provision ended at the next heading CANDIDATE, so a row rejected as
+    apparatus terminated the provision before it and was then skipped - and
+    its text belonged to no provision at all. Measured on Supreme Court (Fees)
+    Regulations 2002 (WA), whose Schedule 1 is one long run of fee items and
+    their note blocks: 32,362 characters, the entire fee schedule, sat past
+    the last provision, unreachable by any search. A provision now runs to the
+    next KEPT heading.
+    """
+    text = (
+        "1. Citation\n"
+        "These regulations are the Example Regulations 2002.\n"
+        "\n"
+        "4. Fees payable\n"
+        "The fees set out in Schedule 1 are payable to the registrar.\n"
+        "Notes for this item:\n"
+        "1. No fee is payable if the proceedings are of an interlocutory nature.\n"
+        "2. The fee is to be paid in respect of the number of hearing days.\n"
+        "\n"
+        "5. Waiver of fees\n"
+        "The registrar may waive a fee in a case of hardship.\n"
+    )
+    provisions = ingest.split_sections(text)
+    numbers = [p.section_number for p in provisions]
+    assert numbers == ["1", "4", "5"], numbers
+
+    fees = next(p for p in provisions if p.section_number == "4")
+    assert "No fee is payable" in fees.text, "the note fell out of the corpus"
+    assert "number of hearing days" in fees.text
+
+    for earlier, later in zip(provisions, provisions[1:]):
+        assert later.char_start == earlier.char_end, (
+            f"text between {earlier.section_number} and {later.section_number} "
+            f"belongs to no provision"
+        )
