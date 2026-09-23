@@ -310,3 +310,80 @@ test("the export of an empty conversation is still a valid document", () => {
   assert.ok(md.startsWith("# Michael"));
   assert.ok(md.includes("not a lawyer"), "the disclaimer is not conditional on content");
 });
+
+/* ---------------------------------------------------------------------- */
+/* Streaming markdown. Michael writes lists, tables and code fences; the   */
+/* page now renders them as elements. The risk that matters is not ugly    */
+/* output - it is that markdown either forges markup out of model text or  */
+/* breaks the two spans a reader relies on to judge an answer.             */
+/* ---------------------------------------------------------------------- */
+
+const { inline, renderMarkdown } = require("./michael.js");
+
+test("a citation survives inside a bullet and inside a table cell", () => {
+  const list = inline("- Under Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07) notice applies.");
+  assert.match(list, /<ul><li>/, "the bullet became a list item");
+  assert.match(list, /<span class="cite">Fair Work Act 2009 \(Cth\) s 117 \(snapshot 2026-07-07\)<\/span>/,
+    "the citation chip is still one intact span inside the item");
+
+  const table = inline(
+    "| Award | Clause |\n| --- | --- |\n| Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07) | 5 weeks |");
+  assert.match(table, /<table><thead>/);
+  assert.match(table, /<td><span class="cite">Fair Work Act 2009 \(Cth\) s 117 \(snapshot 2026-07-07\)<\/span><\/td>/,
+    "a citation in a cell is a chip, not split across cells");
+});
+
+test("a [MISSING] flag survives inside a numbered list", () => {
+  const html = inline("1. Confirm [MISSING: the employee's start date] before relying on this.");
+  assert.match(html, /<ol><li>/);
+  assert.match(html, /<span class="missing">MISSING: the employee's start date<\/span>/,
+    "the gold flag is intact, apostrophe and all");
+});
+
+test("markdown cannot turn model text into markup", () => {
+  /* Every one of these is a shape a model can emit. None may produce a tag
+   * or an attribute the page did not write itself. */
+  const img = inline("![alt](javascript:alert(1))");
+  assert.ok(!img.includes("<img"), "no image element");
+  assert.ok(!img.includes("javascript:alert(1)\""), "nothing became an attribute value");
+
+  const link = inline("[click me](javascript:alert(1))");
+  assert.ok(!/<a\b/.test(link), "links are deliberately not rendered");
+
+  const raw = inline("<script>alert(1)</script> and <img src=x onerror=alert(1)>");
+  assert.ok(!raw.includes("<script"), "raw HTML stays escaped");
+  assert.ok(!/<img/.test(raw), "the img is text, not an element, so onerror never binds");
+  assert.match(raw, /&lt;script&gt;/);
+  assert.match(raw, /&lt;img src=x onerror=alert\(1\)&gt;/);
+
+  /* A fence is the one place text is NOT span-processed - so it is the place
+   * to check that escaping still happened first. */
+  const fenced = inline("```\n<img src=x onerror=alert(1)>\n```");
+  assert.match(fenced, /<pre><code>&lt;img src=x onerror=alert\(1\)&gt;<\/code><\/pre>/);
+
+  /* A backtick pair may not reach across a citation span's quoted attribute
+   * and re-close it somewhere else. */
+  const across = inline("`a` Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07) `b`");
+  assert.match(across, /<code>a<\/code>/);
+  assert.match(across, /<code>b<\/code>/);
+  assert.match(across, /<span class="cite">/);
+  assert.equal((across.match(/class="cite"/g) || []).length, 1);
+});
+
+test("a block element does not bring blank lines with it under pre-wrap", () => {
+  /* .answer is white-space:pre-wrap, so a newline next to a <ul> would print
+   * as an extra empty line the author never wrote. */
+  const html = renderMarkdown("Here:\n\n- one\n- two\n\nAfter.");
+  assert.ok(!/\n<ul>/.test(html), "no newline immediately before a list");
+  assert.ok(!/<\/ul>\n/.test(html), "no newline immediately after a list");
+  assert.match(html, /Here:<ul><li>one<\/li><li>two<\/li><\/ul>After\./);
+});
+
+test("an asterisk bullet is left alone so it can never be read as bold", () => {
+  /* michael.js accepts - and • only. A line starting "* " stays literal text,
+   * which is why a stray asterisk cannot open an emphasis run that swallows
+   * the rest of an answer. */
+  const html = renderMarkdown("* not a bullet");
+  assert.ok(!html.includes("<ul>"));
+  assert.ok(!html.includes("<strong>"));
+});

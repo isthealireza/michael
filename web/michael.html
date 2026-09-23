@@ -239,6 +239,46 @@ main{
   font-size:1rem; line-height:1.7; letter-spacing:var(--track-body);
 }
 
+/* ─── Structure inside an answer ───────────────────────────────────────────
+   Michael writes lists, tables and code fences; michael.js turns them into
+   real elements. They sit inside `white-space:pre-wrap`, so each one resets to
+   `normal` — otherwise the source newlines between a <li> and the next would
+   print twice. Margins are set on both sides because the surrounding text is
+   pre-wrapped and has no paragraph margins of its own. */
+.answer ul,.answer ol,.body ul,.body ol{
+  white-space:normal; margin:var(--s-3) 0; padding-left:1.35rem;
+}
+.answer li,.body li{margin:.2rem 0}
+.answer li::marker,.body li::marker{color:var(--pv-green)}
+
+.answer table,.body table{
+  white-space:normal; border-collapse:collapse; margin:var(--s-4) 0;
+  width:100%; font-size:.91rem; line-height:1.5;
+  display:block; overflow-x:auto; /* a wide table scrolls, never the page */
+}
+.answer th,.answer td,.body th,.body td{
+  text-align:left; vertical-align:top; padding:.42rem var(--s-3);
+  border-bottom:1px solid var(--pv-rule);
+}
+.answer th,.body th{
+  font-size:.69rem; font-weight:700; letter-spacing:var(--track-eyebrow);
+  text-transform:uppercase; color:var(--pv-green);
+  border-bottom:1px solid var(--pv-green);
+}
+.answer tbody tr:last-child td,.body tbody tr:last-child td{border-bottom:0}
+
+.answer pre,.body pre{
+  white-space:pre; margin:var(--s-4) 0; padding:var(--s-3) var(--s-4);
+  background:var(--pv-fg-1); color:#F4F7F5;
+  border-radius:var(--radius-2); overflow-x:auto;
+}
+.answer pre code,.body pre code{background:transparent; color:inherit; padding:0}
+.answer code,.body code{
+  font-family:var(--font-mono); font-size:.87em;
+  background:var(--pv-green-tint); color:var(--pv-fg-1);
+  border-radius:3px; padding:1px 4px;
+}
+
 /* ─── Grounding (blue) ─────────────────────────────────────────────────── */
 .cite{
   background:var(--pv-blue-tint); color:var(--pv-blue-dk);

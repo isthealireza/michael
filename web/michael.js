@@ -203,8 +203,20 @@ function cancelTurn() {
 
 /* ------------------------------- rendering ------------------------------- */
 
-const esc = (s) => String(s).replace(/[&<>"]/g, (c) =>
-  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+/* Unicode bidi control characters (LRM/RLM, LRE/RLE/PDF, LRO/RLO, LRI/RLI/
+ * FSI/PDI) are invisible and carry no HTML markup, so the `[&<>"]` escape
+ * below does not touch them: they reach the DOM as ordinary text and the
+ * browser still obeys them there, reordering the visible glyphs of
+ * whatever text follows. A `U+202E RIGHT-TO-LEFT OVERRIDE` inside a quoted
+ * provision or a [MISSING] item can therefore make a citation, an amount or
+ * a file-adjacent string read backwards on screen while the underlying text
+ * (what gets copied, exported or matched by CITATION/MISSING) is untouched -
+ * the classic RLO spoofing trick. Michael's own prose is plain STE English
+ * and never needs one, so they are stripped outright rather than escaped. */
+const esc = (s) => String(s)
+  .replace(/[‎‏‪-‮⁦-⁩]/g, "")
+  .replace(/[&<>"]/g, (c) =>
+    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 /* A pinpoint as Michael emits it: "Privacy Act 1988 (Cth) s 26WL (snapshot
  * 2026-06-04)". "Sch 1 cl 11" is matched too: a Schedule clause is a different
@@ -297,6 +309,94 @@ function toolLabel(name) {
   return TOOL_LABELS[bare] || null;
 }
 
+/* Markdown, deliberately without links.
+ *
+ * `[text](url)` is the one construct here that would turn model output into an
+ * attribute — and `javascript:` in an href is the whole XSS problem. Michael
+ * has no reason to emit one either: MICHAEL.md forbids citing a web page, so a
+ * link in an answer is already a rule violation rather than something to
+ * render prettily. Images, raw HTML and reference links are out for the same
+ * reason. Everything below emits fixed tags with no attributes drawn from the
+ * text, over a string that has ALREADY been escaped by `inline`.
+ *
+ * Bullets are `-` or `•` only, never `*`, so a bullet can never be confused
+ * with the opening of `**bold**`. */
+function mdSpans(html) {
+  return html
+    .replace(/`([^`\n]+)`/g, (_m, code) => `<code>${code}</code>`)
+    .replace(/\*\*([^*\n]+)\*\*/g, (_m, strong) => `<strong>${strong}</strong>`);
+}
+
+function mdTable(rows) {
+  const cells = (line) =>
+    line.trim().replace(/^\||\|$/g, "").split("|").map((c) => c.trim());
+  const head = cells(rows[0]);
+  const body = rows.slice(2).map(cells);
+  const th = head.map((c) => `<th>${mdSpans(c)}</th>`).join("");
+  const tr = body
+    .map((r) => `<tr>${r.map((c) => `<td>${mdSpans(c)}</td>`).join("")}</tr>`)
+    .join("");
+  return `<table><thead><tr>${th}</tr></thead><tbody>${tr}</tbody></table>`;
+}
+
+function renderMarkdown(html) {
+  const lines = html.split("\n");
+  const out = [];
+  let i = 0;
+
+  const isTableRow = (s) => /^\s*\|.*\|\s*$/.test(s);
+  const isTableRule = (s) => /^\s*\|[\s:|-]+\|\s*$/.test(s);
+  const bullet = /^\s*[-•]\s+(.*)$/;
+  const numbered = /^\s*\d+[.)]\s+(.*)$/;
+
+  while (i < lines.length) {
+    const line = lines[i];
+
+    /* Fenced code: verbatim, and NOT passed through mdSpans. A backtick or an
+     * asterisk inside a code block is code, not emphasis. */
+    const fence = line.match(/^\s*```(\w*)\s*$/);
+    if (fence) {
+      const body = [];
+      i += 1;
+      while (i < lines.length && !/^\s*```\s*$/.test(lines[i])) body.push(lines[i++]);
+      i += 1; // the closing fence
+      out.push(`<pre><code>${body.join("\n")}</code></pre>`);
+      continue;
+    }
+
+    if (isTableRow(line) && isTableRule(lines[i + 1] || "")) {
+      const rows = [];
+      while (i < lines.length && isTableRow(lines[i])) rows.push(lines[i++]);
+      out.push(mdTable(rows));
+      continue;
+    }
+
+    if (bullet.test(line) || numbered.test(line)) {
+      const ordered = !bullet.test(line);
+      const pattern = ordered ? numbered : bullet;
+      const items = [];
+      while (i < lines.length && pattern.test(lines[i])) {
+        items.push(`<li>${mdSpans(lines[i].match(pattern)[1])}</li>`);
+        i += 1;
+      }
+      const tag = ordered ? "ol" : "ul";
+      out.push(`<${tag}>${items.join("")}</${tag}>`);
+      continue;
+    }
+
+    out.push(mdSpans(line));
+    i += 1;
+  }
+  /* The answer is rendered under `white-space: pre-wrap`, so every newline in
+   * this markup is a visible line break — and a block element breaks the line
+   * by itself. Left alone, each list, table and code block would carry a blank
+   * line above and below it that the author never wrote. Blank lines between
+   * ordinary paragraphs are the author's and stay. */
+  return out.join("\n")
+    .replace(/\n+(?=<(?:ul|ol|pre|table)>)/g, "")
+    .replace(/(<\/(?:ul|ol|pre|table)>)\n+/g, "$1");
+}
+
 function inline(text) {
   /* Escape ONCE, here, then match on the escaped text. The captured groups are
    * already escaped, so the replacements must not escape them again: doing so
@@ -313,7 +413,11 @@ function inline(text) {
     `<span class="missing">MISSING: ${item.trim()}</span>`);
   html = html.replace(CITATION, (_m, act, pin, snap) =>
     `<span class="cite">${act} ${pin}${snap || ""}</span>`);
-  return html;
+  /* Markdown LAST, after the citation and [MISSING] spans exist. The order
+   * matters: a citation carries no backtick, asterisk or pipe, so nothing
+   * below can match across one and split it, whereas running markdown first
+   * could put a <strong> inside a citation and stop CITATION matching it. */
+  return renderMarkdown(html);
 }
 
 /* Render one answer. `partial` suppresses the structural parsing while text is
@@ -617,5 +721,6 @@ if (sendKeyEl) {
  * the real functions the tests exercise, not a reimplementation of them. */
 if (typeof module !== "undefined") {
   module.exports = { renderAnswer, headingMatch, NOT_COVERED, toolLabel, inline, esc,
-    connect, CITATION, usageLabel, transcriptMarkdown, clockTime, state, PREFS };
+    connect, CITATION, usageLabel, transcriptMarkdown, clockTime, state, PREFS,
+    renderMarkdown };
 }
