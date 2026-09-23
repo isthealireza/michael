@@ -66,6 +66,7 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("schema", help="create the database schema (idempotent)")
+    sub.add_parser("gate-schema", help="create the michael-gate schema (idempotent)")
     sub.add_parser("domains", help="print the domain routing table")
     sub.add_parser("hosts", help="print the ingestion host allowlist")
     sub.add_parser("prompt", help="print MICHAEL.md")
@@ -170,6 +171,10 @@ def _run(args: argparse.Namespace) -> int:
     match args.command:
         case "schema":
             _print(tools.apply_schema())
+        case "gate-schema":
+            from michael.gate.schema import apply_gate_schema
+
+            _print(apply_gate_schema())
         case "domains":
             _print(tools.list_domains())
         case "hosts":

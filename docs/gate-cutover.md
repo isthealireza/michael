@@ -75,14 +75,12 @@ diagnosed. The gate service itself does not need to be torn down to do this
 3. **Apply the gate schema to the production database.**
    **Note:** `uv run michael schema` applies only the main retrieval schema
    (`michael.schema.apply_schema`, via `michael/cli.py`'s `schema`
-   subcommand). It does **not** create the `gate` schema. There is currently
-   no CLI subcommand wired to `michael.gate.schema.apply_gate_schema` — the
-   function exists and is idempotent, but nothing in `cli.py` calls it. Until
-   that wiring is added, apply it directly, with `MICHAEL_DATABASE_URL` set
-   to the production read/write URL:
+   subcommand). It does **not** create the `gate` schema. Use the dedicated
+   subcommand instead, with `MICHAEL_DATABASE_URL` set to the production
+   read/write URL:
 
    ```bash
-   uv run python -c "from michael.gate.schema import apply_gate_schema; print(apply_gate_schema())"
+   uv run michael gate-schema
    ```
 
    This must run before Step 4 (`gate.users` must exist first) and creates
