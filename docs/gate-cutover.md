@@ -5,38 +5,114 @@ the public domain from `michael-hermes` to it. It is written to be followed
 literally, in order. The order is not advisory: skipping ahead can leave the
 Hermes dashboard unreachable (see Step 6).
 
-## Precondition — read this before starting
+## Current state — the chat page is DOWN
 
-At the time of writing, **the database-backed gate code has never been run
-against a real Postgres.** `tests/gate/test_users.py` and
-`tests/gate/test_sessions.py` are both marked `pytestmark =
-pytest.mark.integration` and are excluded from the default `uv run pytest`
-run (see `pyproject.toml`'s `addopts`, which passes `-m "not integration and
-not network"`). No Postgres was reachable while this task was done, so those
-two files have never executed, not even once, against a live database.
+`https://michael-hermes-production.up.railway.app/assets/michael.html`
+returns **404**. `hermes/Dockerfile` no longer copies `michael.html` and
+`michael.js` into the Hermes image — the gate serves them now — and that
+change reached production the moment `main` was pushed, because Railway
+auto-deploys from that branch. The gate was not deployed to take over.
 
-In particular: `michael.gate.users.recent_attempts` builds the query
+Michael is therefore reachable only through the raw Hermes dashboard at
+`/`, behind the single shared `dashboard.basic_auth` credential. Deploying
+the gate is what **restores** the reader-facing page; it is not an optional
+improvement to a working surface.
 
-```sql
-SELECT account_key, address, at, outcome FROM gate.login_attempts
-WHERE at > now() - %s AND (account_key = lower(%s) OR address = %s)
+If the page is needed before the gate is ready, restore the
+`COPY web/michael.html web/michael.js` block and the `RUN` block that
+follows it in `hermes/Dockerfile`, and push. Having the page in both images
+is harmless — the gate serves its own copy from its own container.
+
+## Precondition — integration tests
+
+`tests/gate/test_users.py` and `tests/gate/test_sessions.py` are marked
+`pytest.mark.integration` and are excluded from the default `uv run pytest`
+run (see `pyproject.toml`'s `addopts`, `-m "not integration and not
+network"`). **A green default run is not evidence that login, rate limiting
+or session ownership works.**
+
+### Where to run them
+
+A dedicated Railway Postgres exists for this. Do **not** point these tests
+at the production database: the `gate_tables` fixture issues
+`TRUNCATE gate.login_attempts, gate.user_sessions, gate.users RESTART
+IDENTITY CASCADE` before every test.
+
+| | |
+|---|---|
+| Service | `Postgres-CWDF`, id `f96cc37b-6904-4554-9d3b-ae0a1385885c` |
+| Database | `michael_gate_test` (PostgreSQL 18.6) |
+| Public endpoint | `iriguchi.proxy.rlwy.net:37258` (TCP proxy) |
+| Production Postgres — NOT this one | id `0703ec04-bcf9-484d-9dc7-9fca111dc9b2` |
+
+```bash
+V=$(railway variables --service Postgres-CWDF --environment production --json)
+URL=$(printf '%s' "$V" | python -c "
+import json,sys
+d=json.load(sys.stdin)
+print(f\"postgresql://{d['POSTGRES_USER']}:{d['POSTGRES_PASSWORD']}@{d['RAILWAY_TCP_PROXY_DOMAIN']}:{d['RAILWAY_TCP_PROXY_PORT']}/{d['POSTGRES_DB']}\")
+")
+MICHAEL_DATABASE_URL="$URL" uv run pytest tests/gate -m integration -q
 ```
 
-and binds a Python `datetime.timedelta` (`ratelimit.WINDOW`, 15 minutes)
-directly as the `%s` for `now() - %s`. psycopg3 is expected to adapt a
-`timedelta` to a Postgres `interval` and produce the intended "attempts in
-the last 15 minutes" query, but **this has not been verified against a real
-server.** If the adaptation is wrong — wrong type, wrong sign, silent cast
-failure — the failure mode is not a crash, it is silent: `recent_attempts`
-would return the wrong window (possibly all rows, possibly none), which
-feeds directly into `is_locked_out`. The entire login and rate-limit path
-(`_authenticate` in `app.py`) sits on top of this one unverified query.
+`tests/conftest.py` sets `MICHAEL_DATABASE_URL` with `os.environ.setdefault`,
+so an exported value wins and no file needs editing. Expect roughly seven
+minutes: `michael.db.writable()` opens a fresh unpooled connection per call,
+and over the public internet with SSL that dominates the runtime.
 
-**Do not proceed past Step 6 (removing the `michael-hermes` domain) until
-`uv run pytest -m integration` has been run and has passed against a real
-Postgres instance carrying the `gate` schema.** Passing the default,
-non-integration suite is not sufficient evidence that login or rate limiting
-works.
+### What has been verified, and when
+
+**2026-09-23 — 20 passed, 131 deselected, 433.78s.** First execution of
+these tests against any live database.
+
+The headline result: `test_recent_attempts_excludes_an_attempt_older_than_
+the_window` **passes**. `michael.gate.users.recent_attempts` binds a Python
+`datetime.timedelta` (`ratelimit.WINDOW`) as the `%s` in `now() - %s`, and
+psycopg3's adaptation of it to a Postgres `interval` was the largest
+unverified assumption in this build — the entire login and rate-limit path
+sits on that one query, and a wrong adaptation fails silently rather than
+crashing. It is now evidence. `test_five_in_window_failures_lock_out_
+through_the_real_query` pins the opposite direction, so a predicate matching
+every row or no row would fail.
+
+Two fixes also proved themselves under real conditions: the `gate_tables`
+truncation fixture (no `UniqueViolation` across 20 tests — the defect that
+previously made this suite unpassable) and `apply_gate_schema`'s `pg_roles`
+guard (`michael_ro` does not exist on the test database; without the guard
+the DDL would have rolled back and every test would have errored).
+
+**Re-run both files and confirm they pass before Step 6.** The code has
+changed since; passing once is not a standing guarantee.
+
+## Precondition — verify the client address is real
+
+`michael.gate.app.client_address` derives the rate-limit key from the
+**rightmost** `X-Forwarded-For` hop. That is correct only if Railway's edge
+appends exactly one hop, and nothing in the test suite can check that —
+`TestClient` verifies the parsing rule, not Railway's behaviour.
+
+The three possibilities, only one of which is safe:
+
+- edge appends one hop → correct;
+- edge appends two (an internal router in front of the app) → the rightmost
+  value is a constant internal address, `ADDRESS_LIMIT` becomes a single
+  global counter, and 20 failed logins from anyone lock out every account
+  for everyone, indefinitely;
+- edge forwards a client-supplied `X-Forwarded-For` unmodified → the value
+  is attacker-controlled and the per-address limit is bypassable.
+
+**Check it after Step 5 and before Step 6.** From two different networks
+(e.g. office wifi and a phone on mobile data), submit one failed login each,
+then against the production database:
+
+```sql
+SELECT DISTINCT address FROM gate.login_attempts
+WHERE at > now() - interval '15 minutes';
+```
+
+Two distinct values, each matching the real client IP, means the assumption
+holds. One value, or an address in a private range, means it does not — do
+not proceed to Step 6.
 
 ## Rollback
 
