@@ -1955,7 +1955,7 @@ def test_a_suppressed_row_stays_in_its_section_rather_than_falling_out_of_the_co
     assert "No fee is payable" in fees.text, "the note fell out of the corpus"
     assert "number of hearing days" in fees.text
 
-    for earlier, later in zip(provisions, provisions[1:]):
+    for earlier, later in zip(provisions, provisions[1:], strict=False):
         assert later.char_start == earlier.char_end, (
             f"text between {earlier.section_number} and {later.section_number} "
             f"belongs to no provision"
