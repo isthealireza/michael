@@ -8,24 +8,24 @@
 <title>Michael · Legal research · Palm Vision</title>
 
 <!--
-  Palm Vision Design System. Tokens mirror web/login.html so the two pages are
-  one surface; names match colors_and_type.css so they stay greppable.
+  A minimal chat surface in the Open WebUI / Hermes WebUI shape: one narrow
+  centred column, no chrome around Michael's replies, the reader's question in
+  a tinted bubble on the right, and a pinned composer with the send control
+  inside the field.
 
-  The answer classes below are emitted by michael.js, and their colours carry
-  meaning rather than decoration:
+  Palm Vision supplies the palette and the type, so the result reads as the
+  firm's rather than as a generic assistant: a slim header over the brand's
+  gold accent rule, green-tint for the reader, cream paper, 4px corners, flat.
 
-    blue   grounding — a pinpoint citation, the classification line, the
-           closing practitioner notice. The things that make an answer
-           traceable.
-    gold   a flagged gap — [MISSING], a classification line out of position,
+  The answer classes below are emitted by michael.js and their colours carry
+  meaning, not decoration:
+
+    blue   grounding — a pinpoint citation, the RESEARCH/DRAFT classification
+           line, the closing practitioner notice. What makes a reply checkable.
+    gold   a declared gap — [MISSING], a classification line out of position,
            VERIFY BEFORE USE, NOT COVERED. Attention, not failure.
-    red    a protocol failure — the classification line or the closing notice
-           absent altogether. Michael is required to emit both; their absence
-           is worth reporting, and the page says so.
-
-  Brand rules observed: gold highlights and rules but never fills a control;
-  black is for the company name only; square by default with 4px on controls;
-  no gradients, glassmorphism, backdrop blur or neon.
+    red    a protocol failure — the classification line or closing notice
+           absent altogether. Michael must emit both; absence is reportable.
 -->
 <style>
 :root{
@@ -40,158 +40,154 @@
   --font-sans:'Segoe UI','Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
   --font-mono:'Consolas','IBM Plex Mono','SFMono-Regular',Menlo,'Courier New',monospace;
   --ls-eyebrow:.18em; --ls-micro:.12em;
-  --radius-2:4px;
-  --shadow-card:0 1px 2px rgba(0,0,0,.04), 0 4px 12px rgba(20,30,50,.06);
+  --radius-2:4px; --radius-3:6px;
   --ease:cubic-bezier(.22,.61,.36,1);
-  --measure:68ch;
+  --column:760px;
 }
 
 *,*::before,*::after{box-sizing:border-box}
 html,body{height:100%}
 body{
   margin:0; display:flex; flex-direction:column;
-  background:var(--pv-paper-warm); color:var(--pv-fg-2);
-  font-family:var(--font-sans); font-size:16px; line-height:1.65;
+  background:var(--pv-paper); color:var(--pv-fg-2);
+  font-family:var(--font-sans); font-size:16px; line-height:1.7;
   -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
 }
 .hidden{display:none}
+.sr{
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; border:0;
+}
 
-/* ─── Header: the brand's green cover device, compressed to a bar ───────── */
-header{background:var(--pv-green); color:#fff; flex:none}
+/* ─── Header: slim, over the brand's gold accent rule ───────────────────── */
+header{
+  flex:none; background:var(--pv-paper);
+  border-bottom:2px solid var(--pv-gold);
+}
 .bar{
-  max-width:1080px; margin:0 auto; padding:14px 24px;
-  display:flex; align-items:center; gap:16px;
+  max-width:var(--column); margin:0 auto; padding:12px 20px;
+  display:flex; align-items:center; gap:11px;
 }
 .bar svg{display:block; flex:none}
 .bar h1{
-  margin:0; font-size:15px; font-weight:700; letter-spacing:var(--ls-micro);
-  text-transform:uppercase; color:#fff; line-height:1.2;
+  margin:0; font-size:15px; font-weight:700; letter-spacing:.01em;
+  color:var(--pv-green); line-height:1.2;
 }
-.sub{font-size:12.5px; color:rgba(255,255,255,.78); line-height:1.35}
+.sub{font-size:12px; color:var(--pv-fg-4); line-height:1.35}
 .sess{
-  margin-left:auto; font-family:var(--font-mono); font-size:11.5px;
-  letter-spacing:var(--ls-micro); color:var(--pv-gold); white-space:nowrap;
+  margin-left:auto; font-family:var(--font-mono); font-size:11px;
+  letter-spacing:var(--ls-micro); color:var(--pv-fg-5); white-space:nowrap;
 }
 @media (max-width:640px){
-  .bar{padding:12px 16px; gap:12px}
+  .bar{padding:10px 16px; gap:9px}
   .sub{display:none}
 }
 
-/* ─── Thread ───────────────────────────────────────────────────────────── */
-main{flex:1; overflow-y:auto}
-.wrap{max-width:1080px; margin:0 auto; padding:32px 24px 40px}
+/* ─── Conversation ─────────────────────────────────────────────────────── */
+main{flex:1; overflow-y:auto; overscroll-behavior:contain}
+.wrap{max-width:var(--column); margin:0 auto; padding:28px 20px 36px}
 @media (max-width:640px){ .wrap{padding:20px 16px 28px} }
 
-.empty{max-width:var(--measure); padding:8px 0 0; color:var(--pv-fg-3)}
+.empty{padding:36px 0 0; max-width:34em}
 .empty .big{
-  font-size:2rem; line-height:1.15; letter-spacing:-.01em; font-weight:700;
-  color:var(--pv-green); margin-bottom:12px;
+  font-size:1.75rem; line-height:1.25; letter-spacing:-.01em; font-weight:700;
+  color:var(--pv-green); margin-bottom:10px;
 }
-.empty .big + div{font-size:15px}
+.empty .big + div{font-size:15px; color:var(--pv-fg-3)}
+@media (max-width:640px){ .empty{padding:20px 0 0} .empty .big{font-size:1.5rem} }
 
-.turn{margin-bottom:32px; max-width:var(--measure)}
+.turn{display:flex; flex-direction:column; margin-bottom:34px}
 
-/* The reader's question. Green tint with a green rule — structure, not alarm. */
+/* The reader's question, right-aligned in the brand's green tint. */
 .asked{
-  background:var(--pv-green-tint); border-left:2px solid var(--pv-green);
-  padding:14px 18px; border-radius:0 var(--radius-2) var(--radius-2) 0;
-  color:var(--pv-fg-1); white-space:pre-wrap;
+  align-self:flex-end; max-width:82%;
+  background:var(--pv-green-tint); color:var(--pv-fg-1);
+  padding:11px 16px; border-radius:var(--radius-3);
+  white-space:pre-wrap; font-size:15.5px; line-height:1.6;
 }
 .asked .who{
-  font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
-  text-transform:uppercase; color:var(--pv-green); margin-bottom:6px;
+  position:absolute; width:1px; height:1px; padding:0; margin:-1px;
+  overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap;
 }
 
-/* Michael's answer. Cards may lift; documents stay flat. */
+/* Michael's reply carries no chrome: no card, no border, no shadow. The
+   column does the framing, the way a chat surface should. */
 .card{
-  background:var(--pv-paper); border:1px solid var(--pv-rule);
-  border-radius:var(--radius-2); box-shadow:var(--shadow-card);
-  padding:22px 24px;
+  background:transparent; border:0; box-shadow:none; padding:0;
+  margin-top:22px !important;
 }
-@media (max-width:640px){ .card{padding:18px 16px} }
 .card h2{
-  margin:0 0 4px; font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
-  text-transform:uppercase; color:var(--pv-blue);
+  margin:0 0 8px; font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
+  text-transform:uppercase; color:var(--pv-green);
 }
-.answer,.body{white-space:pre-wrap; word-wrap:break-word}
+.answer,.body{white-space:pre-wrap; word-wrap:break-word; font-size:16px}
 
 /* ─── Grounding (blue) ─────────────────────────────────────────────────── */
-/* A pinpoint citation: the thing that makes an answer checkable. */
 .cite{
   background:var(--pv-blue-tint); color:var(--pv-blue-dk);
   border-bottom:1px solid #B9D5E2; border-radius:2px;
   padding:1px 4px; font-weight:600;
 }
-/* RESEARCH / DRAFT / BOTH — required as the first line of every output. */
 .classline{
   font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
-  text-transform:uppercase; color:var(--pv-blue);
-  padding-bottom:10px; margin-bottom:14px; border-bottom:1px solid var(--pv-rule-2);
+  text-transform:uppercase; color:var(--pv-blue); margin-bottom:12px;
 }
-/* The closing practitioner notice. Quiet, but it must be visible. */
 .notice{
-  margin-top:18px; padding:12px 16px;
+  margin-top:18px; padding:11px 15px;
   background:var(--pv-blue-tint-2); border-left:2px solid var(--pv-blue);
   border-radius:0 var(--radius-2) var(--radius-2) 0;
-  font-size:13.5px; line-height:1.5; color:var(--pv-fg-3);
+  font-size:13.5px; line-height:1.55; color:var(--pv-fg-3);
 }
 
-/* ─── Flagged gaps (gold) ──────────────────────────────────────────────── */
-/* [MISSING: ...] — a gap Michael declared rather than invented around. */
+/* ─── Declared gaps (gold) ─────────────────────────────────────────────── */
 .missing{
   background:var(--pv-gold-tint); color:var(--pv-gold-dk);
   border-bottom:1px solid #E8CF7A; border-radius:2px;
   padding:1px 4px; font-weight:700;
 }
-/* Present, but not where the rules require it. */
 .classline.late{color:var(--pv-gold-dk)}
 .classline .flag{
-  margin-left:10px; padding:2px 7px; border-radius:2px;
+  margin-left:9px; padding:2px 7px; border-radius:2px;
   background:var(--pv-gold-tint); color:var(--pv-gold-dk);
   font-size:10px; letter-spacing:var(--ls-micro);
 }
-/* NOT COVERED, or a turn that produced no answer. */
 .banner{
-  border:1px solid var(--pv-rule); border-left:2px solid var(--pv-gold);
-  background:var(--pv-paper-warm); border-radius:0 var(--radius-2) var(--radius-2) 0;
-  padding:14px 18px; margin-bottom:16px;
+  border-left:2px solid var(--pv-gold); background:var(--pv-gold-tint);
+  border-radius:0 var(--radius-2) var(--radius-2) 0;
+  padding:12px 16px; margin-bottom:16px;
 }
 .banner .h{
   font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
-  text-transform:uppercase; color:var(--pv-gold-dk); margin-bottom:6px;
+  text-transform:uppercase; color:var(--pv-gold-dk); margin-bottom:5px;
 }
 .banner .b{color:var(--pv-fg-2); font-size:15px}
-/* OPEN ITEMS / VERIFY BEFORE USE. */
 .block{
-  margin-top:18px; padding:14px 18px;
-  border:1px solid var(--pv-rule); border-left:2px solid var(--pv-green);
-  background:var(--pv-green-tint-2); border-radius:0 var(--radius-2) var(--radius-2) 0;
+  margin-top:18px; padding:12px 16px;
+  border-left:2px solid var(--pv-green); background:var(--pv-green-tint-2);
+  border-radius:0 var(--radius-2) var(--radius-2) 0;
 }
 .block .h{
   font-size:11px; font-weight:700; letter-spacing:var(--ls-eyebrow);
-  text-transform:uppercase; color:var(--pv-green); margin-bottom:6px;
+  text-transform:uppercase; color:var(--pv-green); margin-bottom:5px;
 }
 .block.verify{border-left-color:var(--pv-gold); background:var(--pv-gold-tint)}
 .block.verify .h{color:var(--pv-gold-dk)}
 
 /* ─── Protocol failures (red) ──────────────────────────────────────────── */
-/* Michael is required to emit both of these. Absence is worth reporting, and
-   the copy in michael.js says so; the colour should not soften that. */
 .classline.absent,.notice.absent{
   color:var(--pv-danger); background:var(--pv-danger-tint);
   border-left:2px solid var(--pv-danger); border-bottom:0;
-  padding:12px 16px; border-radius:0 var(--radius-2) var(--radius-2) 0;
-  font-weight:600; text-transform:none; letter-spacing:0; font-size:13.5px;
-  line-height:1.5;
+  padding:11px 15px; border-radius:0 var(--radius-2) var(--radius-2) 0;
+  font-weight:600; text-transform:none; letter-spacing:0;
+  font-size:13.5px; line-height:1.55;
 }
-.classline.absent{margin-bottom:14px}
+.classline.absent{margin-bottom:12px}
 .notice.absent{margin-top:18px}
 
 /* ─── Tool trace and progress ──────────────────────────────────────────── */
 .tools{
-  margin-top:14px; padding-top:12px; border-top:1px solid var(--pv-rule-2);
-  font-family:var(--font-mono); font-size:11.5px; letter-spacing:var(--ls-micro);
-  color:var(--pv-fg-4);
+  margin-top:14px; font-family:var(--font-mono); font-size:11px;
+  letter-spacing:var(--ls-micro); color:var(--pv-fg-5);
 }
 .working{
   display:inline-block; width:13px; height:13px; vertical-align:-1px;
@@ -200,52 +196,55 @@ main{flex:1; overflow-y:auto}
 }
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* ─── Composer ─────────────────────────────────────────────────────────── */
+/* ─── Composer: pinned, centred, send control inside the field ─────────── */
 footer{
-  flex:none; background:var(--pv-paper); border-top:1px solid var(--pv-rule);
+  flex:none; background:var(--pv-paper); border-top:1px solid var(--pv-rule-2);
   padding-bottom:env(safe-area-inset-bottom);
 }
-footer .wrap{padding:18px 24px}
-@media (max-width:640px){ footer .wrap{padding:14px 16px} }
-footer label{
-  display:block; margin-bottom:7px;
-  font-size:12px; font-weight:700; letter-spacing:var(--ls-eyebrow);
-  text-transform:uppercase; color:var(--pv-fg-4);
-  transition:color .18s var(--ease);
-}
-footer .wrap:focus-within label{color:var(--pv-blue)}
-.field{position:relative}
-textarea{
-  display:block; width:100%; font:inherit; font-size:16px; line-height:1.55;
-  color:var(--pv-fg-1); background:var(--pv-paper);
-  border:1px solid var(--pv-rule); border-radius:var(--radius-2);
-  padding:12px 14px; min-height:76px; max-height:200px; resize:vertical;
+footer .wrap{padding:14px 20px 16px}
+@media (max-width:640px){ footer .wrap{padding:10px 16px 12px} }
+
+.composer{
+  position:relative; display:flex; align-items:flex-end;
+  background:var(--pv-paper-warm); border:1px solid var(--pv-rule);
+  border-radius:var(--radius-3);
   transition:border-color .18s var(--ease);
 }
-textarea::placeholder{color:var(--pv-fg-5)}
-textarea:hover{border-color:#CFD5CF}
-textarea:focus{outline:none; border-color:var(--pv-green)}
-/* The brand's emphasis mark as the focus device, same as the sign-in page. */
-.field::after{
+.composer:hover{border-color:#CFD5CF}
+.composer:focus-within{border-color:var(--pv-green); background:var(--pv-paper)}
+/* The brand's emphasis mark as the focus device, as on the sign-in page. */
+.composer::after{
   content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
-  background:var(--pv-gold); border-radius:0 0 var(--radius-2) var(--radius-2);
+  background:var(--pv-gold); border-radius:0 0 var(--radius-3) var(--radius-3);
   transform:scaleX(0); transform-origin:left; transition:transform .24s var(--ease);
   pointer-events:none;
 }
-.field:focus-within::after{transform:scaleX(1)}
+.composer:focus-within::after{transform:scaleX(1)}
 
-.row{display:flex; align-items:center; gap:14px; margin-top:12px; flex-wrap:wrap}
-button{
-  font:inherit; font-size:15px; font-weight:700; letter-spacing:.02em;
-  color:#fff; background:var(--pv-green); border:0; border-radius:var(--radius-2);
-  min-height:46px; padding:0 22px; cursor:pointer;
-  transition:background-color .18s var(--ease);
+textarea{
+  flex:1; display:block; width:100%; font:inherit; font-size:16px; line-height:1.55;
+  color:var(--pv-fg-1); background:transparent; border:0; outline:none;
+  padding:13px 8px 13px 15px; min-height:52px; max-height:180px; resize:none;
 }
-button:hover:not(:disabled){background:var(--pv-green-dk)}
-button:focus-visible{outline:2px solid var(--pv-blue); outline-offset:2px}
-button:disabled{background:#8FB9A2; cursor:default}
-.status{font-size:13.5px; color:var(--pv-fg-4)}
-.hint{margin-top:10px; font-size:12.5px; color:var(--pv-fg-5); line-height:1.5}
+textarea::placeholder{color:var(--pv-fg-5)}
+
+#askBtn{
+  /* 44px, the smallest target a thumb hits reliably. The composer's 52px
+     minimum leaves exactly that once the 4px margins are taken. */
+  flex:none; margin:4px 4px 4px 0; width:44px; height:44px; padding:0;
+  display:inline-flex; align-items:center; justify-content:center;
+  color:#fff; background:var(--pv-green); border:0; border-radius:var(--radius-2);
+  cursor:pointer; transition:background-color .18s var(--ease);
+}
+#askBtn:hover:not(:disabled){background:var(--pv-green-dk)}
+#askBtn:focus-visible{outline:2px solid var(--pv-blue); outline-offset:2px}
+#askBtn:disabled{background:#C7D9CE; cursor:default}
+#askBtn svg{display:block}
+
+.row{display:flex; align-items:center; gap:10px; min-height:18px; margin-top:7px}
+.status{font-size:12.5px; color:var(--pv-fg-4)}
+.hint{margin-top:2px; font-size:11.5px; color:var(--pv-fg-5); line-height:1.5}
+@media (max-width:640px){ .hint{font-size:11px} }
 
 @media (prefers-reduced-motion:reduce){
   *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
@@ -255,16 +254,16 @@ button:disabled{background:#8FB9A2; cursor:default}
 <body>
 
 <header><div class="bar">
-  <svg viewBox="0 0 60 60" width="30" height="30" role="img" aria-label="Palm Vision mark">
+  <svg viewBox="0 0 60 60" width="26" height="26" role="img" aria-label="Palm Vision mark">
     <text x="0" y="50" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
-          font-weight="700" font-size="56" letter-spacing="-2" fill="#FFFFFF">P</text>
+          font-weight="700" font-size="56" letter-spacing="-2" fill="#2E8B57">P</text>
     <circle cx="50" cy="14" r="6" fill="#F4C430"></circle>
-    <path d="M 6 50 Q 26 60 46 50" fill="none" stroke="rgba(255,255,255,0.7)"
+    <path d="M 6 50 Q 26 60 46 50" fill="none" stroke="#006994"
           stroke-width="4" stroke-linecap="round"></path>
   </svg>
   <div>
     <h1>Michael</h1>
-    <div class="sub">Legal research and drafting — Western Australia and Commonwealth</div>
+    <div class="sub">Legal research · Western Australia and Commonwealth</div>
   </div>
   <div class="sess" id="sess"></div>
 </div></header>
@@ -280,12 +279,18 @@ button:disabled{background:#8FB9A2; cursor:default}
 </div></main>
 
 <footer><div class="wrap" id="askArea">
-  <label for="q">Your question</label>
-  <div class="field">
-    <textarea id="q" placeholder="What must an entity do when it becomes aware of an eligible data breach?"></textarea>
+  <label for="q" class="sr">Your question</label>
+  <div class="composer">
+    <textarea id="q" rows="1"
+      placeholder="What must an entity do when it becomes aware of an eligible data breach?"></textarea>
+    <button id="askBtn" type="button" aria-label="Send question">
+      <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true">
+        <path d="M10 16V4M10 4l-5 5M10 4l5 5" fill="none" stroke="currentColor"
+              stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+    </button>
   </div>
   <div class="row">
-    <button id="askBtn">Ask Michael</button>
     <span class="status" id="status"></span>
   </div>
   <div class="hint">Enter to send · Shift+Enter for a new line ·
@@ -293,5 +298,28 @@ button:disabled{background:#8FB9A2; cursor:default}
 </div></footer>
 
 <script src="michael.js"></script>
+<script>
+/* Auto-grow the composer, the way a chat surface is expected to behave. The
+   cap matches the stylesheet's max-height so the thread never loses the top
+   of the conversation to a long question. */
+(function () {
+  var q = document.getElementById("q");
+  if (!q) return;
+  var grow = function () {
+    q.style.height = "auto";
+    q.style.height = Math.min(q.scrollHeight, 180) + "px";
+  };
+  q.addEventListener("input", grow);
+  /* michael.js clears the box on submit by assigning to .value, which fires
+     no event and does not touch the attribute -- so watch the two things
+     that cause a submit and re-measure just after it has run. */
+  var btn = document.getElementById("askBtn");
+  if (btn) btn.addEventListener("click", function () { setTimeout(grow, 0); });
+  q.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && !e.shiftKey) setTimeout(grow, 0);
+  });
+  grow();
+})();
+</script>
 </body>
 </html>
