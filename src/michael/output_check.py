@@ -55,15 +55,49 @@ NOTICE = re.compile(
 """Matched across line breaks, because the notice is hard-wrapped in real
 output. Two opus runs read as a dropped notice until this was normalised."""
 
+_CLAUSE_SUBJECT = (
+    r"(?:"
+    # A numbered clause names itself and needs no determiner: "Clause 7",
+    # "clause 12.3", "cl 4A". This is how a drafting answer refers to the
+    # clause it has just produced.
+    r"\bcl(?:ause)?\s+\d+[A-Za-z]*(?:\.\d+)*"
+    # Or a determiner and the noun, with the modifiers real prose puts
+    # between them: "the clause", "the termination clause", "that indemnity
+    # and release clause". Three words is enough for every shape observed
+    # and stops the phrase running into an unrelated later "clause".
+    #
+    # A modifier may not itself be a determiner, and that restriction is
+    # load-bearing rather than tidiness. In the disclaimer MICHAEL.md
+    # requires - "not a statement THAT THE CLAUSE is compliant" - the first
+    # "that" is a conjunction, not a determiner. Let it start the match and
+    # the match swallows the very word DISCLAIMS anchors on, the disclaimer
+    # stops being recognised, and every correct output gets flagged. The
+    # match must begin at "the clause" so "... statement that " is left
+    # standing in front of it.
+    r"|\b(?:this|that|the|each|every|its|your|our)\s+"
+    r"(?:(?!(?:the|a|an|any|no|such|this|that|each|every|its|your|our)\s)[\w-]+\s+){0,3}"
+    r"clause\b"
+    r")"
+)
+"""What counts as naming a clause. Kept deliberately narrow: the rule is
+about asserting something of a CLAUSE, so "an employer complies with s 117
+by ..." - a statement about the law, which Michael must be able to make -
+carries no clause subject and does not trip it."""
+
 CERTIFIES = re.compile(
-    r"\b(?:this|the|that)\s+clause\b[^.\n]{0,60}?"
+    _CLAUSE_SUBJECT + r"[^.\n]{0,60}?"
     r"(?:\b(?:is|is not|isn't)\b[^.\n]{0,30}?\bcomplian(?:t|ce)\b"
     r"|\b(?:complies|does not comply|doesn't comply)\b)",
     re.IGNORECASE,
 )
-"""Michael does not certify a clause in either direction. Scoped to an
-assertion about a clause, so "an employer complies with s 117 by ..." - a
-statement about the law, which is allowed - does not trip it."""
+"""Michael does not certify a clause in either direction.
+
+The subject used to be the bare bigram "this|the|that clause", which missed
+the two shapes a real draft actually produces - a numbered clause ("Clause 7
+is compliant with s 62") and a modified one ("The termination clause is
+compliant"). Both passed the guard silently. That is the failing-open
+direction: a certification that ships is worse than one flagged for a human
+to overrule, so where the subject is ambiguous this errs towards flagging."""
 
 DISCLAIMS = re.compile(
     r"(?:\b(?:not|never|no|nor|nothing)\b[^.\n]{0,60}?"

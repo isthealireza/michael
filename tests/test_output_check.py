@@ -152,6 +152,65 @@ def test_a_negation_in_a_previous_sentence_does_not_cross_the_sentence_boundary(
     assert [f.rule for f in check(body)] == ["certification"]
 
 
+def test_a_numbered_clause_is_a_clause() -> None:
+    """W3-S4 regression. The subject used to be the bare bigram
+    "this|the|that clause", so a drafting answer that named the clause it had
+    just written - the normal way to name one - sailed past the guard.
+
+    Reported as a negation in the previous sentence suppressing the
+    certification. It was not: CERTIFIES never matched these strings at all.
+    """
+    for claim in (
+        "Clause 3 is not unusual. Clause 7 is compliant with s 62.",
+        "Clause 12.3 does not comply with s 62.",
+        "cl 4A is compliant with the NES.",
+    ):
+        body = CLEAN.replace(
+            "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.", claim
+        )
+        assert [f.rule for f in check(body)] == ["certification"], claim
+
+
+def test_a_modified_clause_is_still_a_clause() -> None:
+    """The other half of W3-S4: a determiner separated from the noun by what
+    the clause is about. "The termination clause is compliant" is the same
+    assertion as "the clause is compliant" and was not caught.
+    """
+    for claim in (
+        "Nothing here is a compliance opinion. The termination clause is compliant.",
+        "That indemnity clause does not comply.",
+        "Your termination clause is compliant.",
+    ):
+        body = CLEAN.replace(
+            "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.", claim
+        )
+        assert [f.rule for f in check(body)] == ["certification"], claim
+
+
+def test_widening_the_subject_did_not_swallow_the_disclaimer_s_own_that() -> None:
+    """Caught while widening the subject, and the reason a modifier may not
+    be a determiner.
+
+    In "not a statement THAT THE CLAUSE is compliant", the first "that" is a
+    conjunction. Allow it to open the clause subject and the match begins one
+    word too early, eats the word DISCLAIMS anchors on, and every correct
+    output - which must carry this sentence - gets flagged as a
+    certification. The match has to start at "the clause".
+    """
+    for disclaimer in (
+        "Its content is based on the provisions cited; that is not a "
+        "statement that the clause is compliant.",
+        "Its clauses are based on the provisions cited; that is not a "
+        "statement that any clause is compliant.",
+        "Michael does not certify that the clause is compliant.",
+    ):
+        body = CLEAN.replace(
+            "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.",
+            disclaimer,
+        )
+        assert check(body) == [], disclaimer
+
+
 def test_a_statement_about_the_law_is_not_a_certification() -> None:
     """Michael must still be able to say what the law requires."""
     body = CLEAN.replace(
