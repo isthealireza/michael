@@ -1714,3 +1714,126 @@ def test_a_refusal_after_the_document_row_is_written_leaves_no_half_document(
         f"would commit a document with no provisions: {conn.written}"
     )
     assert conn.written == ["Alpha Act 2000 (WA)", "Charlie Act 2000 (Cth)"], conn.written
+
+
+# Agricultural Produce Commission Act 1988 (WA), excerpted and verbatim from
+# the production corpus. The Act has exactly ONE Schedule, so Western
+# Australian drafting heads it "Schedule" with no number at all. Its clauses
+# restart at 1 and collided with the Act's own sections 1-9: nine duplicate
+# pinpoint groups in one document, every one of them silent, because both
+# provisions were stored under the same plain number.
+UNNUMBERED_SCHEDULE_COLLISION = """1. Short title
+This Act may be cited as the Agricultural Produce Commission Act 1988.
+2. Commencement
+This Act shall come into operation on a day to be fixed by proclamation.
+3. Terms used
+In this Act unless the context otherwise requires — agricultural industry
+means a horticultural industry or any other industry.
+25. Regulations
+The Governor may make regulations prescribing all matters that are required.
+[Section 25 amended: No. 29 of 1993 s. 7; No. 11 of 2021 s. 30.]
+[26, 27. Deleted: No. 11 of 2021 s. 31.]
+Schedule — The Commission and its proceedings
+[s. 5(6)]
+[Heading inserted: No. 19 of 2010 s. 7.]
+1. Term of office of member of Commission
+Subject to this Schedule, a member of the Commission holds office for 3 years.
+2. Remuneration of member of Commission
+A member of the Commission other than an ex officio member is entitled to fees.
+3. Casual vacancies
+Where an office of member of the Commission becomes vacant, the Minister acts.
+"""
+
+# Iron Ore (Mount Goldsworthy) Agreement Act 1964 (WA) and its relatives set
+# their Schedule out under an ORDINAL heading. "First" is the number, written
+# as a word.
+ORDINAL_SCHEDULE_COLLISION = """1. Short title
+This Act may be cited as the Iron Ore (Mount Goldsworthy) Agreement Act 1964.
+2. Ratification
+The Agreement set out in the First Schedule is ratified.
+First Schedule — Iron Ore Agreement
+1. Interpretation
+In this Agreement subject to the context the following terms have meanings.
+2. Term
+This Agreement continues for a period of 21 years from the commencement day.
+"""
+
+
+def test_an_unnumbered_schedule_heading_is_recognised() -> None:
+    """A sole Schedule carries no number, and was invisible to the splitter.
+
+    87 of production's 151 duplicate pinpoint groups are this shape: the
+    Schedule's clauses fall through with plain numeric ids and collide with
+    the Act's own sections, so two different provisions are both cited "1"
+    and a reader cannot tell them apart.
+    """
+    assert schedule_spans("Schedule — The Commission and its proceedings") == [(0, "1")]
+    assert schedule_spans("Schedule - Forms") == [(0, "1")]
+    assert schedule_spans("The Schedule — Matters to be prescribed") == [(0, "1")]
+
+
+def test_an_ordinal_schedule_heading_is_recognised() -> None:
+    """ "First Schedule" is Schedule 1 with the number written as a word."""
+    assert schedule_spans("First Schedule — Iron Ore Agreement") == [(0, "1")]
+    assert schedule_spans("Second Schedule - Forms") == [(0, "2")]
+    assert schedule_spans("Third Schedule — Transitional provisions") == [(0, "3")]
+
+
+def test_a_bare_schedule_word_is_still_not_a_heading() -> None:
+    """The separator remains what distinguishes a heading from a sentence.
+
+    Widening the pattern to an unnumbered Schedule makes this the only thing
+    standing between the rule and ordinary prose, so it is asserted directly.
+    """
+    for line in (
+        "Schedule means the schedule to this Act as amended from time to time.",
+        "Schedule 2 commencement day means the day on which Schedule 2 commences.",
+        "The Schedule referred to in section 5 sets out the procedure.",
+    ):
+        assert schedule_spans(line) == [], line
+
+
+def test_an_unnumbered_schedule_is_ignored_when_the_document_numbers_its_schedules() -> None:
+    """Only a document whose sole Schedule is unnumbered may claim "Sch 1".
+
+    If the document numbers its Schedules, a bare "Schedule" line is a
+    cross-reference or a contents row, and labelling its neighbours "Sch 1"
+    would assert a number the document does not use.
+    """
+    text = "Schedule — Forms\n1. A form\nSchedule 2 — Transitional\n1. A transitional clause\n"
+    assert schedule_spans(text) == [(len("Schedule — Forms\n1. A form\n"), "2")]
+
+
+def test_an_unnumbered_schedules_clauses_do_not_collide_with_the_acts_sections() -> None:
+    """End to end, on the real document: section 1 must resolve once."""
+    provisions = split_sections(UNNUMBERED_SCHEDULE_COLLISION)
+    numbers = [p.section_number for p in provisions]
+    assert len(numbers) == len(set(numbers)), f"duplicate pinpoints remain: {numbers}"
+
+    ones = [p for p in provisions if p.section_number == "1"]
+    assert len(ones) == 1 and ones[0].heading == "Short title"
+    assert any(p.section_number == "Sch 1 cl 1" for p in provisions), numbers
+    assert any(
+        p.section_number == "Sch 1 cl 3" and p.heading == "Casual vacancies" for p in provisions
+    ), numbers
+
+
+def test_an_ordinal_schedules_clauses_do_not_collide_either() -> None:
+    provisions = split_sections(ORDINAL_SCHEDULE_COLLISION)
+    numbers = [p.section_number for p in provisions]
+    assert len(numbers) == len(set(numbers)), f"duplicate pinpoints remain: {numbers}"
+    assert any(p.section_number == "Sch 1 cl 1" for p in provisions), numbers
+
+
+def test_the_relabelled_clauses_keep_the_shape_retrieval_looks_for() -> None:
+    """retrieve.py matches a Schedule sibling with `^Sch \S+ cl <n>$`, and the
+    page's citation chip with `Sch\s+\w+\s+cl`. A label without a number -
+    "Sch cl 3" - satisfies neither, so relabelling would have made these
+    provisions unreachable by the very lookup that exists to find them.
+    """
+    import re
+
+    for text in (UNNUMBERED_SCHEDULE_COLLISION, ORDINAL_SCHEDULE_COLLISION):
+        for p in split_sections(text):
+            if p.section_number.startswith("Sch"):
+                assert re.fullmatch(r"Sch \S+ cl \S+", p.section_number), p.section_number

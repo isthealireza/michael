@@ -366,10 +366,53 @@ ENDNOTES_FOLLOWERS = (
 #: Schedule 2 to the amending Act commences" is a *definition* inside a
 #: Schedule, and matching it labelled the Fair Work Act's s 47A as
 #: "Sch 2 cl 47A" - a citation to a provision that does not exist.
+#: An ordinal Schedule heading writes its number as a word. Old-style WA
+#: Agreement Acts use this form throughout - "First Schedule - Iron Ore
+#: Agreement". The word IS the number, so it maps to one.
+_SCHEDULE_ORDINALS = {
+    "first": "1",
+    "second": "2",
+    "third": "3",
+    "fourth": "4",
+    "fifth": "5",
+    "sixth": "6",
+    "seventh": "7",
+    "eighth": "8",
+    "ninth": "9",
+    "tenth": "10",
+    "eleventh": "11",
+    "twelfth": "12",
+}
+
 SCHEDULE_HEADING = re.compile(
-    r"^schedule\s+(\d+[A-Z]*|[IVXLC]+)[ \t]*(?:[—–-]|$)",
+    r"^(?:"
+    r"schedule[ \t]+(?P<number>\d+[A-Z]*|[IVXLC]+)"
+    r"|(?P<ordinal>" + "|".join(_SCHEDULE_ORDINALS) + r")[ \t]+schedule"
+    r"|(?:the[ \t]+)?(?P<bare>schedule)"
+    r")[ \t]*(?:[—–-]|$)",
     re.IGNORECASE | re.MULTILINE,
 )
+
+
+def _schedule_number(match: re.Match[str]) -> str | None:
+    """The Schedule's number as written, or None when the heading has none."""
+    numbered = match.group("number")
+    if numbered:
+        return numbered.upper()
+    ordinal = match.group("ordinal")
+    if ordinal:
+        return _SCHEDULE_ORDINALS[ordinal.lower()]
+    return None
+
+
+def _numbers_its_schedules(text: str) -> bool:
+    """Does this document give any Schedule of its own a number?
+
+    If it does, a bare "Schedule" line is a cross-reference or a contents row,
+    not the sole Schedule - and labelling the clauses after it "Sch 1" would
+    assert a number the document does not use.
+    """
+    return any(_schedule_number(m) is not None for m in SCHEDULE_HEADING.finditer(text))
 
 
 def find_body_end(text: str, body_start: int) -> int | None:
@@ -475,7 +518,21 @@ def schedule_spans(text: str) -> list[tuple[int, str]]:
     section 11 are different provisions that would otherwise share a pinpoint.
     Knowing where each Schedule begins lets the splitter label them apart.
     """
-    return [(m.start(), m.group(1).upper()) for m in SCHEDULE_HEADING.finditer(text)]
+    numbered = _numbers_its_schedules(text)
+    spans: list[tuple[int, str]] = []
+    for match in SCHEDULE_HEADING.finditer(text):
+        number = _schedule_number(match)
+        if number is None:
+            # An unnumbered "Schedule - Title". A document with exactly one
+            # Schedule does not number it, and its clauses restart at 1, so
+            # before this they fell through with plain numeric ids and
+            # collided with the Act's own sections - 87 of production's 151
+            # duplicate pinpoint groups, every one of them silent.
+            if numbered:
+                continue
+            number = "1"
+        spans.append((match.start(), number))
+    return spans
 
 
 def _opening_schedule(text: str, body_start: int) -> str | None:
@@ -534,6 +591,7 @@ def _opening_schedule(text: str, body_start: int) -> str | None:
       corrupts citations, so this returns ``None`` rather than guessing.
     """
     lines, offsets = _line_index(text)
+    numbered = _numbers_its_schedules(text)
     last_real: str | None = None
     for match in SCHEDULE_HEADING.finditer(text):
         if match.start() > body_start:
@@ -548,7 +606,12 @@ def _opening_schedule(text: str, body_start: int) -> str | None:
         if re.fullmatch(r"schedule\s+\S+", line.strip(), re.IGNORECASE):
             lookahead_start += 1  # this heading's own title wraps onto the next line
         if _has_prose_ahead(lines, lookahead_start):
-            last_real = match.group(1).upper()
+            number = _schedule_number(match)
+            if number is None:
+                if numbered:
+                    continue
+                number = "1"
+            last_real = number
     return last_real
 
 
