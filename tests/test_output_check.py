@@ -122,8 +122,7 @@ def test_an_unrelated_negation_in_a_previous_sentence_does_not_hide_a_certificat
     """
     body = CLEAN.replace(
         "Under the Fair Work Act 2009 (Cth) s 117 an employer must give written notice.",
-        "There is no finding that supports the alternative view. "
-        "This clause complies with s 117.",
+        "There is no finding that supports the alternative view. This clause complies with s 117.",
     )
     assert [f.rule for f in check(body)] == ["certification"]
 

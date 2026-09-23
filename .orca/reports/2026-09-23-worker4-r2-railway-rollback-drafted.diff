@@ -1,0 +1,101 @@
+Drafted by WORKER-4, round 2 (W4-S2). NOT APPLIED — .orca/*.md is the
+ORCHESTRATOR's ground per WORKER.md. Apply this to .orca/RAILWAY.md if agreed.
+
+Why: the "Verify - by artefact, not by the green light" step curls a fixed
+path (`/assets/michael.js`) on a fixed domain
+(`michael-hermes-production.up.railway.app`) and diffs its sha256 against
+`git show <target-commit>:web/michael.js`. Both assumptions are now wrong,
+confirmed live (read-only GET/HEAD, no mutation):
+
+  $ curl -sI https://michael-hermes-production.up.railway.app/
+  HTTP/1.1 404 Not Found
+  x-railway-fallback: true
+  $ curl -s  https://michael-hermes-production.up.railway.app/api/health
+  {"status":"error","code":404,"message":"Application not found", ...}
+
+That domain no longer resolves to any deployed service at all — consistent
+with docs/gate-cutover.md Step 6/7 (remove the michael-hermes public domain
+once michael-gate takes over) having already run. Separately, even before
+that: commit 0c98f30 "feat(gate): serve the chat page from the gate, not the
+Hermes image" removed the COPY that put web/michael.html and web/michael.js
+into the Hermes image at all, and the era before that hashed the served JS
+filename (evidenced in .orca/reports/2026-09-22-wave3-rollback-verification.md:
+`/assets/michael-c6cc4e57dcc6.js`, 200; `/assets/michael.js`, 404 "because the
+built asset is content-hashed"). So the literal `/assets/michael.js` path was
+already wrong for any hermes rollback target after the hashing fix, and is
+doubly wrong now that hermes serves no web assets at all.
+
+The fix below does three things: (1) stop assuming a fixed public domain —
+read it from `railway status`/`railway domain` for the service actually being
+rolled back; (2) branch on whether the rollback target predates the gate
+cutover (0c98f30), since only pre-cutover hermes commits serve the web assets
+at all, and those serve them under a content-hash the doc must read from the
+served HTML rather than assume; (3) for a michael-gate rollback, verify against
+the gate's own fixed, unhashed `/michael.js` path instead.
+
+--- a/.orca/RAILWAY.md
++++ b/.orca/RAILWAY.md
+@@ -169,17 +169,42 @@
+ ### 3. Verify - by artefact, not by the green light
+
+ A rollback that only checks "is the service Online" repeats this project's
+ own mistake of trusting a status light over a measurement (see
+ `.orca/PRODUCTION-READY.md`'s own framing, and W4-7). After the rollback
+ reports success:
+
+ ```
+-railway status                                                    # new deployment ID matches the target
+-curl -sI https://michael-hermes-production.up.railway.app/assets/michael.html
+-curl -sI https://michael-hermes-production.up.railway.app/assets/michael.js
++railway status                                                    # new deployment ID matches the target
++railway domain --service <the service being rolled back>          # the CURRENT public domain, not a remembered one
+ ```
+
+-Compare the served bytes' sha256 (LF-normalised - see finding W4-1) against
+-`git show <target-commit>:web/michael.html` / `:web/michael.js` from this
+-repo at the commit identified in step 1. A matching hash is the proof the
+-rollback actually landed the intended build, not merely that Railway reports
+-a green status - the same distinction D1-D3 already draw for a forward
+-deploy. Re-check `.orca/ro.sh cli hosts` (or another cheap read) to confirm
+-the container is actually serving, not just reporting `Online` while still
+-booting.
++**Do not assume `michael-hermes-production.up.railway.app` still resolves.**
++Since commit 0c98f30 ("serve the chat page from the gate, not the Hermes
++image"), `michael-hermes` no longer serves `web/michael.html` or
++`web/michael.js` at all - `michael-gate` does - and per
++docs/gate-cutover.md Step 6/7 the old public domain on `michael-hermes` is
++removed once the gate takes over. Confirm the actual domain for the service
++you rolled back with `railway domain` before curling anything.
++
++**Rolling back `michael-gate`:** it serves the asset unhashed at a fixed
++path. Compare directly:
++
++```
++curl -s https://<the gate's current domain>/michael.js | sha256sum
++git show <target-commit>:web/michael.js | sha256sum
++```
++
++(LF-normalise if they differ only in line endings - see finding W4-1.) A
++match is the proof the rollback landed the intended build, not merely that
++Railway reports a green status.
++
++**Rolling back `michael-hermes` to a commit before 0c98f30:** that era
++served the page itself, and a separate era within it (see
++.orca/reports/2026-09-22-wave3-rollback-verification.md) content-hashed the
++served JS filename, so `/assets/michael.js` may 404 even on a correct
++rollback. Read the actual filename out of the served HTML instead of
++assuming one:
++
++```
++curl -s https://<hermes's current domain>/assets/michael.html \
++  | grep -o 'michael-[0-9a-f]\{12\}\.js' | head -1
++curl -s https://<hermes's current domain>/assets/<name-from-above> | sha256sum
++git show <target-commit>:web/michael.js | sha256sum
++```
++
++**Rolling back `michael-hermes` to a commit at or after 0c98f30:** it no
++longer serves either web asset, so this artefact check does not apply to it.
++Verify instead against something hermes still serves for that commit, e.g.
++`.orca/ro.sh cli hosts` succeeding (the container is actually up and the
++MCP path is live), and/or the `/api/health` `version` field if that commit
++changed it.

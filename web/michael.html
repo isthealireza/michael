@@ -245,6 +245,22 @@ main{
    `normal` — otherwise the source newlines between a <li> and the next would
    print twice. Margins are set on both sides because the surrounding text is
    pre-wrapped and has no paragraph margins of its own. */
+/* Michael sections a long answer with ## and ###. They start at h3 because
+   the card's own "MICHAEL" label is the h2 — the outline stays true. Tracking
+   tightens as the size grows, per the type scale used elsewhere on the page. */
+.answer h3,.answer h4,.answer h5,.body h3,.body h4,.body h5{
+  white-space:normal; margin:var(--s-5) 0 var(--s-2); color:var(--pv-fg-1);
+  line-height:1.3;
+}
+.answer h3,.body h3{font-size:1.06rem; font-weight:700; letter-spacing:-.011em}
+.answer h4,.body h4{font-size:.94rem; font-weight:700; letter-spacing:-.004em}
+.answer h5,.body h5{
+  font-size:.72rem; font-weight:700; text-transform:uppercase;
+  letter-spacing:var(--track-eyebrow); color:var(--pv-fg-3);
+}
+/* The first heading of an answer has the card head directly above it. */
+.answer > h3:first-child,.answer > h4:first-child,.answer > h5:first-child{margin-top:0}
+
 .answer ul,.answer ol,.body ul,.body ol{
   white-space:normal; margin:var(--s-3) 0; padding-left:1.35rem;
 }

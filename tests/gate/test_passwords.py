@@ -4,13 +4,13 @@ from michael.gate.passwords import hash_password, verify_password
 
 
 def test_round_trips() -> None:
-    assert verify_password("correct horse battery staple",
-                           hash_password("correct horse battery staple"))
+    assert verify_password(
+        "correct horse battery staple", hash_password("correct horse battery staple")
+    )
 
 
 def test_rejects_the_wrong_password() -> None:
-    assert not verify_password("wrong-password-x",
-                               hash_password("right-password-x"))
+    assert not verify_password("wrong-password-x", hash_password("right-password-x"))
 
 
 def test_uses_argon2id_not_scrypt() -> None:

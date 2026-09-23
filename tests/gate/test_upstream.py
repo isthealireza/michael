@@ -134,9 +134,7 @@ def test_a_client_that_already_has_a_session_does_not_sign_in_again() -> None:
     client = _FakeDashboard({"ticket": "tkt"}, already_signed_in=True)
 
     assert asyncio.run(fetch_ws_ticket(CONFIG, client)) == "tkt"  # type: ignore[arg-type]
-    assert client.calls == [
-        "http://michael-hermes.railway.internal:9119/api/auth/ws-ticket"
-    ]
+    assert client.calls == ["http://michael-hermes.railway.internal:9119/api/auth/ws-ticket"]
 
 
 def test_open_upstream_session_posts_the_credential() -> None:
@@ -144,9 +142,7 @@ def test_open_upstream_session_posts_the_credential() -> None:
     asyncio.run(open_upstream_session(CONFIG, client))  # type: ignore[arg-type]
 
     assert client.signed_in
-    assert client.calls == [
-        "http://michael-hermes.railway.internal:9119/auth/password-login"
-    ]
+    assert client.calls == ["http://michael-hermes.railway.internal:9119/auth/password-login"]
 
 
 @pytest.mark.parametrize("bad_payload", [{}, {"ticket": ""}, {"ticket": 123}])

@@ -331,9 +331,9 @@ def test_the_chat_page_keeps_its_answer_states_visually_distinct() -> None:
 
     A later pass that harmonises these into one accent colour would leave the
     page looking tidier and saying less, and nothing else would catch it."""
-    page = (
-        Path(__file__).resolve().parents[2] / "web" / "michael.html"
-    ).read_text(encoding="utf-8")
+    page = (Path(__file__).resolve().parents[2] / "web" / "michael.html").read_text(
+        encoding="utf-8"
+    )
     css = page.split("<style>", 1)[1].split("</style>", 1)[0].replace(" ", "").replace("\n", "")
 
     def rule(selector: str) -> str:
@@ -573,9 +573,7 @@ def test_login_success_is_logged(
             "/auth/login", json={"email": "reader@x.com", "password": "a-long-enough-password"}
         )
     assert response.status_code == 204
-    assert any(
-        "login success" in r.message and "user=7" in r.message for r in caplog.records
-    )
+    assert any("login success" in r.message and "user=7" in r.message for r in caplog.records)
 
 
 def test_login_failure_is_logged_with_account_and_address(
@@ -592,9 +590,7 @@ def test_login_failure_is_logged_with_account_and_address(
         )
     assert response.status_code == 401
     assert any(
-        "login failed" in r.message
-        and "attacker@x.com" in r.message
-        and "203.0.113.9" in r.message
+        "login failed" in r.message and "attacker@x.com" in r.message and "203.0.113.9" in r.message
         for r in caplog.records
     )
 
@@ -975,9 +971,7 @@ def test_a_resumed_sessions_new_live_id_becomes_usable_immediately(
         app_module.session_store, "owned_by", lambda user_id: frozenset({"stored-1"})
     )
     monkeypatch.setattr(app_module, "fetch_ws_ticket", _fake_fetch_ws_ticket)
-    monkeypatch.setattr(
-        app_module.user_store, "find_by_id", lambda user_id: _enabled_user(user_id)
-    )
+    monkeypatch.setattr(app_module.user_store, "find_by_id", lambda user_id: _enabled_user(user_id))
     claimed_ids: list[str] = []
     monkeypatch.setattr(
         app_module.session_store,
@@ -1104,9 +1098,12 @@ def test_a_chat_user_cannot_change_an_account(
     import michael.gate.app as app_module
 
     called: list[str] = []
-    monkeypatch.setattr(
-        app_module.user_store, "disable_user", lambda email: called.append(email) or True
-    )
+
+    def fake_disable(email: str) -> bool:
+        called.append(email)
+        return True
+
+    monkeypatch.setattr(app_module.user_store, "disable_user", fake_disable)
 
     response = client.post(
         "/admin/users/enabled",
@@ -1124,9 +1121,7 @@ def test_an_anonymous_caller_is_sent_to_sign_in(client: TestClient) -> None:
     assert response.headers["location"] == "/login"
 
 
-def test_an_admin_sees_the_accounts(
-    client: TestClient, monkeypatch: pytest.MonkeyPatch
-) -> None:
+def test_an_admin_sees_the_accounts(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
     import michael.gate.app as app_module
 
     monkeypatch.setattr(
@@ -1150,13 +1145,18 @@ def test_an_admin_can_disable_and_re_enable_an_account(
 
     disabled: list[str] = []
     enabled: list[str] = []
+
+    def fake_disable(email: str) -> bool:
+        disabled.append(email)
+        return True
+
+    def fake_enable(email: str) -> bool:
+        enabled.append(email)
+        return True
+
     monkeypatch.setattr(app_module.user_store, "find_by_email", lambda e: _enabled_user(7))
-    monkeypatch.setattr(
-        app_module.user_store, "disable_user", lambda e: disabled.append(e) or True
-    )
-    monkeypatch.setattr(
-        app_module.user_store, "enable_user", lambda e: enabled.append(e) or True
-    )
+    monkeypatch.setattr(app_module.user_store, "disable_user", fake_disable)
+    monkeypatch.setattr(app_module.user_store, "enable_user", fake_enable)
     cookies = {COOKIE_NAME: _admin_token()}
 
     off = client.post(
@@ -1179,10 +1179,13 @@ def test_an_admin_cannot_disable_their_own_account(
     import michael.gate.app as app_module
 
     called: list[str] = []
+
+    def fake_disable(email: str) -> bool:
+        called.append(email)
+        return True
+
     monkeypatch.setattr(app_module.user_store, "find_by_email", lambda e: _enabled_user(1))
-    monkeypatch.setattr(
-        app_module.user_store, "disable_user", lambda e: called.append(e) or True
-    )
+    monkeypatch.setattr(app_module.user_store, "disable_user", fake_disable)
 
     response = client.post(
         "/admin/users/enabled",

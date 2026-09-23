@@ -31,7 +31,7 @@ _OTHER_REQUIRED_VARS = {
 
 def test_entrypoint_guards_michael_database_url() -> None:
     text = ENTRYPOINT.read_text(encoding="utf-8")
-    assert 'MICHAEL_DATABASE_URL:?' in text
+    assert "MICHAEL_DATABASE_URL:?" in text
 
 
 @pytest.mark.skipif(shutil.which("sh") is None, reason="no POSIX sh on PATH")

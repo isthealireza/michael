@@ -318,7 +318,20 @@ test("the export of an empty conversation is still a valid document", () => {
 /* breaks the two spans a reader relies on to judge an answer.             */
 /* ---------------------------------------------------------------------- */
 
-const { inline, renderMarkdown } = require("./michael.js");
+const { inline, renderMarkdown, esc } = require("./michael.js");
+
+test("a bidi override character is stripped, not merely escaped", () => {
+  /* U+202E RIGHT-TO-LEFT OVERRIDE reverses the visual order of everything
+   * that follows it until a pop character or the end of the run — the
+   * classic RLO filename/text spoofing trick — and it has no HTML meaning,
+   * so the plain [&<>"] escape would let it straight through to the DOM. */
+  const rlo = "‮exe.txt";
+  assert.ok(!esc(rlo).includes("‮"), "the RLO character does not survive esc()");
+  assert.equal(esc(rlo), "exe.txt");
+
+  const inMissing = inline("[MISSING: the ‮start date]");
+  assert.ok(!inMissing.includes("‮"), "a bidi override inside a [MISSING] item is stripped too");
+});
 
 test("a citation survives inside a bullet and inside a table cell", () => {
   const list = inline("- Under Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07) notice applies.");
@@ -386,4 +399,28 @@ test("an asterisk bullet is left alone so it can never be read as bold", () => {
   const html = renderMarkdown("* not a bullet");
   assert.ok(!html.includes("<ul>"));
   assert.ok(!html.includes("<strong>"));
+});
+
+test("Michael's ## and ### section headings become headings, not literal hashes", () => {
+  /* Observed in production: a real answer opened with
+     "## Minimum Notice Periods — Fair Work Act 2009 (Cth) s 117 ..." and the
+     page printed the hashes. The card's own label is an h2, so an answer's
+     headings start at h3 and the document outline stays true. */
+  const html = inline("## Minimum Notice Periods\n\nSome prose.\n\n### Extra week\n\nMore prose.");
+  assert.match(html, /<h3>Minimum Notice Periods<\/h3>/);
+  assert.match(html, /<h4>Extra week<\/h4>/);
+  assert.ok(!html.includes("##"), "no literal hashes survive");
+  assert.ok(!/<h[12]\b/.test(html), "an answer never emits an h1 or h2");
+
+  /* A lone # is still inside the card, so it is an h3 too, and deeper levels
+   * bottom out at h5 rather than running off the scale. */
+  assert.match(renderMarkdown("# Top"), /<h3>Top<\/h3>/);
+  assert.match(renderMarkdown("###### Deep"), /<h5>Deep<\/h5>/);
+
+  /* A heading carrying a citation keeps the chip whole. */
+  const cited = inline("## Notice — Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07)");
+  assert.match(cited, /<h3>Notice — <span class="cite">Fair Work Act 2009 \(Cth\) s 117 \(snapshot 2026-07-07\)<\/span><\/h3>/);
+
+  /* A hash that is not a heading — no space after it — stays text. */
+  assert.ok(!renderMarkdown("#hashtag").includes("<h3>"));
 });

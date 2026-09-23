@@ -1,0 +1,55 @@
+Drafted by WORKER-4, round 2 (new ownership: michael-gate). NOT APPLIED —
+.orca/*.md is the ORCHESTRATOR's ground per WORKER.md ("You do not edit
+.orca/*.md. Those are the ORCHESTRATOR's."), the same boundary that keeps
+MICHAEL.md changes as drafted diffs. Applying this section is the
+ORCHESTRATOR's call; the content below is the substance of what the task
+asked for ("add it to .orca/PRODUCTION-READY.md as a covered surface with
+criteria, so the next round can audit it").
+
+Status column choices below are deliberately conservative: PASS only where
+docs/gate-cutover.md or TEAM.md already records a re-run measurement: OPEN
+everywhere the evidence is a one-time build/design note rather than a
+measurement, so the next round has real audit targets rather than a false
+"done".
+
+--- a/.orca/PRODUCTION-READY.md
++++ b/.orca/PRODUCTION-READY.md
+@@ -90,6 +90,42 @@
+ | F4 | Every known trap that has cost this project a session is in a brief or the README |
+
+ ---
+
++## G. michael-gate — the public front door
++
++A second Railway service (`gate/Dockerfile`, `src/michael/gate/`) with its
++own auth, rate limiting, session cookies and sign-in UI. It was built and
++deployed without a worker owning it or a criterion here covering it (see
++`.orca/TEAM.md`, "Unowned"). WORKER-4 owns it from round 2 onward. It was
++**not** changed or attacked to produce this section — everything below is
++read from `docs/gate-cutover.md` and prior read-only checks. The next round
++should audit it properly, including things this list does not yet cover
++(session fixation, cookie-theft blast radius, the admin console's own input
++handling, rate-limit bypass beyond the client_address check below).
++
++| # | Criterion | Status | Evidence |
++|---|---|---|---|
++| G1 | `/` redirects an unauthenticated caller to `/login` (303) | PASS | `.orca/TEAM.md` "Unowned" entry; re-verify live before relying on it again |
++| G2 | Session cookie carries `HttpOnly; Secure; SameSite=strict; Max-Age=43200` | PASS | `.orca/TEAM.md` "Unowned" entry |
++| G3 | The rate-limit key (`client_address`) is the caller's real address, not shared edge infrastructure or attacker-controlled | PASS — 2026-09-23 | `docs/gate-cutover.md` "Precondition — verify the client address is real": 5 live probes from a real public address, `X-Real-IP` matches the caller and a spoofed `X-Real-IP` is overwritten by Railway's edge |
++| G4 | `tests/gate/test_users.py` and `tests/gate/test_sessions.py` (marked `integration`, excluded from the default `uv run pytest`) pass against a real database | PASS — 2026-09-23, two consecutive runs | `docs/gate-cutover.md` "Precondition — integration tests": 20 passed / 131 deselected, twice, against `Postgres-CWDF`/`michael_gate_test` |
++| G5 | `role` (`admin`/`chat`) is enforced, not merely stored: a `chat` session gets 404 (not 403) from `/admin*`, an anonymous caller is redirected, and a forged `admin` cookie fails signature verification | OPEN | Asserted by `docs/gate-cutover.md` "The administrator role" and by `tests/gate/test_app.py`'s admin tests (default suite, not `integration` — re-run and re-read to confirm, not merely cited) |
++| G6 | `michael_ro` cannot read or write the `gate` schema (the answering path's read-only role stays scoped to the retrieval schema, not account/session data) | OPEN | `docs/gate-cutover.md` step 3 describes the REVOKE as part of `michael gate-schema`; not independently re-verified against production |
++| G7 | A disabled account cannot open a new `/api/ws` connection; an already-open one is not re-checked mid-connection; a plain `GET /` still trusts an existing cookie until its 12-hour lifetime expires | ACCEPTED gap, not a defect | `docs/gate-cutover.md` "Known residual gap — disabling an account has a lag"; mitigation is rotating `GATE_SECRET`, which invalidates every session |
++| G8 | `GATE_SECRET`, `HERMES_PASSWORD` and `MICHAEL_DATABASE_URL` reach the container only via Railway variables, never the repo or an image layer | OPEN | Same secrets-hygiene bar as B9; not independently re-checked for this service |
++| G9 | The gate's own Dockerfile installs from `uv.lock` with `--frozen` (I7), so the deployed dependency set is provably the one the test suite ran against | PASS | `gate/Dockerfile` comment records the incident this replaced (a prior `pip install "/opt/michael[gate]"` floated off-lock) |
++
++**Rollback for this service is not yet written down as its own procedure.**
++`.orca/RAILWAY.md`'s Rollback section (F3) was written for `michael-hermes`
++and needs the same treatment for `michael-gate` — see the round-2 W4-S2 fix
++(`.orca/reports/2026-09-23-worker4-r2-railway-rollback-drafted.diff`), which
++already adds a `michael-gate` branch to that procedure's verification step.
++That diff is drafted, not applied, for the same reason this section is.
++
++---
++
+ ## The rule that governs this campaign

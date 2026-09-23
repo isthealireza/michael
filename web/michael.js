@@ -371,6 +371,18 @@ function renderMarkdown(html) {
       continue;
     }
 
+    /* ATX headings. Michael sections long answers with ## and ###, and left
+     * unhandled the hashes print literally. The card's own heading is an <h2>,
+     * so an answer's headings start at <h3> — including a lone "#", which is
+     * still subordinate to the card it sits inside. */
+    const heading = line.match(/^\s*(#{1,6})[ \t]+(.+?)[ \t]*#*\s*$/);
+    if (heading) {
+      const level = Math.min(5, heading[1].length <= 2 ? 3 : heading[1].length + 1);
+      out.push(`<h${level}>${mdSpans(heading[2])}</h${level}>`);
+      i += 1;
+      continue;
+    }
+
     if (bullet.test(line) || numbered.test(line)) {
       const ordered = !bullet.test(line);
       const pattern = ordered ? numbered : bullet;
@@ -393,8 +405,8 @@ function renderMarkdown(html) {
    * line above and below it that the author never wrote. Blank lines between
    * ordinary paragraphs are the author's and stay. */
   return out.join("\n")
-    .replace(/\n+(?=<(?:ul|ol|pre|table)>)/g, "")
-    .replace(/(<\/(?:ul|ol|pre|table)>)\n+/g, "$1");
+    .replace(/\n+(?=<(?:ul|ol|pre|table|h[3-5])>)/g, "")
+    .replace(/(<\/(?:ul|ol|pre|table|h[3-5])>)\n+/g, "$1");
 }
 
 function inline(text) {

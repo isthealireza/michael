@@ -65,9 +65,7 @@ def test_apply_gate_schema_applies_the_revokes_when_michael_ro_exists(
 
     schema_module.apply_gate_schema()
 
-    assert any(
-        "REVOKE ALL ON SCHEMA gate FROM michael_ro" in stmt for stmt in cur.executed
-    )
+    assert any("REVOKE ALL ON SCHEMA gate FROM michael_ro" in stmt for stmt in cur.executed)
 
 
 def test_creates_its_own_schema_not_public() -> None:
@@ -81,10 +79,7 @@ def test_revokes_everything_from_the_readonly_role() -> None:
     sql = gate_schema_sql()
     assert "REVOKE ALL ON SCHEMA gate FROM michael_ro" in sql
     assert "REVOKE ALL ON ALL TABLES IN SCHEMA gate FROM michael_ro" in sql
-    assert (
-        "ALTER DEFAULT PRIVILEGES IN SCHEMA gate REVOKE ALL ON TABLES FROM michael_ro"
-        in sql
-    )
+    assert "ALTER DEFAULT PRIVILEGES IN SCHEMA gate REVOKE ALL ON TABLES FROM michael_ro" in sql
     assert "GRANT" not in sql.replace("REVOKE ALL", "")
 
 

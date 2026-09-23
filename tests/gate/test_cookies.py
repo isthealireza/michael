@@ -12,8 +12,7 @@ NOW = datetime(2026, 9, 23, 12, 0, tzinfo=UTC)
 
 def test_round_trips() -> None:
     payload = verify(mint(7, "chat", secret=SECRET, now=NOW), secret=SECRET, now=NOW)
-    assert payload == CookiePayload(user_id=7, role="chat",
-                                    expires_at=NOW + LIFETIME)
+    assert payload == CookiePayload(user_id=7, role="chat", expires_at=NOW + LIFETIME)
 
 
 def test_lifetime_is_twelve_hours() -> None:
@@ -45,9 +44,7 @@ def test_tampering_with_the_role_is_rejected() -> None:
     assert claims["role"] == "chat"
     claims["role"] = "admin"
     forged_body = (
-        base64.urlsafe_b64encode(
-            json.dumps(claims, separators=(",", ":"), sort_keys=True).encode()
-        )
+        base64.urlsafe_b64encode(json.dumps(claims, separators=(",", ":"), sort_keys=True).encode())
         .decode("ascii")
         .rstrip("=")
     )
@@ -66,6 +63,7 @@ def test_overflow_in_expiry_claim_is_rejected() -> None:
     Regression test for uncaught OverflowError in verify(): float(10**400) and
     datetime.fromtimestamp(1e300) both raise OverflowError, which was not caught.
     """
+
     # Create a forged token with an absurd exp value that will pass signature
     # check but raise OverflowError when parsed. We build it the same way mint()
     # does so the HMAC check passes.

@@ -32,6 +32,5 @@ def gate_tables() -> None:
     apply_gate_schema()
     with writable() as conn, conn.cursor() as cur:
         cur.execute(
-            "TRUNCATE gate.login_attempts, gate.user_sessions, gate.users "
-            "RESTART IDENTITY CASCADE"
+            "TRUNCATE gate.login_attempts, gate.user_sessions, gate.users RESTART IDENTITY CASCADE"
         )
