@@ -23,7 +23,36 @@ const GATEWAY_PROTOCOL = "hermes-gateway-v1";
 const ANSWER_FRAME = "message.delta";
 const TERMINAL_FRAMES = new Set(["message.complete", "turn.end", "turn.complete"]);
 
-const state = { live: null, stored: null, busy: false };
+const state = {
+  live: null,
+  stored: null,
+  busy: false,
+  /* The socket of the turn in flight, so Stop can close it. One socket per
+   * turn (see connect), so there is never more than one to hold. */
+  socket: null,
+  /* Question/answer pairs, kept for the Markdown export. The gate stores who
+   * owns which session, never what was asked in it, so this is the only place
+   * the transcript exists — and it lives for the life of the page only. */
+  turns: [],
+};
+
+/* Preferences that are the reader's, not the system's. localStorage is
+ * per-browser and can throw outright in a private window, so every access is
+ * guarded and the page works the same when it fails. */
+const PREFS = { sendKey: "enter" };
+
+function loadPrefs() {
+  try {
+    const raw = localStorage.getItem("michael.prefs");
+    if (raw) Object.assign(PREFS, JSON.parse(raw));
+  } catch { /* unavailable or unparseable: the defaults above stand */ }
+}
+
+function savePrefs() {
+  try {
+    localStorage.setItem("michael.prefs", JSON.stringify(PREFS));
+  } catch { /* nothing to do; the preference simply will not persist */ }
+}
 
 /* ------------------------------- transport ------------------------------- */
 
@@ -75,8 +104,9 @@ function unwrap(frame, what) {
 
 /* --------------------------------- asking -------------------------------- */
 
-async function ask(question, onDelta, onTool, onPhase) {
+async function ask(question, onDelta, onTool, onPhase, onUsage) {
   const ws = await connect();
+  state.socket = ws;
   try {
     if (!state.live) {
       onPhase("opening a session");
@@ -126,6 +156,11 @@ async function ask(question, onDelta, onTool, onPhase) {
           }
         } else if (kind === "tool.start") {
           onTool(payload.name || payload.tool || "tool");
+        } else if (kind === "session.usage") {
+          /* Already on the wire — three or four of these arrive per turn.
+           * Rendering them costs no new upstream method, and what a turn
+           * cost is worth knowing on a tool billed per run. */
+          if (onUsage) onUsage(payload);
         } else if (TERMINAL_FRAMES.has(kind)) {
           resolve();
         }
@@ -147,8 +182,23 @@ async function ask(question, onDelta, onTool, onPhase) {
     if (!answer.trim()) throw new Error("Michael returned nothing — that is a failed run");
     return answer;
   } finally {
+    state.socket = null;
     try { ws.close(); } catch { /* already closed */ }
   }
+}
+
+/* Stop. Closing the socket ends the turn from this page's side: `ask` resolves
+ * if any answer text had already arrived, and rejects otherwise.
+ *
+ * Be clear about what this does NOT do. The upstream turn keeps running and
+ * keeps costing — cancelling it server-side needs a method the gate's
+ * allowlist does not carry, and widening that allowlist is a security
+ * decision, not a convenience. So this stops the waiting, not the work. */
+function cancelTurn() {
+  const ws = state.socket;
+  if (!ws) return;
+  state.socket = null;
+  try { ws.close(); } catch { /* already closed */ }
 }
 
 /* ------------------------------- rendering ------------------------------- */
@@ -334,6 +384,104 @@ function showSession() {
   $("sess").textContent = state.stored ? `session ${state.stored}` : "";
 }
 
+/* ------------------------- transcript, usage, search ---------------------- */
+
+/* A time, not a date: the thread is one sitting. The full stamp goes on the
+ * title attribute, and into the export, where the date matters. */
+function clockTime(when) {
+  return when.toLocaleTimeString("en-AU", { hour: "2-digit", minute: "2-digit" });
+}
+
+/* What a turn cost, from the session.usage frames the socket already carries.
+ * Fields vary by provider, so each is read defensively and anything missing is
+ * simply not shown rather than rendered as zero. */
+function usageLabel(payload) {
+  if (!payload || typeof payload !== "object") return "";
+  const inTok = payload.input_tokens ?? payload.prompt_tokens;
+  const outTok = payload.output_tokens ?? payload.completion_tokens;
+  const cost = payload.cost ?? payload.total_cost ?? payload.estimated_cost;
+  const parts = [];
+  if (Number.isFinite(inTok) && Number.isFinite(outTok)) {
+    parts.push(`${inTok} in · ${outTok} out`);
+  }
+  if (Number.isFinite(cost) && cost > 0) parts.push(`$${Number(cost).toFixed(4)}`);
+  return parts.join(" · ");
+}
+
+/* The export. Michael's answers already carry their own citations, snapshot
+ * dates and closing notice, so a plain-text transcript is a usable record on
+ * its own — which is the point: the workflow is getting this into a memo. */
+function transcriptMarkdown() {
+  const when = new Date();
+  const lines = [
+    "# Michael — research transcript",
+    "",
+    `Exported ${when.toLocaleString("en-AU")}`,
+    state.stored ? `Session ${state.stored}` : "",
+    "",
+    "Internal research only. Michael is not a lawyer and does not give legal",
+    "advice. Every output requires review by an admitted Australian legal",
+    "practitioner before use.",
+    "",
+    "---",
+    "",
+  ];
+  for (const turn of state.turns) {
+    lines.push(`## Question — ${turn.at.toLocaleString("en-AU")}`, "", turn.question, "");
+    lines.push("## Michael", "", turn.answer || "(no answer)", "");
+    if (turn.tools) lines.push(`_Consulted: ${turn.tools}_`, "");
+    lines.push("---", "");
+  }
+  return lines.filter((line) => line !== null).join("\n");
+}
+
+function downloadTranscript() {
+  if (!state.turns.length) return;
+  const stamp = new Date().toISOString().slice(0, 16).replace(/[:T]/g, "-");
+  const blob = new Blob([transcriptMarkdown()], { type: "text/markdown;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `michael-${stamp}.md`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+/* Search hides non-matching turns rather than highlighting inside them: the
+ * reader is usually hunting one section number across a long answer, and
+ * rewriting answer HTML to inject marks would mean re-running the citation
+ * and closing-block rendering on already-rendered output. */
+function filterThread(query) {
+  const needle = query.trim().toLowerCase();
+  const turns = [...document.querySelectorAll("#thread .turn")];
+  let shown = 0;
+  for (const turn of turns) {
+    const hit = !needle || turn.textContent.toLowerCase().includes(needle);
+    turn.classList.toggle("nomatch", !hit);
+    if (hit) shown += 1;
+  }
+  const note = $("searchCount");
+  if (note) {
+    note.textContent = !needle
+      ? ""
+      : `${shown} of ${turns.length} ${turns.length === 1 ? "turn" : "turns"}`;
+  }
+}
+
+async function copyText(text, button) {
+  try {
+    await navigator.clipboard.writeText(text);
+    const was = button.textContent;
+    button.textContent = "Copied";
+    setTimeout(() => { button.textContent = was; }, 1400);
+  } catch {
+    button.textContent = "Press Ctrl+C";
+    setTimeout(() => { button.textContent = "Copy"; }, 1800);
+  }
+}
+
 /* --------------------------------- wiring -------------------------------- */
 
 function scrollDown() {
@@ -349,19 +497,32 @@ async function submit() {
   $("q").value = "";
   $("empty")?.remove();
 
+  const at = new Date();
+  const record = { question, answer: "", tools: "", at };
+  state.turns.push(record);
+
   const turn = document.createElement("div");
   turn.className = "turn";
   turn.innerHTML =
     `<div class="asked"><div class="who">Question</div>${esc(question)}</div>
      <div class="card" style="margin-top:12px">
-       <h2>Michael</h2><div class="body"><span class="working"></span></div>
+       <div class="cardhead"><h2>Michael</h2>
+         <time datetime="${at.toISOString()}" title="${esc(at.toLocaleString("en-AU"))}"
+           >${esc(clockTime(at))}</time>
+         <button type="button" class="copy" hidden>Copy</button></div>
+       <div class="body"><span class="working"></span></div>
+       <div class="meta hidden"></div>
        <div class="tools hidden"></div></div>`;
   $("thread").appendChild(turn);
   scrollDown();
 
   const bodyEl = turn.querySelector(".body");
   const toolsEl = turn.querySelector(".tools");
+  const metaEl = turn.querySelector(".meta");
+  const copyEl = turn.querySelector(".copy");
   const tools = [];
+
+  setComposerBusy(true);
 
   try {
     const answer = await ask(
@@ -373,32 +534,88 @@ async function submit() {
         if (!tools.includes(label)) tools.push(label);
         toolsEl.classList.remove("hidden");
         toolsEl.textContent = "consulted: " + tools.join(" · ");
+        record.tools = tools.join(" · ");
       },
       (phase) => { $("status").textContent = phase + "…"; },
+      (usage) => {
+        const label = usageLabel(usage);
+        if (!label) return;
+        metaEl.classList.remove("hidden");
+        metaEl.textContent = label;
+      },
     );
     bodyEl.innerHTML = renderAnswer(answer, false);
+    record.answer = answer;
+    copyEl.hidden = false;
+    copyEl.onclick = () => copyText(answer, copyEl);
     $("status").textContent = "";
   } catch (err) {
     bodyEl.innerHTML =
       `<div class="banner"><div class="h">NO ANSWER</div><div class="b">${
         esc(err.message || err)}</div></div>`;
+    record.answer = "";
     $("status").textContent = "";
   } finally {
     state.busy = false;
-    $("askBtn").disabled = false;
+    setComposerBusy(false);
     scrollDown();
     $("q").focus();
   }
 }
 
-$("askBtn").onclick = submit;
+/* The send control becomes Stop while a turn is in flight. One control, not
+ * two: a disabled Send beside a live Stop is two things to read where the
+ * reader only ever has one choice. */
+function setComposerBusy(busy) {
+  const btn = $("askBtn");
+  btn.disabled = false;
+  btn.classList.toggle("stop", busy);
+  btn.setAttribute("aria-label", busy ? "Stop this answer" : "Send question");
+  const dl = $("downloadBtn");
+  if (dl) dl.disabled = state.turns.length === 0;
+}
+
+$("askBtn").onclick = () => {
+  if (state.busy) { cancelTurn(); return; }
+  submit();
+};
+
+/* Enter-to-send punishes anyone drafting a long factual question, which is
+ * the normal case here, so it is a preference rather than a rule. */
 $("q").addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); submit(); }
+  if (e.key !== "Enter") return;
+  const wantsCtrl = PREFS.sendKey === "ctrl";
+  const send = wantsCtrl ? (e.ctrlKey || e.metaKey) : !e.shiftKey;
+  if (send) { e.preventDefault(); if (!state.busy) submit(); }
 });
+
+loadPrefs();
+
+/* Toolbar. Each control is absent-tolerant so michael.js keeps working against
+ * the test harness's stub DOM, which has none of them. */
+$("searchBox")?.addEventListener("input", (e) => filterThread(e.target.value));
+$("downloadBtn")?.addEventListener("click", downloadTranscript);
+if ($("downloadBtn")) $("downloadBtn").disabled = true;
+
+const sendKeyEl = $("sendKey");
+if (sendKeyEl) {
+  sendKeyEl.value = PREFS.sendKey;
+  sendKeyEl.addEventListener("change", (e) => {
+    PREFS.sendKey = e.target.value === "ctrl" ? "ctrl" : "enter";
+    savePrefs();
+    const hint = $("sendHint");
+    if (hint) {
+      hint.textContent = PREFS.sendKey === "ctrl"
+        ? "Ctrl+Enter to send · Enter for a new line"
+        : "Enter to send · Shift+Enter for a new line";
+    }
+  });
+}
 
 /* Node-only export, for tests. `module` is undefined in the browser, so this
  * is a no-op there and changes nothing about how the page behaves. Exports
  * the real functions the tests exercise, not a reimplementation of them. */
 if (typeof module !== "undefined") {
-  module.exports = { renderAnswer, headingMatch, NOT_COVERED, toolLabel, inline, esc, connect, CITATION };
+  module.exports = { renderAnswer, headingMatch, NOT_COVERED, toolLabel, inline, esc,
+    connect, CITATION, usageLabel, transcriptMarkdown, clockTime, state, PREFS };
 }

@@ -113,10 +113,43 @@ header{
 }
 .sub{font-size:.75rem; line-height:1.4; letter-spacing:var(--track-body); color:var(--pv-fg-4)}
 .sess{
-  margin-left:auto; font-family:var(--font-mono); font-size:.69rem;
+  font-family:var(--font-mono); font-size:.69rem;
   letter-spacing:var(--track-mono); color:var(--pv-fg-5); white-space:nowrap;
 }
-@media (max-width:40rem){ .bar{padding:var(--s-2) var(--s-4); gap:.55rem} .sub{display:none} }
+.tools-bar{
+  margin-left:auto; display:flex; align-items:center; gap:var(--s-2); flex-wrap:wrap;
+}
+.tools-bar input[type=search],.tools-bar select{
+  font:inherit; font-size:.79rem; color:var(--pv-fg-1); background:var(--pv-paper);
+  border:1px solid var(--pv-rule); border-radius:var(--radius-2);
+  padding:5px 8px; min-height:32px;
+}
+.tools-bar input[type=search]{width:9rem}
+.tools-bar input[type=search]:focus,.tools-bar select:focus{
+  outline:none; border-color:var(--pv-green);
+}
+.tools-bar .count{
+  font-family:var(--font-mono); font-size:.63rem; letter-spacing:var(--track-mono);
+  color:var(--pv-fg-4); min-width:5.5rem;
+}
+#downloadBtn{
+  font:inherit; font-size:.72rem; font-weight:700; letter-spacing:.06em;
+  text-transform:uppercase; color:var(--pv-blue); background:transparent;
+  border:1px solid var(--pv-rule); border-radius:var(--radius-2);
+  min-height:32px; padding:0 10px; cursor:pointer;
+}
+#downloadBtn:hover:not(:disabled){color:var(--pv-blue-dk); border-color:var(--pv-blue)}
+#downloadBtn:disabled{color:var(--pv-fg-5); cursor:default}
+#downloadBtn:focus-visible{outline:2px solid var(--pv-blue); outline-offset:1px}
+
+@media (max-width:52rem){
+  .tools-bar input[type=search]{width:7rem}
+  .tools-bar .count,.tools-bar select{display:none}
+}
+@media (max-width:40rem){
+  .bar{padding:var(--s-2) var(--s-4); gap:.55rem} .sub{display:none}
+  .sess{display:none}
+}
 
 /* ─── Conversation ─────────────────────────────────────────────────────── */
 /* Fills the viewport under the floating chrome. The wrap's padding clears
@@ -172,10 +205,35 @@ main{
   background:transparent; border:0; box-shadow:none; padding:0;
   margin-top:var(--s-5) !important;
 }
+.cardhead{display:flex; align-items:baseline; gap:var(--s-2); margin-bottom:var(--s-2)}
 .card h2{
-  margin:0 0 var(--s-2); font-size:.69rem; font-weight:700;
+  margin:0; font-size:.69rem; font-weight:700;
   letter-spacing:var(--track-eyebrow); text-transform:uppercase; color:var(--pv-green);
 }
+.cardhead time{
+  font-family:var(--font-mono); font-size:.63rem; letter-spacing:var(--track-mono);
+  color:var(--pv-fg-5);
+}
+.copy{
+  margin-left:auto; font:inherit; font-size:.69rem; font-weight:700;
+  letter-spacing:.06em; text-transform:uppercase;
+  color:var(--pv-blue); background:transparent; border:0; border-radius:var(--radius-2);
+  min-height:28px; padding:0 var(--s-2); cursor:pointer;
+  transition:color var(--press-ms) var(--press), background-color var(--press-ms) var(--press);
+}
+.copy:hover{color:var(--pv-blue-dk); background:var(--pv-blue-tint-2)}
+.copy:focus-visible{outline:2px solid var(--pv-blue); outline-offset:1px}
+.copy:active{transform:scale(.96)}
+
+/* What the turn cost, from session.usage frames already on the wire. */
+.meta{
+  margin-top:var(--s-3); font-family:var(--font-mono); font-size:.63rem;
+  letter-spacing:var(--track-mono); color:var(--pv-fg-5);
+}
+
+/* Search hides non-matching turns outright rather than dimming them: a
+   half-visible legal answer invites reading the half. */
+.turn.nomatch{display:none}
 .answer,.body{
   white-space:pre-wrap; word-wrap:break-word;
   font-size:1rem; line-height:1.7; letter-spacing:var(--track-body);
@@ -312,6 +370,13 @@ textarea::placeholder{color:var(--pv-fg-5)}
 #askBtn:focus-visible{outline:2px solid var(--pv-blue); outline-offset:2px}
 #askBtn:disabled{background:#C7D9CE; cursor:default}
 #askBtn svg{display:block}
+/* One control, two states. A disabled Send beside a live Stop is two things
+   to read where the reader only ever has one choice. */
+#askBtn .i-stop{display:none}
+#askBtn.stop .i-send{display:none}
+#askBtn.stop .i-stop{display:block}
+#askBtn.stop{background:var(--pv-danger)}
+#askBtn.stop:hover{background:#96301F}
 
 .row{display:flex; align-items:center; gap:var(--s-2); min-height:1.1rem; margin-top:var(--s-2)}
 .status{font-size:.79rem; letter-spacing:var(--track-body); color:var(--pv-fg-4)}
@@ -369,6 +434,17 @@ textarea::placeholder{color:var(--pv-fg-5)}
     <h1>Michael</h1>
     <div class="sub">Legal research · Western Australia and Commonwealth</div>
   </div>
+  <div class="tools-bar">
+    <label class="sr" for="searchBox">Search this conversation</label>
+    <input id="searchBox" type="search" placeholder="Search…" autocomplete="off" spellcheck="false">
+    <span id="searchCount" class="count" aria-live="polite"></span>
+    <label class="sr" for="sendKey">Send with</label>
+    <select id="sendKey" title="Which key sends a question">
+      <option value="enter">Enter sends</option>
+      <option value="ctrl">Ctrl+Enter sends</option>
+    </select>
+    <button type="button" id="downloadBtn" title="Download this conversation as Markdown">Export</button>
+  </div>
   <div class="sess" id="sess"></div>
 </div></header>
 
@@ -388,16 +464,19 @@ textarea::placeholder{color:var(--pv-fg-5)}
     <textarea id="q" rows="1"
       placeholder="What must an entity do when it becomes aware of an eligible data breach?"></textarea>
     <button id="askBtn" type="button" aria-label="Send question">
-      <svg viewBox="0 0 20 20" width="17" height="17" aria-hidden="true">
+      <svg class="i-send" viewBox="0 0 20 20" width="17" height="17" aria-hidden="true">
         <path d="M10 16V4M10 4l-5 5M10 4l5 5" fill="none" stroke="currentColor"
               stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path>
+      </svg>
+      <svg class="i-stop" viewBox="0 0 20 20" width="15" height="15" aria-hidden="true">
+        <rect x="5" y="5" width="10" height="10" rx="1.5" fill="currentColor"></rect>
       </svg>
     </button>
   </div>
   <div class="row">
     <span class="status" id="status"></span>
   </div>
-  <div class="hint">Enter to send · Shift+Enter for a new line ·
+  <div class="hint"><span id="sendHint">Enter to send · Shift+Enter for a new line</span> ·
     Internal research only. Not legal advice.</div>
 </div></footer>
 

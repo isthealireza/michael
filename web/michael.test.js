@@ -262,3 +262,51 @@ test("MICHAEL.md's citation examples are the shape the page actually marks", () 
     assert.equal(hit && hit[0], line, `specimen is not matched whole: ${line}`);
   }
 });
+
+/* ---- the reader-facing extras: usage, export, timestamps ---------------- */
+
+const { usageLabel, transcriptMarkdown, state } = require("./michael.js");
+
+test("usageLabel reads the session.usage frames already on the wire", () => {
+  assert.equal(usageLabel({ input_tokens: 1240, output_tokens: 880, cost: 0.01171 }),
+    "1240 in · 880 out · $0.0117");
+  // Providers name these differently; both spellings are accepted.
+  assert.equal(usageLabel({ prompt_tokens: 10, completion_tokens: 5 }), "10 in · 5 out");
+});
+
+test("usageLabel shows nothing rather than a misleading zero", () => {
+  // A missing cost is not a free turn, and a missing count is not zero tokens.
+  assert.equal(usageLabel({ input_tokens: 10, output_tokens: 5, cost: 0 }), "10 in · 5 out");
+  assert.equal(usageLabel({}), "");
+  assert.equal(usageLabel(null), "");
+  assert.equal(usageLabel("nonsense"), "");
+});
+
+test("the export carries the citations and the practitioner notice", () => {
+  /* The point of the export is that a transcript pasted into a memo is still
+   * sourced and still carries its disclaimer. An export that dropped either
+   * would be worse than no export: it would look like a clean answer. */
+  state.turns.length = 0;
+  state.turns.push({
+    question: "What notice period applies?",
+    answer: "CLASSIFICATION: RESEARCH\nFair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07).",
+    tools: "searched the corpus",
+    at: new Date("2026-09-23T08:15:00Z"),
+  });
+
+  const md = transcriptMarkdown();
+
+  assert.ok(md.includes("Fair Work Act 2009 (Cth) s 117 (snapshot 2026-07-07)"));
+  assert.ok(md.includes("not a lawyer"));
+  assert.ok(md.includes("admitted Australian legal"));
+  assert.ok(md.includes("What notice period applies?"));
+  assert.ok(md.includes("searched the corpus"));
+  state.turns.length = 0;
+});
+
+test("the export of an empty conversation is still a valid document", () => {
+  state.turns.length = 0;
+  const md = transcriptMarkdown();
+  assert.ok(md.startsWith("# Michael"));
+  assert.ok(md.includes("not a lawyer"), "the disclaimer is not conditional on content");
+});
