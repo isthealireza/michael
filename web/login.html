@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en-AU">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="light">
+<title>Sign in · Michael · Palm Vision</title>
+
+<!--
+  Palm Vision Design System. Tokens copied from colors_and_type.css rather than
+  linked: this is a single standalone page on the public internet, and a second
+  render-blocking request buys nothing. Names match the source so the two stay
+  greppable against each other.
+
+  Brand rules observed, from SKILL.md's "do not violate" list:
+    · Black (#000) is for the company NAME only. Body copy is #333.
+    · Gold is a highlighter, never a fill. It appears here as the focus rule,
+      the sun in the mark, and the sanctioned sun-circle motif. No gold buttons.
+    · Square by default; inputs and buttons take 4px.
+    · No gradients, no glassmorphism, no backdrop blur, no neon, no shadow stacks.
+    · No emoji. No exclamation marks.
+    · Australian/British spelling.
+-->
+<style>
+:root{
+  --pv-green:#2E8B57; --pv-green-dk:#1F6A40; --pv-green-tint:#EAF3EE;
+  --pv-blue:#006994;  --pv-blue-dk:#00547A;
+  --pv-gold:#F4C430;  --pv-gold-dk:#C99B12;
+  --pv-ink:#000000;
+  --pv-fg-1:#1A1A1A; --pv-fg-2:#333333; --pv-fg-3:#555555; --pv-fg-4:#777777; --pv-fg-5:#999999;
+  --pv-rule:#E2E5E2; --pv-rule-2:#EFF1EF;
+  --pv-paper:#FFFFFF; --pv-paper-warm:#FAFAF7;
+  --pv-danger:#B23A28;
+
+  --font-sans:'Segoe UI','Open Sans','Helvetica Neue',Helvetica,Arial,sans-serif;
+  --font-mono:'Consolas','IBM Plex Mono','SFMono-Regular',Menlo,'Courier New',monospace;
+
+  --ls-eyebrow:.18em; --ls-micro:.12em;
+  --space-2:.5rem; --space-3:.75rem; --space-4:1rem; --space-6:1.5rem;
+  --space-8:2rem; --space-10:2.5rem; --space-12:3rem; --space-16:4rem;
+  --radius-2:4px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+*,*::before,*::after{box-sizing:border-box}
+html{font-family:var(--font-sans);color:var(--pv-fg-2)}
+body{
+  margin:0; min-height:100svh; background:var(--pv-paper-warm);
+  font-size:15px; line-height:1.55; color:var(--pv-fg-2);
+  -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+}
+
+/* ─── Layout ─────────────────────────────────────────────────────────────
+   Two panels. The green block is the brand's cover device; the cream side
+   carries the form. Below 960px they stack and the cover compresses to a
+   band, so the form is above the fold on a phone. */
+.shell{display:grid; grid-template-columns:minmax(0,46fr) minmax(0,54fr); min-height:100svh}
+@media (max-width:960px){ .shell{grid-template-columns:1fr} }
+
+/* ─── Cover panel ──────────────────────────────────────────────────────── */
+.cover{
+  position:relative; overflow:hidden; background:var(--pv-green); color:#fff;
+  padding:var(--space-16) clamp(var(--space-8),5vw,var(--space-16));
+  display:flex; flex-direction:column; justify-content:space-between; gap:var(--space-12);
+}
+/* The one sanctioned decorative motif: a soft gold sun-circle, upper right. */
+.cover::after{
+  content:""; position:absolute; top:clamp(28px,6vw,64px); right:clamp(28px,6vw,64px);
+  width:14px; height:14px; border-radius:50%; background:var(--pv-gold);
+  box-shadow:0 0 0 4px rgba(244,196,48,.18); pointer-events:none;
+}
+.brand{display:flex; align-items:center; gap:var(--space-3)}
+.brand svg{display:block; flex:none}
+.brand-name{
+  font-size:13px; font-weight:700; letter-spacing:var(--ls-micro);
+  text-transform:uppercase; color:#fff;
+}
+.cover-body{max-width:34ch}
+.eyebrow{
+  font-size:12px; font-weight:700; letter-spacing:var(--ls-eyebrow);
+  text-transform:uppercase; margin:0 0 var(--space-4);
+}
+.cover .eyebrow{color:var(--pv-gold)}
+.display{
+  margin:0; font-size:clamp(2.5rem,6vw,3.125rem); line-height:1.05;
+  letter-spacing:-.02em; font-weight:700; color:#fff;
+}
+.rule-gold{width:56px; height:2px; background:var(--pv-gold); margin:var(--space-6) 0; border:0}
+.lead{margin:0; font-size:17px; line-height:1.55; color:rgba(255,255,255,.88)}
+.cover-foot{display:flex; flex-wrap:wrap; gap:var(--space-2) var(--space-4); align-items:baseline}
+.pillars{
+  margin:0; font-size:12px; font-weight:600; letter-spacing:var(--ls-micro);
+  text-transform:uppercase; color:rgba(255,255,255,.72);
+}
+.index{
+  font-family:var(--font-mono); font-size:12px; letter-spacing:var(--ls-micro);
+  color:var(--pv-gold);
+}
+/* On a phone the cover compresses to a band. The lead paragraph and the
+   pillars line are context, not instruction — kept on the desktop split where
+   there is room, dropped here so the first field sits near the top of the
+   screen instead of below the fold. */
+@media (max-width:960px){
+  .cover{
+    padding:var(--space-8) var(--space-6) var(--space-6);
+    gap:var(--space-4); min-height:auto;
+  }
+  .cover::after{top:var(--space-8); right:var(--space-6); width:10px; height:10px}
+  .cover-foot,.lead{display:none}
+  .cover-body{max-width:none}
+  .display{font-size:2.25rem}
+  .eyebrow{margin-bottom:var(--space-2)}
+  .rule-gold{margin:var(--space-4) 0 0}
+  .panel{padding:var(--space-10) var(--space-6) var(--space-12)}
+  .h1{font-size:1.625rem}
+  .sub{margin-bottom:var(--space-8)}
+}
+
+/* ─── Form panel ───────────────────────────────────────────────────────── */
+.panel{
+  display:flex; align-items:center; justify-content:center;
+  padding:var(--space-16) clamp(var(--space-6),5vw,var(--space-16));
+  background:var(--pv-paper-warm);
+}
+.form-wrap{width:100%; max-width:392px}
+.panel .eyebrow{color:var(--pv-blue)}
+.h1{
+  margin:0 0 var(--space-3); font-size:2rem; line-height:1.15; letter-spacing:-.01em;
+  font-weight:700; color:var(--pv-green);
+}
+.sub{margin:0 0 var(--space-10); color:var(--pv-fg-3); font-size:15px}
+
+/* Field. The label sits above the control and the gold rule is the focus
+   device — the brand's emphasis mark, animated rather than invented. */
+.field{position:relative; margin-bottom:var(--space-6)}
+.field label{
+  display:block; margin-bottom:var(--space-2);
+  font-size:13px; font-weight:600; color:var(--pv-fg-3);
+  transition:color .18s var(--ease);
+}
+.field:focus-within label{color:var(--pv-blue)}
+.control{position:relative; display:flex; align-items:stretch}
+.field input{
+  width:100%; font:inherit; font-size:16px; /* 16px: stops iOS zooming on focus */
+  color:var(--pv-fg-1); background:var(--pv-paper);
+  border:1px solid var(--pv-rule); border-radius:var(--radius-2);
+  padding:13px var(--space-4); min-height:48px;
+  transition:border-color .18s var(--ease), background-color .18s var(--ease);
+}
+.field input::placeholder{color:var(--pv-fg-5)}
+.field input:hover{border-color:#CFD5CF}
+.field input:focus{outline:none; border-color:var(--pv-green)}
+.field input[aria-invalid="true"]{border-color:var(--pv-danger)}
+/* The animated gold rule. Sits under the control, scales in from the left. */
+.control::after{
+  content:""; position:absolute; left:0; right:0; bottom:0; height:2px;
+  background:var(--pv-gold); border-radius:0 0 var(--radius-2) var(--radius-2);
+  transform:scaleX(0); transform-origin:left; transition:transform .24s var(--ease);
+  pointer-events:none;
+}
+.field:focus-within .control::after{transform:scaleX(1)}
+.field input[type=password], .field input.has-toggle{padding-right:76px}
+
+.toggle{
+  position:absolute; right:4px; top:50%; transform:translateY(-50%);
+  /* 44px: the smallest target a thumb hits reliably. The control is 52px, so
+     this fits inside it without crowding the text. */
+  min-height:44px; min-width:44px; padding:0 var(--space-3);
+  font:inherit; font-size:12px; font-weight:700; letter-spacing:.06em; text-transform:uppercase;
+  color:var(--pv-blue); background:transparent; border:0; border-radius:var(--radius-2);
+  cursor:pointer;
+}
+.toggle:hover{color:var(--pv-blue-dk); background:var(--pv-green-tint)}
+.toggle:focus-visible{outline:2px solid var(--pv-blue); outline-offset:1px}
+
+.hint{
+  display:none; margin-top:var(--space-2); font-size:13px; color:var(--pv-gold-dk);
+  font-weight:600;
+}
+.hint.on{display:block}
+
+.alert{
+  display:none; margin-bottom:var(--space-6); padding:var(--space-3) var(--space-4);
+  border-left:2px solid var(--pv-danger); background:#FBF1EF;
+  color:var(--pv-danger); font-size:14px; font-weight:600;
+  border-radius:0 var(--radius-2) var(--radius-2) 0;
+}
+.alert.on{display:block}
+
+.submit{
+  width:100%; min-height:52px; margin-top:var(--space-2);
+  font:inherit; font-size:15px; font-weight:700; letter-spacing:.02em;
+  color:#fff; background:var(--pv-green);
+  border:0; border-radius:var(--radius-2); cursor:pointer;
+  display:inline-flex; align-items:center; justify-content:center; gap:10px;
+  transition:background-color .18s var(--ease);
+}
+.submit:hover:not(:disabled){background:var(--pv-green-dk)}
+.submit:focus-visible{outline:2px solid var(--pv-blue); outline-offset:2px}
+.submit:disabled{background:#8FB9A2; cursor:default}
+.spinner{
+  width:15px; height:15px; border:2px solid rgba(255,255,255,.4); border-top-color:#fff;
+  border-radius:50%; animation:spin .7s linear infinite; display:none;
+}
+.submit.busy .spinner{display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.legal{
+  margin:var(--space-10) 0 0; padding-top:var(--space-6);
+  border-top:1px solid var(--pv-rule-2);
+  font-size:13px; line-height:1.5; color:var(--pv-fg-4);
+}
+.legal strong{color:var(--pv-fg-3); font-weight:600}
+
+/* Respect the reader's motion preference. Everything below is decoration. */
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms !important; animation-iteration-count:1 !important; transition-duration:.01ms !important}
+  .control::after{transition:none}
+}
+</style>
+</head>
+<body>
+<main class="shell">
+
+  <!-- Cover block — the brand's solid green device. -->
+  <section class="cover">
+    <div class="brand">
+      <svg viewBox="0 0 60 60" width="40" height="40" role="img" aria-label="Palm Vision mark">
+        <text x="0" y="50" font-family="'Segoe UI','Helvetica Neue',Arial,sans-serif"
+              font-weight="700" font-size="56" letter-spacing="-2" fill="#FFFFFF">P</text>
+        <circle cx="50" cy="14" r="6" fill="#F4C430"></circle>
+        <path d="M 6 50 Q 26 60 46 50" fill="none" stroke="rgba(255,255,255,0.7)"
+              stroke-width="4" stroke-linecap="round"></path>
+      </svg>
+      <span class="brand-name">Palm Vision Pty Ltd</span>
+    </div>
+
+    <div class="cover-body">
+      <p class="eyebrow">Internal legal research</p>
+      <h1 class="display">Michael</h1>
+      <hr class="rule-gold">
+      <p class="lead">
+        Research and drafting support for Australian employment and privacy
+        matters, grounded in the legislation it cites.
+      </p>
+    </div>
+
+    <div class="cover-foot">
+      <p class="pillars">Stability · Vision · Adaptability</p>
+      <span class="index">01 / ACCESS</span>
+    </div>
+  </section>
+
+  <!-- Form panel -->
+  <section class="panel">
+    <div class="form-wrap">
+      <p class="eyebrow">Sign in</p>
+      <h2 class="h1">Account access</h2>
+      <p class="sub">Use the address your administrator registered.</p>
+
+      <div id="alert" class="alert" role="alert" aria-live="polite"></div>
+
+      <form id="form" novalidate>
+        <div class="field">
+          <label for="email">Email address</label>
+          <div class="control">
+            <input id="email" name="email" type="email" inputmode="email"
+                   autocomplete="username" autocapitalize="none" spellcheck="false"
+                   required placeholder="name@palm.vu" aria-describedby="alert">
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <div class="control">
+            <input id="password" name="password" type="password" class="has-toggle"
+                   autocomplete="current-password" required
+                   placeholder="••••••••••••" aria-describedby="caps alert">
+            <button type="button" id="reveal" class="toggle"
+                    aria-pressed="false" aria-controls="password">Show</button>
+          </div>
+          <p id="caps" class="hint">Caps Lock is on.</p>
+        </div>
+
+        <button type="submit" id="submit" class="submit">
+          <span class="spinner" aria-hidden="true"></span>
+          <span id="submit-label">Sign in</span>
+        </button>
+      </form>
+
+      <p class="legal">
+        <strong>Internal research only.</strong> Michael is not a lawyer and does
+        not give legal advice. Every output requires review by an admitted
+        Australian legal practitioner before use.
+      </p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+"use strict";
+
+const $ = (id) => document.getElementById(id);
+const form = $("form"), alertBox = $("alert"), submit = $("submit"), label = $("submit-label");
+const email = $("email"), password = $("password"), reveal = $("reveal"), caps = $("caps");
+
+function showError(message) {
+  alertBox.textContent = message;
+  alertBox.classList.add("on");
+  email.setAttribute("aria-invalid", "true");
+  password.setAttribute("aria-invalid", "true");
+}
+
+function clearError() {
+  alertBox.classList.remove("on");
+  alertBox.textContent = "";
+  email.removeAttribute("aria-invalid");
+  password.removeAttribute("aria-invalid");
+}
+
+[email, password].forEach((el) => el.addEventListener("input", clearError));
+
+/* Reveal. aria-pressed carries the state for assistive technology; the label
+   says what the next press does. */
+reveal.addEventListener("click", () => {
+  const shown = password.type === "text";
+  password.type = shown ? "password" : "text";
+  reveal.textContent = shown ? "Show" : "Hide";
+  reveal.setAttribute("aria-pressed", String(!shown));
+  password.focus();
+});
+
+/* Caps Lock is the single most common cause of a login that "should" work.
+   getModifierState is unavailable on some soft keyboards, hence the guard. */
+function capsCheck(event) {
+  const on = typeof event.getModifierState === "function" && event.getModifierState("CapsLock");
+  caps.classList.toggle("on", Boolean(on));
+}
+password.addEventListener("keydown", capsCheck);
+password.addEventListener("keyup", capsCheck);
+password.addEventListener("blur", () => caps.classList.remove("on"));
+
+form.addEventListener("submit", async (event) => {
+  event.preventDefault();
+  clearError();
+
+  if (!email.value.trim() || !password.value) {
+    showError("Enter your email address and password.");
+    (email.value.trim() ? password : email).focus();
+    return;
+  }
+
+  submit.disabled = true;
+  submit.classList.add("busy");
+  label.textContent = "Signing in";
+
+  try {
+    const response = await fetch("/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ email: email.value.trim(), password: password.value }),
+    });
+
+    if (response.ok) {
+      /* Leave the button disabled: the navigation is the success state, and
+         re-enabling it invites a second submit during the redirect. */
+      label.textContent = "Signed in";
+      location.href = "/";
+      return;
+    }
+
+    let detail = "Sign in failed. Try again.";
+    try {
+      const body = await response.json();
+      if (body && typeof body.detail === "string") detail = body.detail;
+    } catch { /* a non-JSON error body: keep the generic message */ }
+    showError(detail);
+    password.select();
+  } catch {
+    showError("Could not reach the server. Check your connection and try again.");
+  } finally {
+    if (!submit.disabled || alertBox.classList.contains("on")) {
+      submit.disabled = false;
+      submit.classList.remove("busy");
+      label.textContent = "Sign in";
+    }
+  }
+});
+
+email.focus();
+</script>
+</body>
+</html>

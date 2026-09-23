@@ -60,22 +60,13 @@ INVALID_CREDENTIALS = "invalid email or password"
 #: even though the response body is identical.
 _DUMMY_PASSWORD_HASH = hash_password(secrets.token_urlsafe(32))
 
-LOGIN_PAGE = """<!doctype html><html lang="en-AU"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1"><title>Michael</title>
-</head><body><h1>Michael</h1><form id="f">
-<label>Email <input name="email" type="email" required autocomplete="username"></label>
-<label>Password <input name="password" type="password" required
-  autocomplete="current-password"></label>
-<button>Sign in</button></form><p id="e" role="alert"></p><script>
-document.getElementById("f").onsubmit = async (ev) => {
-  ev.preventDefault();
-  const data = Object.fromEntries(new FormData(ev.target));
-  const r = await fetch("/auth/login", {method: "POST",
-    headers: {"Content-Type": "application/json"}, body: JSON.stringify(data)});
-  if (r.ok) location.href = "/";
-  else document.getElementById("e").textContent = (await r.json()).detail;
-};
-</script></body></html>"""
+#: The sign-in page lives in `web/login.html`, beside the chat page, rather
+#: than in a string here. It carries the Palm Vision brand — a solid green
+#: cover block, the gold focus rule, the type scale — and that is markup and
+#: CSS worth editing in a file a designer can open, not a Python literal.
+#: `gate/Dockerfile` already copies the whole of `web/`, so it ships with the
+#: image the same way `michael.html` and `michael.js` do.
+LOGIN_PAGE_FILE = "login.html"
 
 
 def client_address(request: Request) -> str:
@@ -208,7 +199,7 @@ def build_app(*, secret: str, upstream: UpstreamConfig, web_root: Path) -> Starl
         return FileResponse(web_root / "michael.html")
 
     async def login_page(request: Request) -> Response:
-        return Response(LOGIN_PAGE, media_type="text/html")
+        return FileResponse(web_root / LOGIN_PAGE_FILE)
 
     async def chat_script(request: Request) -> Response:
         # Referenced by web/michael.html as a page-relative "michael.js", which

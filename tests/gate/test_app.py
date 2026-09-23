@@ -25,6 +25,9 @@ def _token(user_id: int = 1, role: str = "chat") -> str:
 def client(tmp_path: Path) -> TestClient:
     (tmp_path / "michael.html").write_text("<html>michael</html>", encoding="utf-8")
     (tmp_path / "michael.js").write_text("// chat client script\n", encoding="utf-8")
+    # The sign-in page is served from web/ too, so the fake web root needs one
+    # or `/login` 500s on a missing file rather than returning the page.
+    (tmp_path / "login.html").write_text("<html>sign in</html>", encoding="utf-8")
     return TestClient(build_app(secret=SECRET, upstream=UPSTREAM, web_root=tmp_path))
 
 
@@ -257,6 +260,50 @@ def test_the_real_chat_page_has_no_dead_password_login_card(tmp_path: Path) -> N
     assert 'id="thread" class="hidden"' not in response.text
     assert 'id="askArea"' in response.text
     assert 'class="wrap hidden" id="askArea"' not in response.text
+
+
+def test_the_real_login_page_posts_to_the_route_the_gate_actually_serves() -> None:
+    """The chat page once carried a form wired to `/auth/password-login`, a
+    route that does not exist, and nothing caught it until a whole-branch
+    review read the markup. The sign-in page is the same shape of risk, so
+    this reads the REAL web/login.html rather than a tmp_path stand-in."""
+    repo_web_root = Path(__file__).resolve().parents[2] / "web"
+    client = TestClient(build_app(secret=SECRET, upstream=UPSTREAM, web_root=repo_web_root))
+
+    page = client.get("/login").text
+
+    assert '"/auth/login"' in page
+    assert "password-login" not in page
+    # The two controls the POST body is built from must exist, with the
+    # autocomplete hints a password manager needs to offer the right entry.
+    assert 'id="email"' in page and 'autocomplete="username"' in page
+    assert 'id="password"' in page and 'autocomplete="current-password"' in page
+
+
+def test_the_real_login_page_keeps_the_palm_vision_brand_rules() -> None:
+    """Palm Vision's design system names these as "do not violate". They are
+    the kind of rule a later edit breaks silently — a gradient or a blur reads
+    as an improvement to whoever adds it — so they are asserted rather than
+    left to memory. Source: the design system's SKILL.md."""
+    page = (Path(__file__).resolve().parents[2] / "web" / "login.html").read_text(encoding="utf-8")
+
+    # "No gradients, no glassmorphism, no backdrop blur, no neon."
+    for banned in ("linear-gradient", "radial-gradient", "backdrop-filter", "blur("):
+        assert banned not in page, f"{banned} violates a Palm Vision do-not-violate rule"
+
+    # "Gold is a highlighter, never a fill." The primary action is green; a
+    # gold button is the most likely well-meant breach of this one.
+    submit_rule = page.split(".submit{", 1)[1].split("}", 1)[0]
+    assert "--pv-green" in submit_rule, "the primary button must be green"
+    assert "--pv-gold" not in submit_rule, "gold must not fill the primary button"
+
+    # "Black is for the company NAME only." Body copy is #333.
+    assert "color:#000" not in page.replace(" ", "")
+
+    # Inputs must stay at 16px or iOS zooms the viewport on focus, which on a
+    # split-screen layout throws the reader into a half-scrolled page.
+    field_rule = page.split(".field input{", 1)[1].split("}", 1)[0]
+    assert "font-size:16px" in field_rule.replace(" ", "")
 
 
 def test_health_is_public_and_ok(client: TestClient) -> None:
