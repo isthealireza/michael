@@ -11,6 +11,7 @@ Refusal is the default: anything not positively recognised is refused.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Literal
 
 #: session.create opens a conversation. The other three act on one that already
 #: exists, and so must be checked against ownership.
@@ -20,11 +21,25 @@ ALLOWED_METHODS = frozenset(
 
 _NEEDS_OWNED_SESSION = frozenset({"session.resume", "session.status", "prompt.submit"})
 
+#: Per-method params key allowlist. Unknown keys are refused.
+_ALLOWED_PARAMS_KEYS = {
+    "session.create": frozenset({"title"}),
+    "session.resume": frozenset({"session_id"}),
+    "session.status": frozenset({"session_id"}),
+    "prompt.submit": frozenset({"session_id", "text"}),
+}
+
 
 @dataclass(frozen=True)
 class Decision:
     allowed: bool
-    reason: str
+    reason: Literal[
+        "ok",
+        "malformed_frame",
+        "method_not_allowed",
+        "missing_session_id",
+        "not_your_session",
+    ]
     session_id: str | None = None
 
 
@@ -43,6 +58,11 @@ def decide(frame: object, *, owned_session_ids: frozenset[str]) -> Decision:
 
     if method not in ALLOWED_METHODS:
         return Decision(False, "method_not_allowed")
+
+    # Check that params contains only allowed keys
+    allowed_keys = _ALLOWED_PARAMS_KEYS[method]
+    if not set(params.keys()).issubset(allowed_keys):
+        return Decision(False, "malformed_frame")
 
     if method not in _NEEDS_OWNED_SESSION:
         return Decision(True, "ok")
