@@ -69,7 +69,7 @@ def verify(token: str, *, secret: str, now: datetime) -> CookiePayload | None:
         expires_at = datetime.fromtimestamp(float(claims["exp"]), tz=UTC)
         user_id = int(claims["uid"])
         role = str(claims["role"])
-    except (ValueError, KeyError, TypeError):
+    except (ValueError, KeyError, TypeError, OverflowError):
         return None
     if now >= expires_at:
         return None

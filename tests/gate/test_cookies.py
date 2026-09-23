@@ -1,6 +1,8 @@
 import base64
+import hmac
 import json
 from datetime import UTC, datetime, timedelta
+from hashlib import sha256
 
 from michael.gate.cookies import LIFETIME, CookiePayload, mint, verify
 
@@ -56,3 +58,25 @@ def test_tampering_with_the_role_is_rejected() -> None:
 def test_garbage_is_rejected_without_raising() -> None:
     for junk in ["", ".", "no-dot", "a.b.c", "!!!.???"]:
         assert verify(junk, secret=SECRET, now=NOW) is None
+
+
+def test_overflow_in_expiry_claim_is_rejected() -> None:
+    """OverflowError from absurd timestamps must not raise—return None instead.
+
+    Regression test for uncaught OverflowError in verify(): float(10**400) and
+    datetime.fromtimestamp(1e300) both raise OverflowError, which was not caught.
+    """
+    # Create a forged token with an absurd exp value that will pass signature
+    # check but raise OverflowError when parsed. We build it the same way mint()
+    # does so the HMAC check passes.
+    def _b64encode(raw: bytes) -> str:
+        return base64.urlsafe_b64encode(raw).decode("ascii").rstrip("=")
+
+    def _sign(body: str, secret: str) -> str:
+        return _b64encode(hmac.new(secret.encode(), body.encode(), sha256).digest())
+
+    claims = {"uid": 7, "role": "chat", "exp": 10**400}
+    body = _b64encode(json.dumps(claims, separators=(",", ":"), sort_keys=True).encode())
+    signature = _sign(body, SECRET)
+    token = f"{body}.{signature}"
+    assert verify(token, secret=SECRET, now=NOW) is None

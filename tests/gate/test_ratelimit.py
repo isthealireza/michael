@@ -46,3 +46,13 @@ def test_unknown_account_failures_still_count() -> None:
     """Enumerating addresses must cost the attacker the same as guessing."""
     probes = [Attempt(at=NOW, outcome="no_such_user") for _ in range(20)]
     assert is_locked_out([], probes, now=NOW)
+
+
+def test_unknown_outcome_counts_as_failure() -> None:
+    """New failure outcomes must count by default, not be silently ignored.
+
+    This is a fail-safe default: if a new outcome is added (e.g. "mfa_failed")
+    without updating the deny-list, it still counts toward lockout.
+    """
+    unknown = [Attempt(at=NOW, outcome="mfa_failed") for _ in range(5)]
+    assert is_locked_out(unknown, [], now=NOW)

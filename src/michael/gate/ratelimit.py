@@ -15,8 +15,10 @@ ADDRESS_LIMIT = 20
 WINDOW = timedelta(minutes=15)
 
 #: A success is not evidence of an attack. Counting it would let an active
-#: reader lock themselves out by using the service normally.
-FAILURE_OUTCOMES = frozenset({"bad_password", "no_such_user"})
+#: reader lock themselves out by using the service normally. Anything which is
+#: not a success counts as a failure, so a new failure outcome is counted by
+#: default rather than ignored.
+SUCCESS_OUTCOMES = frozenset({"ok"})
 
 
 @dataclass(frozen=True)
@@ -27,7 +29,7 @@ class Attempt:
 
 def _recent_failures(attempts: Sequence[Attempt], now: datetime) -> int:
     cutoff = now - WINDOW
-    return sum(1 for a in attempts if a.outcome in FAILURE_OUTCOMES and a.at > cutoff)
+    return sum(1 for a in attempts if a.outcome not in SUCCESS_OUTCOMES and a.at > cutoff)
 
 
 def is_locked_out(
