@@ -485,13 +485,13 @@ def test_bad_login_pays_the_password_check_cost_for_a_disabled_account_too(
     assert checked == ["disabled-users-hash"]
 
 
-def test_two_different_forwarded_addresses_yield_two_different_addresses(
+def test_two_different_callers_yield_two_different_addresses(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """C3: request.client.host is Railway's edge proxy — identical for every
-    caller on the internet — so the rate limit must key off the rightmost
-    (edge-appended) X-Forwarded-For hop instead. This proves two distinct
-    callers, each behind that same edge, are told apart."""
+    """C3: request.client.host is Railway's edge — identical for every caller
+    on the internet — so the rate limit must key off the header Railway
+    documents as carrying the client's remote IP. This proves two distinct
+    callers behind that same edge are told apart."""
     import michael.gate.app as app_module
 
     seen: list[str] = []
@@ -505,12 +505,12 @@ def test_two_different_forwarded_addresses_yield_two_different_addresses(
     client.post(
         "/auth/login",
         json={"email": "a@x.com", "password": "whatever-12345"},
-        headers={"X-Forwarded-For": "203.0.113.5"},
+        headers={"X-Real-IP": "203.0.113.5"},
     )
     client.post(
         "/auth/login",
         json={"email": "a@x.com", "password": "whatever-12345"},
-        headers={"X-Forwarded-For": "198.51.100.9"},
+        headers={"X-Real-IP": "198.51.100.9"},
     )
 
     assert len(seen) == 2
@@ -518,13 +518,14 @@ def test_two_different_forwarded_addresses_yield_two_different_addresses(
     assert seen == ["203.0.113.5", "198.51.100.9"]
 
 
-def test_client_address_takes_the_rightmost_forwarded_hop_not_the_leftmost(
+def test_a_forwarded_for_header_does_not_override_the_real_ip(
     client: TestClient, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """The TRAP the reviewer named explicitly: trusting the leftmost XFF entry
-    (what '--forwarded-allow-ips=*' would give uvicorn) lets an attacker
-    supply their own fabricated leading hop and impersonate any address. The
-    rightmost entry is the one the trusted edge itself appended."""
+    """X-Forwarded-For is not Railway's client-IP header and must not be read
+    as one. Measured in production: the XFF that arrives is Railway's own
+    internal chain whose rightmost hop is an edge POP (152.233.33.x, a handful
+    of values for the whole internet), so keying off it re-creates the global
+    lockout. A caller-supplied XFF must change nothing."""
     import michael.gate.app as app_module
 
     seen: list[str] = []
@@ -537,7 +538,7 @@ def test_client_address_takes_the_rightmost_forwarded_hop_not_the_leftmost(
     client.post(
         "/auth/login",
         json={"email": "a@x.com", "password": "whatever-12345"},
-        headers={"X-Forwarded-For": "9.9.9.9, 203.0.113.5"},
+        headers={"X-Real-IP": "203.0.113.5", "X-Forwarded-For": "9.9.9.9, 198.51.100.1"},
     )
 
     assert seen == ["203.0.113.5"]
@@ -587,7 +588,7 @@ def test_login_failure_is_logged_with_account_and_address(
         response = client.post(
             "/auth/login",
             json={"email": "attacker@x.com", "password": "wrong-password"},
-            headers={"X-Forwarded-For": "203.0.113.9"},
+            headers={"X-Real-IP": "203.0.113.9"},
         )
     assert response.status_code == 401
     assert any(

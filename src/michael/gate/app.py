@@ -77,18 +77,27 @@ def client_address(request: Request) -> str:
     ``ADDRESS_LIMIT`` into one global counter (C3): twenty failed logins from
     anyone locks out every account for everyone.
 
-    This does NOT lean on uvicorn's own ``--forwarded-allow-ips`` handling.
-    Trusting it via ``'*'`` converts the DoS into an outright bypass: uvicorn
-    then takes the LEFTMOST ``X-Forwarded-For`` entry, which is exactly the
-    value an attacker controls by sending their own header. Instead: treat
-    the edge as the one and only trusted hop and take the RIGHTMOST entry --
-    the one the edge itself appends for the peer that spoke to it. Anything
-    earlier in the header was supplied by the caller and is not trusted.
+    Railway's published request-header spec names ``X-Real-IP`` as the header
+    "for identifying client's remote IP", and its edge sets it. That is the
+    value to key off.
+
+    ``X-Forwarded-For`` is NOT that value here, which the first version of
+    this function got wrong. Railway does not document XFF at all, and the
+    header that does arrive carries its own internal chain: the rightmost hop
+    is an edge POP, measured in production as one of a small set of
+    ``152.233.33.x`` addresses shared by every caller. Keying the limit off
+    that restores the global-lockout DoS this function exists to prevent,
+    spread across three or four buckets instead of one. A request from a
+    machine whose real address was ``124.148.255.130`` was recorded as
+    ``152.233.33.164``.
+
+    This does NOT lean on uvicorn's ``--forwarded-allow-ips`` handling either.
+    Trusting it via ``'*'`` makes uvicorn take the LEFTMOST XFF entry, which
+    is precisely the value an attacker supplies by sending their own header.
     """
-    forwarded = request.headers.get("x-forwarded-for", "")
-    hops = [hop.strip() for hop in forwarded.split(",") if hop.strip()]
-    if hops:
-        return hops[-1]
+    real_ip = request.headers.get("x-real-ip", "").strip()
+    if real_ip:
+        return real_ip
     return request.client.host if request.client else "unknown"
 
 
