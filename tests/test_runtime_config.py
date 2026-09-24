@@ -88,6 +88,18 @@ def test_the_rendered_config_keeps_every_guarantee() -> None:
     assert out["dashboard"]["basic_auth"]["password_hash"]
     # The benchmarked model is pinned.
     assert out["model"]["default"] == "deepseek/deepseek-v4-pro"
+    # The auxiliary lane has a fallback, and it cannot spend.
+    #
+    # free_only is a filter, not a chooser: on its own it rejected Hermes'
+    # paid default and left the lane with NO fallback at all, which production
+    # logged on every boot. Both halves are asserted because either alone is
+    # wrong - a paid model here spends outside the benchmarked $0.01171/run,
+    # and no model here means a hiccup on the main provider fails the side
+    # task outright instead of degrading.
+    auxiliary = out["auxiliary"]
+    assert auxiliary["free_only"] is True
+    model = auxiliary["openrouter_model"]
+    assert model.endswith(":free") or model.startswith("stealth/"), model
 
 
 def test_the_agent_profile_grants_no_write_tool() -> None:

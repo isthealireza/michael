@@ -24,6 +24,28 @@ _config_version: 39
 # outside that number.
 auxiliary:
   free_only: true
+  # free_only alone did not pin the fallback - it DISABLED it. The guard is a
+  # filter, not a chooser: Hermes' default OpenRouter fallback model is a paid
+  # SKU, so free_only rejected it and returned no client at all. Production
+  # logged the refusal on every boot:
+  #
+  #   auxiliary.free_only is enabled but the OpenRouter fallback model
+  #   'google/gemini-3.6-flash' is not a :free SKU - skipping the OpenRouter
+  #   fallback.
+  #
+  # With step 2 skipped and Nous Portal unconfigured ("nous requested but Nous
+  # Portal not configured"), every remaining step in the auxiliary chain was
+  # also absent, so the lane had no fallback whatever: a hiccup on the main
+  # provider failed the side task outright rather than degrading. Naming a
+  # :free model restores step 2 and keeps the cost guarantee above exactly as
+  # it was, because a :free SKU cannot spend.
+  #
+  # This one is Hermes' own documented example, and text-only is the right
+  # shape here: the lane's other job is vision, and no image can reach Michael
+  # - the gate allowlists prompt.submit with a `text` param and nothing else.
+  # :free tiers are heavily rate limited, which is the correct trade for a
+  # step that only runs when the main provider is already failing.
+  openrouter_model: nvidia/nemotron-3-ultra-550b-a55b:free
 
 mcp_servers:
   michael:
