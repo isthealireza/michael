@@ -24,6 +24,12 @@ COPY domains.yaml MICHAEL.md ./
 # Measured on the deployed container before this line existed. A migration
 # that cannot be applied where the database lives is not a migration.
 COPY db ./db
+# Declared beside the COPY it depends on. PROJECT_ROOT is derived from the
+# installed package's location - `.venv/lib/python3.13` here - so the default
+# looks inside the venv and finds nothing. This is a property of the image
+# layout rather than of the deployment, so it belongs in the image and not in
+# a Railway variable that can drift away from the line above it.
+ENV MICHAEL_MIGRATIONS_DIR=/opt/michael/db/migrations
 
 RUN uv venv /opt/michael/.venv --python 3.13 \
     && uv pip install --python /opt/michael/.venv/bin/python "/opt/michael[mcp]" \

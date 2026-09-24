@@ -392,7 +392,13 @@ def test_the_image_ships_the_migrations_it_would_have_to_apply() -> None:
         "hermes/Dockerfile does not ship db/, so `michael migrate` has nothing "
         "to apply on the container and reports every migration as drifted"
     )
-    # And the directory it promises to ship is the one the loader reads.
+    # And the image must point the loader at where it put them: PROJECT_ROOT
+    # resolves inside the venv for an installed package, so shipping the files
+    # without declaring the path leaves `migrate` still finding nothing.
+    assert any(
+        line.startswith("ENV MICHAEL_MIGRATIONS_DIR=/opt/michael/db/migrations")
+        for line in instructions
+    ), "hermes/Dockerfile ships db/ but does not tell michael where it went"
     assert (Path(__file__).resolve().parents[1] / "db" / "migrations").is_dir()
 
 
