@@ -80,12 +80,17 @@ is reported, not silently dropped.
 
 ### Calibrating the threshold
 
-`RETRIEVAL_MIN_SCORE = 0.60`, calibrated — not guessed.
+`RETRIEVAL_MIN_SCORE = 0.60` is **not currently supported by measurement.** It
+was calibrated against a 200-document WA-only corpus with 15 known-good and 10
+known-absent queries. Re-measured on 2026-09-24 against the production corpus
+(205 documents, 8,915 provisions, including the Privacy Act 1988 (Cth), with
+`corpus_stats` freshly refreshed) using an expanded labelled set of 48
+known-good and 33 known-absent queries, it admits **11 false positives out of
+33** and retrieves only 30 of 48 known-good targets.
 
-The labelled set is `calibration/labelled_queries.json`: 15 known-good queries
-paired with the provision each should return, and 10 known-absent queries that
-must return nothing. Queries are paraphrases rather than verbatim provision
-text, so the test is not trivially lexical. Reproduce with:
+The labelled set is `calibration/labelled_queries.json`. Queries are paraphrases
+rather than verbatim provision text, so the test is not trivially lexical.
+Reproduce with:
 
 ```bash
 uv run python calibration/calibrate.py
@@ -97,29 +102,43 @@ unfiltered, the threshold alone has to do the work.
 
 | threshold | TP | FN | FP | TN | precision | recall |
 |---|---|---|---|---|---|---|
-| 0.30 | 15 | 0 | 10 | 0 | 0.600 | 1.000 |
-| 0.35 | 15 | 0 | 9 | 1 | 0.625 | 1.000 |
-| 0.50 | 15 | 0 | 6 | 4 | 0.714 | 1.000 |
-| 0.55 | 15 | 0 | 2 | 8 | 0.882 | 1.000 |
-| **0.60** | **15** | **0** | **0** | **10** | **1.000** | **1.000** |
-| 0.65 | 14 | 1 | 0 | 10 | 1.000 | 0.933 |
-| 0.70 | 10 | 5 | 0 | 10 | 1.000 | 0.667 |
-| 0.80 | 1 | 14 | 0 | 10 | 1.000 | 0.067 |
+| 0.30 | 38 | 10 | 33 | 0 | 0.535 | 0.792 |
+| 0.35 | 38 | 10 | 32 | 1 | 0.543 | 0.792 |
+| 0.40 | 38 | 10 | 32 | 1 | 0.543 | 0.792 |
+| 0.45 | 37 | 11 | 31 | 2 | 0.544 | 0.771 |
+| 0.50 | 37 | 11 | 26 | 7 | 0.587 | 0.771 |
+| 0.55 | 33 | 15 | 20 | 13 | 0.623 | 0.688 |
+| 0.60 | 30 | 18 | 11 | 22 | 0.732 | 0.625 |
+| 0.65 | 23 | 25 | 2 | 31 | 0.920 | 0.479 |
+| 0.70 | 13 | 35 | 0 | 33 | 1.000 | 0.271 |
+| 0.75 | 9 | 39 | 0 | 33 | 1.000 | 0.188 |
+| 0.80 | 1 | 47 | 0 | 33 | 1.000 | 0.021 |
 
-A false positive is the failure that matters — answering a question the corpus
-cannot answer is the "nearest guess" the design forbids — so the chosen value is
-the **lowest threshold with zero false positives**. At 0.60 that costs nothing:
-recall is also 1.000.
+**No threshold separates the two sets.** The lowest threshold with zero false
+positives is 0.70, and there recall is 0.271 — 13 of 48 known-good queries
+survive. The highest known-absent score is 0.6669 ("what privacy obligations
+apply to Queensland government agencies handling personal information", which
+returns APP 9). 29 of 48 known-good targets — 60% — score at or below that,
+including 10 that never enter the top 10 at all.
 
-Highest known-absent score is 0.574; lowest retained known-good score is 0.653
-(*Fair Work Act 2009 (Cth)* s 15A). The **margin is 0.079** — against 0.034
-before the contents-entry fix, which removed the short table-of-provisions rows
-that were both inflating absent-query scores and outranking real sections.
+Recall of 0.9 is unreachable at **any** threshold, including no threshold: with
+the cutoff disabled entirely, only 38 of 48 targets rank in the top 10, a
+ceiling of 0.792. That is a retrieval-quality limit, not a threshold choice, so
+no value of `RETRIEVAL_MIN_SCORE` fixes it.
+
+Accordingly **no new value has been adopted**, and `.env` is unchanged at 0.60.
+Changing the number cannot help: at 0.60 the search answers 11 questions the
+corpus cannot answer, and lifting it to 0.70 to stop that discards three
+quarters of the questions it can. Both failures are the same defect — the fused
+score does not order "covered" above "not covered" on this corpus. See the open
+decisions below.
 
 Re-derive after any change to the corpus, the embedding model, the splitter or
 the fusion weights; none of those preserve this scale. The known-absent set also
-has to be re-checked when the corpus grows: two Fair Work queries were retired
-from it once the Act was ingested, because they stopped being absent.
+has to be re-checked whenever the corpus grows: two Fair Work queries were
+retired from it once that Act was ingested, because they stopped being absent.
+On the 2026-09-24 re-check **no query was retired** — all ten pre-existing
+known-absent queries remain genuinely uncovered.
 
 ## Drafting
 
@@ -158,19 +177,34 @@ The fix needs a decision on whether cases are chunked by paragraph and cited as
 `[2]`, or handled by a separate splitter. The section splitter is correct for
 legislation, which is what the acceptance test exercises.
 
-**The calibrated threshold trails the corpus.** `RETRIEVAL_MIN_SCORE = 0.60`
-was calibrated twice against `calibration/labelled_queries.json` — 15
-known-good and 10 known-absent queries, scored unfiltered, precision and recall
-1.000 both times. The second run used corrected corpus statistics.
+**The threshold does not separate covered from uncovered questions.** Measured
+2026-09-24 against the production corpus with 48 known-good and 33 known-absent
+queries: the lowest threshold with zero false positives is 0.70, at which recall
+is 0.271. The configured 0.60 admits 11 false positives out of 33. See
+"Calibrating the threshold" above for the full table.
 
-It has not been re-derived since the Privacy Act 1988 (Cth) was ingested.
-Corpus statistics move BM25, so **a threshold is only valid for the corpus it
-was measured against**. Re-run `calibration/calibrate.py` and add Privacy Act
-queries to the labelled set before relying on the current value; the
-known-absent entries need re-checking too, because queries that were genuinely
-absent may now be covered.
+This is the retrieval quality limit, not a tuning problem, and it is the
+blocking issue for the NOT COVERED guarantee: MICHAEL.md promises that an empty
+result means "the corpus cannot answer this", and on the current corpus a
+0.60 cutoff breaks that promise on a third of questions built to be uncoverable.
+An earlier value of 0.65, derived against a WA-only corpus, is superseded and is
+no better — it still admits 2 false positives at recall 0.479.
 
-An earlier value of 0.65, derived against a WA-only corpus, is superseded.
+The leading suspect is **the Privacy Act's internal near-duplication.** Part
+IIIA (credit reporting, ss 20A–22F) restates access, correction, quality,
+security and notification for credit information, in language close to the
+Australian Privacy Principles in Schedule 1. Plain-English APP questions return
+the credit-reporting provisions instead: "can an individual demand a copy of
+what a company holds about them" returns ss 20T, 21V and 20B, and never APP 12.
+Eight of the ten known-good targets that never rank are Privacy Act APP or Part
+IIIC provisions.
+
+**Ruled out:** stale corpus statistics. `corpus_stats` had drifted to 8,982
+provisions against an actual 8,915 after a note-merge deleted 67 rows without
+refreshing, and BM25 reads N and avgdl from that row. It was refreshed on
+2026-09-24 and the whole labelled set re-scored. Maximum movement on any fused
+score was 0.00025; every headline figure was identical. Worth knowing, because
+"the statistics were stale" is the obvious explanation and it is not the answer.
 
 **Tables of provisions were ingested as provisions — fixed, with a residue.**
 Each Act repeats its section numbers and headings in a contents table at the
