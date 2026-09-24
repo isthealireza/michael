@@ -1,0 +1,4140 @@
+{
+ "corpus": "205 documents / 8,915 provisions",
+ "effect_of_refresh": {
+  "boundary_case": "'how much notice must a landlord give to end a periodic residential tenancy in WA' moved 0.600093 -> 0.599957, crossing the 0.60 cell boundary. A tie-break, not an improvement.",
+  "conclusion": "No material change. STOP stands: the lowest zero-false-positive threshold is 0.70 at recall 0.271, and the recall ceiling with the threshold disabled entirely is 38/48 = 0.792, so recall >= 0.9 is unreachable at any threshold.",
+  "max_abs_delta_best_score": 0.00025,
+  "mean_abs_delta_best_score": 0.00011,
+  "queries_whose_best_score_fell": 74,
+  "queries_whose_best_score_rose": 7,
+  "sweep_cells_changed": "FP at threshold 0.60 only, 12 -> 11"
+ },
+ "measured_date": "2026-09-24",
+ "method": "calibration/calibrate.py probe() and sweep logic, run against the PRODUCTION database read-only via .orca/ro.sh in 7 batches of 12 queries; sweep computed locally. Retrieval unfiltered (Routing domain=None), top_k=10, min_score=0.0. The labelled set is byte-identical between the two runs.",
+ "runs": {
+  "post_stats_refresh": {
+   "corpus_stats": {
+    "avg_tokens": 103.74929893438026,
+    "drift": 0,
+    "provisions": 8915,
+    "refreshed_at": "2026-09-24T04:14:44Z"
+   },
+   "highest_known_absent": 0.6668979881568522,
+   "highest_known_absent_query": "what privacy obligations apply to Queensland government agencies handling personal information",
+   "lowest_retained_known_good": 0.7255605089023286,
+   "lowest_zero_fp_threshold": 0.7,
+   "margin": 0.058663,
+   "recall_at_lowest_zero_fp": 0.2708,
+   "recall_ceiling_threshold_disabled": 0.7917,
+   "results": [
+    {
+     "best": 0.7255605089023286,
+     "g": 1,
+     "q": "must a cat be sterilised before it can be registered",
+     "top": [
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "18",
+       "sc": 0.7256
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "21",
+       "sc": 0.7046
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "20",
+       "sc": 0.6933
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7255605089023286
+    },
+    {
+     "best": 0.6480946558880252,
+     "g": 1,
+     "q": "what are the grounds for appealing a criminal conviction",
+     "top": [
+      {
+       "c": "Criminal Appeals Act 2004 (WA)",
+       "s": "8",
+       "sc": 0.6481
+      },
+      {
+       "c": "Criminal Appeals Act 2004 (WA)",
+       "s": "30",
+       "sc": 0.6451
+      },
+      {
+       "c": "Criminal Appeals Act 2004 (WA)",
+       "s": "24",
+       "sc": 0.6448
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6480946558880252
+    },
+    {
+     "best": 0.7919005537635899,
+     "g": 1,
+     "q": "duty to minimise risk arising from dangerous goods",
+     "top": [
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "8",
+       "sc": 0.7919
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "4",
+       "sc": 0.6981
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "Sch 1 cl 1",
+       "sc": 0.6835
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7919005537635899
+    },
+    {
+     "best": 0.6678206092071448,
+     "g": 1,
+     "q": "how is a food business registered",
+     "top": [
+      {
+       "c": "Food Act 2008 (WA)",
+       "s": "110",
+       "sc": 0.6678
+      },
+      {
+       "c": "Food Act 2008 (WA)",
+       "s": "115",
+       "sc": 0.6546
+      },
+      {
+       "c": "Food Act 2008 (WA)",
+       "s": "109",
+       "sc": 0.6506
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6678206092071448
+    },
+    {
+     "best": 0.6708641882610784,
+     "g": 1,
+     "q": "does the Commissioner keep a register of pawnbroker licences",
+     "top": [
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "28",
+       "sc": 0.6709
+      },
+      {
+       "c": "Witness Protection (Western Australia) Act 1996 (WA)",
+       "s": "13",
+       "sc": 0.6551
+      },
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "45",
+       "sc": 0.65
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6708641882610784
+    },
+    {
+     "best": 0.7728553533449748,
+     "g": 1,
+     "q": "can a trustee surrender an onerous lease",
+     "top": [
+      {
+       "c": "Trustees Act 1962 (WA)",
+       "s": "35",
+       "sc": 0.7729
+      },
+      {
+       "c": "Trustees Act 1962 (WA)",
+       "s": "36",
+       "sc": 0.6225
+      },
+      {
+       "c": "Infants' Property Act 1830 (Imp) (WA)",
+       "s": "31",
+       "sc": 0.5692
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7728553533449748
+    },
+    {
+     "best": 0.6773993386932127,
+     "g": 1,
+     "q": "land tax exemption where the owner is living in residential care",
+     "top": [
+      {
+       "c": "Land Tax Assessment Act 2002 (WA)",
+       "s": "15A",
+       "sc": 0.6774
+      },
+      {
+       "c": "Land Tax Assessment Act 2002 (WA)",
+       "s": "26B",
+       "sc": 0.6701
+      },
+      {
+       "c": "Land Tax Assessment Act 2002 (WA)",
+       "s": "38A",
+       "sc": 0.6663
+      }
+     ],
+     "tr": 2,
+     "ts": 0.670090781652682
+    },
+    {
+     "best": 0.7752861115797118,
+     "g": 1,
+     "q": "what powers does the Tribunal have over heritage agreements",
+     "top": [
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "101",
+       "sc": 0.7753
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "88",
+       "sc": 0.6909
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "111",
+       "sc": 0.685
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7752861115797118
+    },
+    {
+     "best": 0.7660826873358988,
+     "g": 1,
+     "q": "compensation payable to a park operator when a long-stay tenant holds over",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "46",
+       "sc": 0.7661
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "69",
+       "sc": 0.7658
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "32A",
+       "sc": 0.7585
+      }
+     ],
+     "tr": 2,
+     "ts": 0.7657769210313117
+    },
+    {
+     "best": 0.7546861545727418,
+     "g": 1,
+     "q": "applying for a warrant to enter premises holding dangerous goods",
+     "top": [
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "42",
+       "sc": 0.7547
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "35",
+       "sc": 0.7129
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "45",
+       "sc": 0.7044
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7546861545727418
+    },
+    {
+     "best": 0.5563620062206659,
+     "g": 1,
+     "q": "can I resell a concert ticket for more than I paid for it",
+     "top": [
+      {
+       "c": "Ticket Scalping Act 2021 (WA)",
+       "s": "7",
+       "sc": 0.5564
+      },
+      {
+       "c": "Ticket Scalping Act 2021 (WA)",
+       "s": "10",
+       "sc": 0.5419
+      },
+      {
+       "c": "Ticket Scalping Act 2021 (WA)",
+       "s": "3",
+       "sc": 0.5299
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5563620062206659
+    },
+    {
+     "best": 0.7287525003202701,
+     "g": 1,
+     "q": "how does someone create a carbon right over a parcel of land",
+     "top": [
+      {
+       "c": "Carbon Rights Act 2003 (WA)",
+       "s": "5",
+       "sc": 0.7288
+      },
+      {
+       "c": "Carbon Rights Act 2003 (WA)",
+       "s": "7",
+       "sc": 0.7061
+      },
+      {
+       "c": "Carbon Rights Act 2003 (WA)",
+       "s": "11",
+       "sc": 0.6959
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7287525003202701
+    },
+    {
+     "best": 0.5399711651185097,
+     "g": 1,
+     "q": "what can a repairer do with goods a customer never came back to collect",
+     "top": [
+      {
+       "c": "Disposal of Uncollected Goods Act 1970 (WA)",
+       "s": "29",
+       "sc": 0.54
+      },
+      {
+       "c": "Disposal of Uncollected Goods Act 1970 (WA)",
+       "s": "20",
+       "sc": 0.5396
+      },
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "5",
+       "sc": 0.5184
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5730701053936716,
+     "g": 1,
+     "q": "I have come across an old shipwreck, am I obliged to report it",
+     "top": [
+      {
+       "c": "Maritime Archaeology Act 1973 (WA)",
+       "s": "24",
+       "sc": 0.5731
+      },
+      {
+       "c": "Coroners Act 1996 (WA)",
+       "s": "17",
+       "sc": 0.5004
+      },
+      {
+       "c": "W.A. Marine (Radiotelephony) Regulations 1981 (WA)",
+       "s": "24",
+       "sc": 0.4581
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.663933520106499,
+     "g": 1,
+     "q": "meaning of casual employee",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "Sch 1 cl 47A",
+       "sc": 0.6639
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "15A",
+       "sc": 0.6609
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "359B",
+       "sc": 0.6258
+      }
+     ],
+     "tr": 2,
+     "ts": 0.6608809497240198
+    },
+    {
+     "best": 0.7602988283682972,
+     "g": 1,
+     "q": "casual employees of small business employers",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "Sch 1 cl 47A",
+       "sc": 0.7603
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "23",
+       "sc": 0.6814
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "125B",
+       "sc": 0.657
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7602988283682972
+    },
+    {
+     "best": 0.8213190742213341,
+     "g": 1,
+     "q": "giving employees the Casual Employment Information Statement",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "125B",
+       "sc": 0.8213
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "125A",
+       "sc": 0.7541
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "125",
+       "sc": 0.704
+      }
+     ],
+     "tr": 1,
+     "ts": 0.8213190742213341
+    },
+    {
+     "best": 0.7631129656319197,
+     "g": 1,
+     "q": "the National Employment Standards are minimum standards",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "61",
+       "sc": 0.7631
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "59",
+       "sc": 0.665
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "761",
+       "sc": 0.6526
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7631129656319197
+    },
+    {
+     "best": 0.7879869244474078,
+     "g": 1,
+     "q": "dismissing an employee in order to re-engage them as a casual",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "359B",
+       "sc": 0.788
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "359C",
+       "sc": 0.667
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "358",
+       "sc": 0.6531
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7879869244474078
+    },
+    {
+     "best": 0.6669585498012471,
+     "g": 1,
+     "q": "if a hospital already reported a records breach under health records law, must it notify again under the Privacy Act",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WD",
+       "sc": 0.667
+      },
+      {
+       "c": "Health Services (Conciliation and Review) Regulations 2010 (WA)",
+       "s": "Sch 3 cl 14",
+       "sc": 0.6184
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "6A",
+       "sc": 0.6019
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6669585498012471
+    },
+    {
+     "best": 0.7255672780851645,
+     "g": 1,
+     "q": "when does unauthorised access to personal information count as a data breach the entity must act on",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WE",
+       "sc": 0.7256
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WF",
+       "sc": 0.6881
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WA",
+       "sc": 0.682
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7255672780851645
+    },
+    {
+     "best": 0.6843858680408645,
+     "g": 1,
+     "q": "what must the notification to the Commissioner about a data breach describe",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WA",
+       "sc": 0.6844
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.6806
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WR",
+       "sc": 0.6802
+      }
+     ],
+     "tr": 4,
+     "ts": 0.6631328360677688
+    },
+    {
+     "best": 0.684345161185214,
+     "g": 1,
+     "q": "who does a business have to notify once it decides there has been a data breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.6843
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WR",
+       "sc": 0.6457
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WJ",
+       "sc": 0.6233
+      }
+     ],
+     "tr": 1,
+     "ts": 0.684345161185214
+    },
+    {
+     "best": 0.6637766199029422,
+     "g": 1,
+     "q": "can the regulator force a business to notify a data breach it has not reported",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.6638
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WR",
+       "sc": 0.6495
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WU",
+       "sc": 0.6154
+      }
+     ],
+     "tr": 2,
+     "ts": 0.6495247116385742
+    },
+    {
+     "best": 0.6478079797459823,
+     "g": 1,
+     "q": "is a law enforcement body excused from notifying a data breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WN",
+       "sc": 0.6478
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.6252
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WD",
+       "sc": 0.6246
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6478079797459823
+    },
+    {
+     "best": 0.5725896092764237,
+     "g": 1,
+     "q": "if we sent customer data to a supplier overseas and they lose it, is that treated as our breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WJ",
+       "sc": 0.5726
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WE",
+       "sc": 0.5563
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WM",
+       "sc": 0.555
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5028728269758888,
+     "g": 1,
+     "q": "we fixed the problem before anyone was hurt, do we still have to report the incident",
+     "top": [
+      {
+       "c": "Children and Community Services Regulations 2006 (WA)",
+       "s": "7",
+       "sc": 0.5029
+      },
+      {
+       "c": "Railways (Access) Code 2000 (WA)",
+       "s": "Sch 3 cl 18",
+       "sc": 0.4775
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "68",
+       "sc": 0.443
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6316262206428491,
+     "g": 1,
+     "q": "what factors decide whether a leak is likely to cause serious harm",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WG",
+       "sc": 0.6316
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "5",
+       "sc": 0.5291
+      },
+      {
+       "c": "Petroleum (Submerged Lands) (Resource Management and Administration) Regulations 2015 (WA)",
+       "s": "Sch 4 cl 11",
+       "sc": 0.5259
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6316262206428491
+    },
+    {
+     "best": 0.5449016279802645,
+     "g": 1,
+     "q": "how long do we have to investigate when we only suspect personal information has leaked",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "504",
+       "sc": 0.5449
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "87",
+       "sc": 0.5244
+      },
+      {
+       "c": "Coroners Act 1996 (WA)",
+       "s": "23",
+       "sc": 0.522
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6547964950106582,
+     "g": 1,
+     "q": "what happens when another Commonwealth law forbids disclosing what the breach statement would reveal",
+     "top": [
+      {
+       "c": "Gas Corporation (Business Disposal) Act 1999 (WA)",
+       "s": "29",
+       "sc": 0.6548
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WT",
+       "sc": 0.6346
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26XB",
+       "sc": 0.6158
+      }
+     ],
+     "tr": 6,
+     "ts": 0.6075070293906834
+    },
+    {
+     "best": 0.6485835755719018,
+     "g": 1,
+     "q": "can the Commissioner excuse an organisation from having to notify a particular breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WR",
+       "sc": 0.6486
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.618
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WU",
+       "sc": 0.6163
+      }
+     ],
+     "tr": 4,
+     "ts": 0.6064465407967699
+    },
+    {
+     "best": 0.6749238267171305,
+     "g": 1,
+     "q": "can the regulator compel documents and answers while investigating a suspected breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WU",
+       "sc": 0.6749
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "44",
+       "sc": 0.6265
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "504",
+       "sc": 0.6244
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6749238267171305
+    },
+    {
+     "best": 0.5541726243292249,
+     "g": 1,
+     "q": "does a company need a written privacy policy and what has to be in it",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 1",
+       "sc": 0.5542
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "22A",
+       "sc": 0.518
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "22B",
+       "sc": 0.4976
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5541726243292249
+    },
+    {
+     "best": 0.5211645489460223,
+     "g": 1,
+     "q": "can a customer deal with a business without giving their real name",
+     "top": [
+      {
+       "c": "Finance Brokers Control Act 1975 (WA)",
+       "s": "41",
+       "sc": 0.5212
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "50",
+       "sc": 0.4944
+      },
+      {
+       "c": "Australia and New Zealand Banking Group Limited (Town & Country) Act 1995 (WA)",
+       "s": "8",
+       "sc": 0.4897
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6516090439639649,
+     "g": 1,
+     "q": "when may an organisation collect personal details about someone at all",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 3",
+       "sc": 0.6516
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.6228
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 7",
+       "sc": 0.5917
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6516090439639649
+    },
+    {
+     "best": 0.4529943015989602,
+     "g": 1,
+     "q": "what should a business do with personal details it never asked for",
+     "top": [
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "367",
+       "sc": 0.453
+      },
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "364",
+       "sc": 0.4479
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.4414
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5282086075895059,
+     "g": 1,
+     "q": "what must customers be told at the point their details are collected",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.5282
+      },
+      {
+       "c": "Electricity Industry (Network Quality and Reliability of Supply) Code 2005 (WA)",
+       "s": "21",
+       "sc": 0.5273
+      },
+      {
+       "c": "Commercial Tenancy (Retail Shops) Agreements Regulations 1985 (WA)",
+       "s": "Sch 2 cl 26",
+       "sc": 0.5209
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5282086075895059
+    },
+    {
+     "best": 0.46068315322954245,
+     "g": 1,
+     "q": "can we reuse information gathered for one reason for a different reason",
+     "top": [
+      {
+       "c": "Environmental Protection (NEPM-NPI) Regulations 1998 (WA)",
+       "s": "5",
+       "sc": 0.4607
+      },
+      {
+       "c": "Environmental Protection (NEPM-UPM) Regulations 2013 (WA)",
+       "s": "10",
+       "sc": 0.4436
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 3",
+       "sc": 0.4432
+      }
+     ],
+     "tr": 5,
+     "ts": 0.4213514599036763
+    },
+    {
+     "best": 0.54244238258972,
+     "g": 1,
+     "q": "when can a company use a customer list for marketing and how does someone opt out",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 7",
+       "sc": 0.5424
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "15AC",
+       "sc": 0.4916
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20G",
+       "sc": 0.4912
+      }
+     ],
+     "tr": 1,
+     "ts": 0.54244238258972
+    },
+    {
+     "best": 0.5962501262225959,
+     "g": 1,
+     "q": "what must we do before sending personal details to a recipient outside Australia",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 8",
+       "sc": 0.5963
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.5813
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "16C",
+       "sc": 0.5566
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5962501262225959
+    },
+    {
+     "best": 0.623355108157819,
+     "g": 1,
+     "q": "obligation to keep customer records accurate and up to date",
+     "top": [
+      {
+       "c": "Health Services (Conciliation and Review) Regulations 2010 (WA)",
+       "s": "Sch 3 cl 15",
+       "sc": 0.6234
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "535",
+       "sc": 0.6071
+      },
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "45",
+       "sc": 0.5598
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5252414502509506,
+     "g": 1,
+     "q": "what must a business do to keep personal details safe and when must it destroy them",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 11",
+       "sc": 0.5252
+      },
+      {
+       "c": "Environmental Protection (Clearing of Native Vegetation) Regulations 2004 (WA)",
+       "s": "11",
+       "sc": 0.5109
+      },
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "45",
+       "sc": 0.5072
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5252414502509506
+    },
+    {
+     "best": 0.5264621127301867,
+     "g": 1,
+     "q": "can an individual demand a copy of what a company holds about them",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20T",
+       "sc": 0.5265
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "21V",
+       "sc": 0.5136
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20B",
+       "sc": 0.5092
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.4942452722859288,
+     "g": 1,
+     "q": "how do I get a company to fix wrong information it holds about me",
+     "top": [
+      {
+       "c": "Anglo-Persian Oil Company Limited's (Private) Act 1919 (WA)",
+       "s": "12",
+       "sc": 0.4942
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20T",
+       "sc": 0.4892
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20S",
+       "sc": 0.4842
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5495213772447176,
+     "g": 1,
+     "q": "is a small shop with low turnover covered by the privacy rules at all",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "6D",
+       "sc": 0.5495
+      },
+      {
+       "c": "Commercial Tenancy (Retail Shops) Agreements Regulations 1985 (WA)",
+       "s": "Sch 2 cl 39",
+       "sc": 0.5223
+      },
+      {
+       "c": "Commercial Tenancy (Retail Shops) Agreements Regulations 1985 (WA)",
+       "s": "3AA",
+       "sc": 0.518
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5495213772447176
+    },
+    {
+     "best": 0.7342493723780844,
+     "g": 1,
+     "q": "what penalty applies when an organisation seriously interferes with an individual's privacy",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "13H",
+       "sc": 0.7342
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "13G",
+       "sc": 0.7266
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "13",
+       "sc": 0.7098
+      }
+     ],
+     "tr": 2,
+     "ts": 0.7266011878032416
+    },
+    {
+     "best": 0.6618389013200834,
+     "g": 1,
+     "q": "can a person sue someone directly for a serious invasion of their privacy",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 7",
+       "sc": 0.6618
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 2",
+       "sc": 0.6106
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 12",
+       "sc": 0.6046
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6618389013200834
+    },
+    {
+     "best": 0.6236802980962959,
+     "g": 1,
+     "q": "how long after a privacy invasion can a claim still be brought",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 7",
+       "sc": 0.6237
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 14",
+       "sc": 0.616
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 12",
+       "sc": 0.5831
+      }
+     ],
+     "tr": 2,
+     "ts": 0.6160218447357181
+    },
+    {
+     "best": 0.5754289101324082,
+     "g": 0,
+     "q": "ASX continuous disclosure obligations for listed entities",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "20A",
+       "sc": 0.5754
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "22F",
+       "sc": 0.5452
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WJ",
+       "sc": 0.5427
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5795276858681315,
+     "g": 0,
+     "q": "franchising code of conduct cooling off period",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "18",
+       "sc": 0.5795
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "425",
+       "sc": 0.5212
+      },
+      {
+       "c": "Finance Brokers Control Act 1975 (WA)",
+       "s": "81",
+       "sc": 0.5144
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5522217067657678,
+     "g": 0,
+     "q": "GDPR data subject access request response deadline",
+     "top": [
+      {
+       "c": "Electricity Distribution Regulations 1997 (WA)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.5522
+      },
+      {
+       "c": "Electricity Distribution Regulations 1997 (WA)",
+       "s": "Sch 1 cl 2",
+       "sc": 0.5321
+      },
+      {
+       "c": "Electricity Distribution Regulations 1997 (WA)",
+       "s": "9",
+       "sc": 0.5144
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.4595781288225928,
+     "g": 0,
+     "q": "New York rent stabilization ordinance succession rights",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "107",
+       "sc": 0.4596
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "106",
+       "sc": 0.4541
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "169",
+       "sc": 0.4526
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.4773409462748072,
+     "g": 0,
+     "q": "patent claim construction and the doctrine of equivalents",
+     "top": [
+      {
+       "c": "Construction Contracts Act 2004 (WA)",
+       "s": "16",
+       "sc": 0.4773
+      },
+      {
+       "c": "Construction Contracts Act 2004 (WA)",
+       "s": "17",
+       "sc": 0.4744
+      },
+      {
+       "c": "Construction Contracts Act 2004 (WA)",
+       "s": "15",
+       "sc": 0.4651
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.4702589916952543,
+     "g": 0,
+     "q": "Medicare bulk billing incentive payment rates",
+     "top": [
+      {
+       "c": "Coal Industry Superannuation Regulations 1990 (WA)",
+       "s": "36",
+       "sc": 0.4703
+      },
+      {
+       "c": "Anglo-Persian Oil Company Limited's (Private) Act 1919 (WA)",
+       "s": "14",
+       "sc": 0.4545
+      },
+      {
+       "c": "Supreme Court (Fees) Regulations 2002 (WA)",
+       "s": "Sch 1 cl 4",
+       "sc": 0.4368
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.3145636878612622,
+     "g": 0,
+     "q": "how do I bake sourdough bread at home",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "32J",
+       "sc": 0.3146
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "32K",
+       "sc": 0.3048
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "55A",
+       "sc": 0.3038
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5364150498018465,
+     "g": 0,
+     "q": "stamp duty on a racehorse syndicate share in Antarctica",
+     "top": [
+      {
+       "c": "Bank of Western Australia Act 1995 (WA)",
+       "s": "18",
+       "sc": 0.5364
+      },
+      {
+       "c": "Mining On Private Property Act 1898 (WA)",
+       "s": "56",
+       "sc": 0.5354
+      },
+      {
+       "c": "Insurance Commission of Western Australia Regulations 1986 (WA)",
+       "s": "5",
+       "sc": 0.5183
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5395181597046557,
+     "g": 0,
+     "q": "conveyancing settlement procedure in Victoria",
+     "top": [
+      {
+       "c": "Settlement Agents Code of Conduct 2016 (WA)",
+       "s": "29",
+       "sc": 0.5395
+      },
+      {
+       "c": "Settlement Agents Code of Conduct 2016 (WA)",
+       "s": "35",
+       "sc": 0.5174
+      },
+      {
+       "c": "Trustees Act 1962 (WA)",
+       "s": "110",
+       "sc": 0.5028
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5484691605084566,
+     "g": 0,
+     "q": "criminal sentencing guidelines in the Northern Territory",
+     "top": [
+      {
+       "c": "Criminal Appeals Act 2004 (WA)",
+       "s": "41",
+       "sc": 0.5485
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "571",
+       "sc": 0.5359
+      },
+      {
+       "c": "COVID-19 Response and Economic Recovery Omnibus Act 2020 (WA)",
+       "s": "55",
+       "sc": 0.5313
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6411726653280845,
+     "g": 0,
+     "q": "what must a healthcare provider do after a My Health Record is accessed without authorisation",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WD",
+       "sc": 0.6412
+      },
+      {
+       "c": "Health Services (Conciliation and Review) Regulations 2010 (WA)",
+       "s": "Sch 3 cl 15",
+       "sc": 0.6318
+      },
+      {
+       "c": "Health Services (Information) Regulations 2017 (WA)",
+       "s": "4",
+       "sc": 0.5602
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6132251895774017,
+     "g": 0,
+     "q": "what is the threshold for a notifiable privacy breach under the New Zealand Privacy Act 2020",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "6A",
+       "sc": 0.6132
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "13",
+       "sc": 0.5984
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WD",
+       "sc": 0.5815
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5172332559246345,
+     "g": 0,
+     "q": "how does a consumer opt out of the sale of their personal information in California",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "15AC",
+       "sc": 0.5172
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "15AD",
+       "sc": 0.5116
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "21P",
+       "sc": 0.504
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6668979881568522,
+     "g": 0,
+     "q": "what privacy obligations apply to Queensland government agencies handling personal information",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 9",
+       "sc": 0.6669
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "100",
+       "sc": 0.6516
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "2A",
+       "sc": 0.6424
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6070084455419297,
+     "g": 0,
+     "q": "what privacy safeguards apply to an accredited data recipient under the Consumer Data Right",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "22E",
+       "sc": 0.607
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "80TE",
+       "sc": 0.6062
+      },
+      {
+       "c": "Health Practitioner Regulation National Law Regulation 2018 (WA)",
+       "s": "33",
+       "sc": 0.6015
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5186417623462356,
+     "g": 0,
+     "q": "rules for sending unsolicited commercial electronic messages to customers",
+     "top": [
+      {
+       "c": "Electricity Industry (Network Quality and Reliability of Supply) Code 2005 (WA)",
+       "s": "11A",
+       "sc": 0.5186
+      },
+      {
+       "c": "Electricity Industry (Network Quality and Reliability of Supply) Code 2005 (WA)",
+       "s": "11",
+       "sc": 0.5171
+      },
+      {
+       "c": "COVID-19 Response and Economic Recovery Omnibus Act 2020 (WA)",
+       "s": "71",
+       "sc": 0.5057
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5154772012972699,
+     "g": 0,
+     "q": "how long must a telecommunications provider retain customer metadata",
+     "top": [
+      {
+       "c": "Road Traffic (Towing of Vehicles) Regulations 2020 (WA)",
+       "s": "8",
+       "sc": 0.5155
+      },
+      {
+       "c": "Animal Welfare (Transport, Saleyards and Depots) (Cattle and Sheep) Regulations 2020 (WA)",
+       "s": "51",
+       "sc": 0.4873
+      },
+      {
+       "c": "Settlement Agents Code of Conduct 2016 (WA)",
+       "s": "28",
+       "sc": 0.4868
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5665393802724122,
+     "g": 0,
+     "q": "how long does an agency have to decide a freedom of information request",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "35",
+       "sc": 0.5665
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "34",
+       "sc": 0.5632
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "74",
+       "sc": 0.5515
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5863628949050017,
+     "g": 0,
+     "q": "is it lawful to record a private conversation with a colleague in Western Australia",
+     "top": [
+      {
+       "c": "Albany Hardwood Plantation Agreement Act 1993 (WA)",
+       "s": "Sch 1 cl 3",
+       "sc": 0.5864
+      },
+      {
+       "c": "Collie Hardwood Plantation Agreement Act 1995 (WA)",
+       "s": "Sch 1 cl 3",
+       "sc": 0.5864
+      },
+      {
+       "c": "Iron Ore Processing (Mineralogy Pty. Ltd.) Agreement Act 2002 (WA)",
+       "s": "Sch 1 cl 46",
+       "sc": 0.5651
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.48874527302723386,
+     "g": 0,
+     "q": "how do I put my phone number on the Do Not Call Register",
+     "top": [
+      {
+       "c": "Minimum Conditions of Employment Regulations 2022 (WA)",
+       "s": "2",
+       "sc": 0.4887
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "35",
+       "sc": 0.4122
+      },
+      {
+       "c": "Chattel Securities Regulations 1988 (WA)",
+       "s": "Sch 1 cl 4",
+       "sc": 0.4104
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6340650523075129,
+     "g": 0,
+     "q": "what penalty rate applies to Sunday work under the General Retail Industry Award",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "135A",
+       "sc": 0.6341
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "139",
+       "sc": 0.5955
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "23B",
+       "sc": 0.5928
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6025164305243011,
+     "g": 0,
+     "q": "what classification level applies to a level 3 employee under the Clerks Private Sector Award",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "168E",
+       "sc": 0.6025
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "168L",
+       "sc": 0.596
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "143B",
+       "sc": 0.5824
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6513665541003872,
+     "g": 0,
+     "q": "what is the current national minimum wage per hour",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "295",
+       "sc": 0.6514
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "299",
+       "sc": 0.6131
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "282",
+       "sc": 0.5985
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5999568385634979,
+     "g": 0,
+     "q": "how much notice must a landlord give to end a periodic residential tenancy in WA",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "42",
+       "sc": 0.6
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "41",
+       "sc": 0.5919
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "40",
+       "sc": 0.5872
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5889950548834357,
+     "g": 0,
+     "q": "do I have to register my dog with the local council in WA",
+     "top": [
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "10",
+       "sc": 0.589
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "88",
+       "sc": 0.5814
+      },
+      {
+       "c": "Planning and Development (Development Assessment Panels) Regulations 2011 (WA)",
+       "s": "25",
+       "sc": 0.5342
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6231462622763371,
+     "g": 0,
+     "q": "what are the duties of a PCBU under Western Australian work health and safety law",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "789FH",
+       "sc": 0.6231
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "333R",
+       "sc": 0.6165
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "527L",
+       "sc": 0.614
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6368010818851604,
+     "g": 0,
+     "q": "how do I lodge a caveat over a property title in Western Australia",
+     "top": [
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "345",
+       "sc": 0.6368
+      },
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "342",
+       "sc": 0.632
+      },
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "346",
+       "sc": 0.6234
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5957301640023147,
+     "g": 0,
+     "q": "how are strata by-laws enforced against a lot owner in WA",
+     "top": [
+      {
+       "c": "Land Tax Assessment Act 2002 (WA)",
+       "s": "Sch 1 cl 2",
+       "sc": 0.5957
+      },
+      {
+       "c": "Bayulu Community By-laws 2006 (WA)",
+       "s": "1",
+       "sc": 0.5773
+      },
+      {
+       "c": "By-laws for the Control of Hoardings (WA)",
+       "s": "13",
+       "sc": 0.5749
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5768883468981567,
+     "g": 0,
+     "q": "what is the time limit for lodging a workers compensation claim in WA",
+     "top": [
+      {
+       "c": "Taxation Administration Regulations 2003 (WA)",
+       "s": "13J",
+       "sc": 0.5769
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "130",
+       "sc": 0.5577
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "156",
+       "sc": 0.513
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.616040704297041,
+     "g": 0,
+     "q": "what are the requirements for applying for a liquor licence in Western Australia",
+     "top": [
+      {
+       "c": "Charitable Collections Regulations 1947 (WA)",
+       "s": "4",
+       "sc": 0.616
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "185",
+       "sc": 0.5986
+      },
+      {
+       "c": "Liquor Control (Juwurlinji Restricted Area) Regulations 2009 (WA)",
+       "s": "7",
+       "sc": 0.5842
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.45974315887873773,
+     "g": 0,
+     "q": "how many demerit points do you get for exceeding the speed limit in WA",
+     "top": [
+      {
+       "c": "Legislation Act 2021 (WA)",
+       "s": "8",
+       "sc": 0.4597
+      },
+      {
+       "c": "Bank of Western Australia Act 1995 (WA)",
+       "s": "42J",
+       "sc": 0.4468
+      },
+      {
+       "c": "Legislation Act 2021 (WA)",
+       "s": "13",
+       "sc": 0.4443
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6226872207834279,
+     "g": 0,
+     "q": "when is a building permit required under the Building Act 2011 in WA",
+     "top": [
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "183",
+       "sc": 0.6227
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "67",
+       "sc": 0.5648
+      },
+      {
+       "c": "Agriculture and Related Resources Protection (European House Borer) Regulations 2006 (WA)",
+       "s": "14",
+       "sc": 0.5596
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.429738961833481,
+     "g": 0,
+     "q": "how do I stop my cat from scratching the furniture",
+     "top": [
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "18",
+       "sc": 0.4297
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "34",
+       "sc": 0.4293
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "28",
+       "sc": 0.4273
+      }
+     ],
+     "tr": null,
+     "ts": null
+    }
+   ],
+   "sweep": [
+    {
+     "fn": 10,
+     "fp": 33,
+     "precision": 0.5352,
+     "recall": 0.7917,
+     "threshold": 0.3,
+     "tn": 0,
+     "tp": 38
+    },
+    {
+     "fn": 10,
+     "fp": 32,
+     "precision": 0.5429,
+     "recall": 0.7917,
+     "threshold": 0.35,
+     "tn": 1,
+     "tp": 38
+    },
+    {
+     "fn": 10,
+     "fp": 32,
+     "precision": 0.5429,
+     "recall": 0.7917,
+     "threshold": 0.4,
+     "tn": 1,
+     "tp": 38
+    },
+    {
+     "fn": 11,
+     "fp": 31,
+     "precision": 0.5441,
+     "recall": 0.7708,
+     "threshold": 0.45,
+     "tn": 2,
+     "tp": 37
+    },
+    {
+     "fn": 11,
+     "fp": 26,
+     "precision": 0.5873,
+     "recall": 0.7708,
+     "threshold": 0.5,
+     "tn": 7,
+     "tp": 37
+    },
+    {
+     "fn": 15,
+     "fp": 20,
+     "precision": 0.6226,
+     "recall": 0.6875,
+     "threshold": 0.55,
+     "tn": 13,
+     "tp": 33
+    },
+    {
+     "fn": 18,
+     "fp": 11,
+     "precision": 0.7317,
+     "recall": 0.625,
+     "threshold": 0.6,
+     "tn": 22,
+     "tp": 30
+    },
+    {
+     "fn": 25,
+     "fp": 2,
+     "precision": 0.92,
+     "recall": 0.4792,
+     "threshold": 0.65,
+     "tn": 31,
+     "tp": 23
+    },
+    {
+     "fn": 35,
+     "fp": 0,
+     "precision": 1.0,
+     "recall": 0.2708,
+     "threshold": 0.7,
+     "tn": 33,
+     "tp": 13
+    },
+    {
+     "fn": 39,
+     "fp": 0,
+     "precision": 1.0,
+     "recall": 0.1875,
+     "threshold": 0.75,
+     "tn": 33,
+     "tp": 9
+    },
+    {
+     "fn": 47,
+     "fp": 0,
+     "precision": 1.0,
+     "recall": 0.0208,
+     "threshold": 0.8,
+     "tn": 33,
+     "tp": 1
+    }
+   ]
+  },
+  "pre_stats_refresh": {
+   "corpus_stats": {
+    "avg_tokens": 103.0360721442886,
+    "drift": 67,
+    "provisions": 8982,
+    "refreshed_at": "2026-09-23T10:45:30Z"
+   },
+   "highest_known_absent": 0.6669038812287844,
+   "highest_known_absent_query": "what privacy obligations apply to Queensland government agencies handling personal information",
+   "lowest_retained_known_good": 0.7256191336052626,
+   "lowest_zero_fp_threshold": 0.7,
+   "margin": 0.058715,
+   "recall_at_lowest_zero_fp": 0.2708,
+   "recall_ceiling_threshold_disabled": 0.7917,
+   "results": [
+    {
+     "best": 0.7256347170151413,
+     "g": 1,
+     "q": "must a cat be sterilised before it can be registered",
+     "top": [
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "18",
+       "sc": 0.7256
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "21",
+       "sc": 0.7046
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "20",
+       "sc": 0.6933
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7256347170151413
+    },
+    {
+     "best": 0.648230067010255,
+     "g": 1,
+     "q": "what are the grounds for appealing a criminal conviction",
+     "top": [
+      {
+       "c": "Criminal Appeals Act 2004 (WA)",
+       "s": "8",
+       "sc": 0.6482
+      },
+      {
+       "c": "Criminal Appeals Act 2004 (WA)",
+       "s": "30",
+       "sc": 0.6451
+      },
+      {
+       "c": "Criminal Appeals Act 2004 (WA)",
+       "s": "24",
+       "sc": 0.6448
+      }
+     ],
+     "tr": 1,
+     "ts": 0.648230067010255
+    },
+    {
+     "best": 0.7919382582114343,
+     "g": 1,
+     "q": "duty to minimise risk arising from dangerous goods",
+     "top": [
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "8",
+       "sc": 0.7919
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "4",
+       "sc": 0.6982
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "Sch 1 cl 1",
+       "sc": 0.6835
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7919382582114343
+    },
+    {
+     "best": 0.6678985266922266,
+     "g": 1,
+     "q": "how is a food business registered",
+     "top": [
+      {
+       "c": "Food Act 2008 (WA)",
+       "s": "110",
+       "sc": 0.6679
+      },
+      {
+       "c": "Food Act 2008 (WA)",
+       "s": "115",
+       "sc": 0.6548
+      },
+      {
+       "c": "Food Act 2008 (WA)",
+       "s": "109",
+       "sc": 0.6508
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6678985266922266
+    },
+    {
+     "best": 0.6710069781410918,
+     "g": 1,
+     "q": "does the Commissioner keep a register of pawnbroker licences",
+     "top": [
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "28",
+       "sc": 0.671
+      },
+      {
+       "c": "Witness Protection (Western Australia) Act 1996 (WA)",
+       "s": "13",
+       "sc": 0.6553
+      },
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "45",
+       "sc": 0.65
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6710069781410918
+    },
+    {
+     "best": 0.7728752322671582,
+     "g": 1,
+     "q": "can a trustee surrender an onerous lease",
+     "top": [
+      {
+       "c": "Trustees Act 1962 (WA)",
+       "s": "35",
+       "sc": 0.7729
+      },
+      {
+       "c": "Trustees Act 1962 (WA)",
+       "s": "36",
+       "sc": 0.6225
+      },
+      {
+       "c": "Infants' Property Act 1830 (Imp) (WA)",
+       "s": "31",
+       "sc": 0.5693
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7728752322671582
+    },
+    {
+     "best": 0.6774222388435127,
+     "g": 1,
+     "q": "land tax exemption where the owner is living in residential care",
+     "top": [
+      {
+       "c": "Land Tax Assessment Act 2002 (WA)",
+       "s": "15A",
+       "sc": 0.6774
+      },
+      {
+       "c": "Land Tax Assessment Act 2002 (WA)",
+       "s": "26B",
+       "sc": 0.67
+      },
+      {
+       "c": "Land Tax Assessment Act 2002 (WA)",
+       "s": "38A",
+       "sc": 0.6664
+      }
+     ],
+     "tr": 2,
+     "ts": 0.6700248050756243
+    },
+    {
+     "best": 0.7754098959013587,
+     "g": 1,
+     "q": "what powers does the Tribunal have over heritage agreements",
+     "top": [
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "101",
+       "sc": 0.7754
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "88",
+       "sc": 0.691
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "111",
+       "sc": 0.6851
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7754098959013587
+    },
+    {
+     "best": 0.7661506407145406,
+     "g": 1,
+     "q": "compensation payable to a park operator when a long-stay tenant holds over",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "46",
+       "sc": 0.7662
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "69",
+       "sc": 0.7659
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "32A",
+       "sc": 0.7585
+      }
+     ],
+     "tr": 2,
+     "ts": 0.7658508496683218
+    },
+    {
+     "best": 0.7547613617302199,
+     "g": 1,
+     "q": "applying for a warrant to enter premises holding dangerous goods",
+     "top": [
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "42",
+       "sc": 0.7548
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "35",
+       "sc": 0.713
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "45",
+       "sc": 0.7044
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7547613617302199
+    },
+    {
+     "best": 0.5564900856335342,
+     "g": 1,
+     "q": "can I resell a concert ticket for more than I paid for it",
+     "top": [
+      {
+       "c": "Ticket Scalping Act 2021 (WA)",
+       "s": "7",
+       "sc": 0.5565
+      },
+      {
+       "c": "Ticket Scalping Act 2021 (WA)",
+       "s": "10",
+       "sc": 0.542
+      },
+      {
+       "c": "Ticket Scalping Act 2021 (WA)",
+       "s": "3",
+       "sc": 0.5298
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5564900856335342
+    },
+    {
+     "best": 0.7288602251834394,
+     "g": 1,
+     "q": "how does someone create a carbon right over a parcel of land",
+     "top": [
+      {
+       "c": "Carbon Rights Act 2003 (WA)",
+       "s": "5",
+       "sc": 0.7289
+      },
+      {
+       "c": "Carbon Rights Act 2003 (WA)",
+       "s": "7",
+       "sc": 0.7062
+      },
+      {
+       "c": "Carbon Rights Act 2003 (WA)",
+       "s": "11",
+       "sc": 0.6959
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7288602251834394
+    },
+    {
+     "best": 0.540135679197699,
+     "g": 1,
+     "q": "what can a repairer do with goods a customer never came back to collect",
+     "top": [
+      {
+       "c": "Disposal of Uncollected Goods Act 1970 (WA)",
+       "s": "29",
+       "sc": 0.5401
+      },
+      {
+       "c": "Disposal of Uncollected Goods Act 1970 (WA)",
+       "s": "20",
+       "sc": 0.5396
+      },
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "5",
+       "sc": 0.5185
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5729310611166952,
+     "g": 1,
+     "q": "I have come across an old shipwreck, am I obliged to report it",
+     "top": [
+      {
+       "c": "Maritime Archaeology Act 1973 (WA)",
+       "s": "24",
+       "sc": 0.5729
+      },
+      {
+       "c": "Coroners Act 1996 (WA)",
+       "s": "17",
+       "sc": 0.5006
+      },
+      {
+       "c": "W.A. Marine (Radiotelephony) Regulations 1981 (WA)",
+       "s": "24",
+       "sc": 0.4583
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6641004105542851,
+     "g": 1,
+     "q": "meaning of casual employee",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "Sch 1 cl 47A",
+       "sc": 0.6641
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "15A",
+       "sc": 0.661
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "359B",
+       "sc": 0.626
+      }
+     ],
+     "tr": 2,
+     "ts": 0.6610149142572668
+    },
+    {
+     "best": 0.7604108460321677,
+     "g": 1,
+     "q": "casual employees of small business employers",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "Sch 1 cl 47A",
+       "sc": 0.7604
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "23",
+       "sc": 0.6815
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "125B",
+       "sc": 0.6571
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7604108460321677
+    },
+    {
+     "best": 0.8214614068149502,
+     "g": 1,
+     "q": "giving employees the Casual Employment Information Statement",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "125B",
+       "sc": 0.8215
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "125A",
+       "sc": 0.7543
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "125",
+       "sc": 0.7042
+      }
+     ],
+     "tr": 1,
+     "ts": 0.8214614068149502
+    },
+    {
+     "best": 0.7632346905375587,
+     "g": 1,
+     "q": "the National Employment Standards are minimum standards",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "61",
+       "sc": 0.7632
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "59",
+       "sc": 0.6652
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "761",
+       "sc": 0.6528
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7632346905375587
+    },
+    {
+     "best": 0.7881215891298126,
+     "g": 1,
+     "q": "dismissing an employee in order to re-engage them as a casual",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "359B",
+       "sc": 0.7881
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "359C",
+       "sc": 0.6672
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "358",
+       "sc": 0.6532
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7881215891298126
+    },
+    {
+     "best": 0.6671142859743251,
+     "g": 1,
+     "q": "if a hospital already reported a records breach under health records law, must it notify again under the Privacy Act",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WD",
+       "sc": 0.6671
+      },
+      {
+       "c": "Health Services (Conciliation and Review) Regulations 2010 (WA)",
+       "s": "Sch 3 cl 14",
+       "sc": 0.6186
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "6A",
+       "sc": 0.6021
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6671142859743251
+    },
+    {
+     "best": 0.7256191336052626,
+     "g": 1,
+     "q": "when does unauthorised access to personal information count as a data breach the entity must act on",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WE",
+       "sc": 0.7256
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WF",
+       "sc": 0.6881
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WA",
+       "sc": 0.6821
+      }
+     ],
+     "tr": 1,
+     "ts": 0.7256191336052626
+    },
+    {
+     "best": 0.6844829147386846,
+     "g": 1,
+     "q": "what must the notification to the Commissioner about a data breach describe",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WA",
+       "sc": 0.6845
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.6806
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WR",
+       "sc": 0.6802
+      }
+     ],
+     "tr": 4,
+     "ts": 0.6632477551893913
+    },
+    {
+     "best": 0.6844281241013359,
+     "g": 1,
+     "q": "who does a business have to notify once it decides there has been a data breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.6844
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WR",
+       "sc": 0.6457
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WJ",
+       "sc": 0.6235
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6844281241013359
+    },
+    {
+     "best": 0.6638504003873889,
+     "g": 1,
+     "q": "can the regulator force a business to notify a data breach it has not reported",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.6639
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WR",
+       "sc": 0.6496
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WU",
+       "sc": 0.6154
+      }
+     ],
+     "tr": 2,
+     "ts": 0.6495523675370521
+    },
+    {
+     "best": 0.6479290891549765,
+     "g": 1,
+     "q": "is a law enforcement body excused from notifying a data breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WN",
+       "sc": 0.6479
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.6252
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WD",
+       "sc": 0.6246
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6479290891549765
+    },
+    {
+     "best": 0.5727463180684829,
+     "g": 1,
+     "q": "if we sent customer data to a supplier overseas and they lose it, is that treated as our breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WJ",
+       "sc": 0.5727
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WE",
+       "sc": 0.5564
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WM",
+       "sc": 0.5551
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5029595951482758,
+     "g": 1,
+     "q": "we fixed the problem before anyone was hurt, do we still have to report the incident",
+     "top": [
+      {
+       "c": "Children and Community Services Regulations 2006 (WA)",
+       "s": "7",
+       "sc": 0.503
+      },
+      {
+       "c": "Railways (Access) Code 2000 (WA)",
+       "s": "Sch 3 cl 18",
+       "sc": 0.4776
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "68",
+       "sc": 0.443
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6316467884003436,
+     "g": 1,
+     "q": "what factors decide whether a leak is likely to cause serious harm",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WG",
+       "sc": 0.6316
+      },
+      {
+       "c": "Dangerous Goods Safety Act 2004 (WA)",
+       "s": "5",
+       "sc": 0.5293
+      },
+      {
+       "c": "Petroleum (Submerged Lands) (Resource Management and Administration) Regulations 2015 (WA)",
+       "s": "Sch 4 cl 11",
+       "sc": 0.526
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6316467884003436
+    },
+    {
+     "best": 0.545023110732783,
+     "g": 1,
+     "q": "how long do we have to investigate when we only suspect personal information has leaked",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "504",
+       "sc": 0.545
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "87",
+       "sc": 0.5245
+      },
+      {
+       "c": "Coroners Act 1996 (WA)",
+       "s": "23",
+       "sc": 0.5222
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6549191709814457,
+     "g": 1,
+     "q": "what happens when another Commonwealth law forbids disclosing what the breach statement would reveal",
+     "top": [
+      {
+       "c": "Gas Corporation (Business Disposal) Act 1999 (WA)",
+       "s": "29",
+       "sc": 0.6549
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WT",
+       "sc": 0.6346
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26XB",
+       "sc": 0.6158
+      }
+     ],
+     "tr": 6,
+     "ts": 0.6075962780820268
+    },
+    {
+     "best": 0.6486692257874385,
+     "g": 1,
+     "q": "can the Commissioner excuse an organisation from having to notify a particular breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WR",
+       "sc": 0.6487
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WL",
+       "sc": 0.6181
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WU",
+       "sc": 0.6163
+      }
+     ],
+     "tr": 4,
+     "ts": 0.6066098000378248
+    },
+    {
+     "best": 0.674929574154921,
+     "g": 1,
+     "q": "can the regulator compel documents and answers while investigating a suspected breach",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WU",
+       "sc": 0.6749
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "44",
+       "sc": 0.6266
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "504",
+       "sc": 0.6244
+      }
+     ],
+     "tr": 1,
+     "ts": 0.674929574154921
+    },
+    {
+     "best": 0.5542396767063699,
+     "g": 1,
+     "q": "does a company need a written privacy policy and what has to be in it",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 1",
+       "sc": 0.5542
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "22A",
+       "sc": 0.5179
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "22B",
+       "sc": 0.4976
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5542396767063699
+    },
+    {
+     "best": 0.5213953302946003,
+     "g": 1,
+     "q": "can a customer deal with a business without giving their real name",
+     "top": [
+      {
+       "c": "Finance Brokers Control Act 1975 (WA)",
+       "s": "41",
+       "sc": 0.5214
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "50",
+       "sc": 0.4946
+      },
+      {
+       "c": "Australia and New Zealand Banking Group Limited (Town & Country) Act 1995 (WA)",
+       "s": "8",
+       "sc": 0.49
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6516488274626169,
+     "g": 1,
+     "q": "when may an organisation collect personal details about someone at all",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 3",
+       "sc": 0.6516
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.6229
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 7",
+       "sc": 0.5918
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6516488274626169
+    },
+    {
+     "best": 0.4531867849526672,
+     "g": 1,
+     "q": "what should a business do with personal details it never asked for",
+     "top": [
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "367",
+       "sc": 0.4532
+      },
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "364",
+       "sc": 0.4481
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.4416
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5282757043784412,
+     "g": 1,
+     "q": "what must customers be told at the point their details are collected",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.5283
+      },
+      {
+       "c": "Electricity Industry (Network Quality and Reliability of Supply) Code 2005 (WA)",
+       "s": "21",
+       "sc": 0.5275
+      },
+      {
+       "c": "Commercial Tenancy (Retail Shops) Agreements Regulations 1985 (WA)",
+       "s": "Sch 2 cl 26",
+       "sc": 0.5211
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5282757043784412
+    },
+    {
+     "best": 0.4606544555586779,
+     "g": 1,
+     "q": "can we reuse information gathered for one reason for a different reason",
+     "top": [
+      {
+       "c": "Environmental Protection (NEPM-NPI) Regulations 1998 (WA)",
+       "s": "5",
+       "sc": 0.4607
+      },
+      {
+       "c": "Environmental Protection (NEPM-UPM) Regulations 2013 (WA)",
+       "s": "10",
+       "sc": 0.4435
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 3",
+       "sc": 0.4435
+      }
+     ],
+     "tr": 5,
+     "ts": 0.4215639743522861
+    },
+    {
+     "best": 0.5424321847904323,
+     "g": 1,
+     "q": "when can a company use a customer list for marketing and how does someone opt out",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 7",
+       "sc": 0.5424
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "15AC",
+       "sc": 0.4916
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20G",
+       "sc": 0.4913
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5424321847904323
+    },
+    {
+     "best": 0.5963253223454941,
+     "g": 1,
+     "q": "what must we do before sending personal details to a recipient outside Australia",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 8",
+       "sc": 0.5963
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.5813
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "16C",
+       "sc": 0.5568
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5963253223454941
+    },
+    {
+     "best": 0.6234006440217265,
+     "g": 1,
+     "q": "obligation to keep customer records accurate and up to date",
+     "top": [
+      {
+       "c": "Health Services (Conciliation and Review) Regulations 2010 (WA)",
+       "s": "Sch 3 cl 15",
+       "sc": 0.6234
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "535",
+       "sc": 0.6072
+      },
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "45",
+       "sc": 0.5599
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.525399815745496,
+     "g": 1,
+     "q": "what must a business do to keep personal details safe and when must it destroy them",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 11",
+       "sc": 0.5254
+      },
+      {
+       "c": "Environmental Protection (Clearing of Native Vegetation) Regulations 2004 (WA)",
+       "s": "11",
+       "sc": 0.5109
+      },
+      {
+       "c": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
+       "s": "45",
+       "sc": 0.5074
+      }
+     ],
+     "tr": 1,
+     "ts": 0.525399815745496
+    },
+    {
+     "best": 0.5265941115860615,
+     "g": 1,
+     "q": "can an individual demand a copy of what a company holds about them",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20T",
+       "sc": 0.5266
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "21V",
+       "sc": 0.5137
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20B",
+       "sc": 0.5093
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.49429619052140455,
+     "g": 1,
+     "q": "how do I get a company to fix wrong information it holds about me",
+     "top": [
+      {
+       "c": "Anglo-Persian Oil Company Limited's (Private) Act 1919 (WA)",
+       "s": "12",
+       "sc": 0.4943
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20T",
+       "sc": 0.4894
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "20S",
+       "sc": 0.4844
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5494594869359324,
+     "g": 1,
+     "q": "is a small shop with low turnover covered by the privacy rules at all",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "6D",
+       "sc": 0.5495
+      },
+      {
+       "c": "Commercial Tenancy (Retail Shops) Agreements Regulations 1985 (WA)",
+       "s": "Sch 2 cl 39",
+       "sc": 0.5222
+      },
+      {
+       "c": "Commercial Tenancy (Retail Shops) Agreements Regulations 1985 (WA)",
+       "s": "3AA",
+       "sc": 0.518
+      }
+     ],
+     "tr": 1,
+     "ts": 0.5494594869359324
+    },
+    {
+     "best": 0.7343694774304699,
+     "g": 1,
+     "q": "what penalty applies when an organisation seriously interferes with an individual's privacy",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "13H",
+       "sc": 0.7344
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "13G",
+       "sc": 0.7266
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "13",
+       "sc": 0.7098
+      }
+     ],
+     "tr": 2,
+     "ts": 0.7266167045529303
+    },
+    {
+     "best": 0.6618540275053029,
+     "g": 1,
+     "q": "can a person sue someone directly for a serious invasion of their privacy",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 7",
+       "sc": 0.6619
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 2",
+       "sc": 0.6107
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 12",
+       "sc": 0.6046
+      }
+     ],
+     "tr": 1,
+     "ts": 0.6618540275053029
+    },
+    {
+     "best": 0.6237107765708579,
+     "g": 1,
+     "q": "how long after a privacy invasion can a claim still be brought",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 7",
+       "sc": 0.6237
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 14",
+       "sc": 0.6161
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 2 cl 12",
+       "sc": 0.5831
+      }
+     ],
+     "tr": 2,
+     "ts": 0.6160785247299029
+    },
+    {
+     "best": 0.5755634403226597,
+     "g": 0,
+     "q": "ASX continuous disclosure obligations for listed entities",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "20A",
+       "sc": 0.5756
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "22F",
+       "sc": 0.5453
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WJ",
+       "sc": 0.5429
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5795419014941797,
+     "g": 0,
+     "q": "franchising code of conduct cooling off period",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "18",
+       "sc": 0.5795
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "425",
+       "sc": 0.5212
+      },
+      {
+       "c": "Finance Brokers Control Act 1975 (WA)",
+       "s": "81",
+       "sc": 0.5147
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5524365294021514,
+     "g": 0,
+     "q": "GDPR data subject access request response deadline",
+     "top": [
+      {
+       "c": "Electricity Distribution Regulations 1997 (WA)",
+       "s": "Sch 1 cl 5",
+       "sc": 0.5524
+      },
+      {
+       "c": "Electricity Distribution Regulations 1997 (WA)",
+       "s": "Sch 1 cl 2",
+       "sc": 0.5323
+      },
+      {
+       "c": "Electricity Distribution Regulations 1997 (WA)",
+       "s": "9",
+       "sc": 0.5145
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.45967914561648204,
+     "g": 0,
+     "q": "New York rent stabilization ordinance succession rights",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "107",
+       "sc": 0.4597
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "106",
+       "sc": 0.4542
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "169",
+       "sc": 0.4528
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.4774900301874752,
+     "g": 0,
+     "q": "patent claim construction and the doctrine of equivalents",
+     "top": [
+      {
+       "c": "Construction Contracts Act 2004 (WA)",
+       "s": "16",
+       "sc": 0.4775
+      },
+      {
+       "c": "Construction Contracts Act 2004 (WA)",
+       "s": "17",
+       "sc": 0.4746
+      },
+      {
+       "c": "Construction Contracts Act 2004 (WA)",
+       "s": "15",
+       "sc": 0.4653
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.4704247556898834,
+     "g": 0,
+     "q": "Medicare bulk billing incentive payment rates",
+     "top": [
+      {
+       "c": "Coal Industry Superannuation Regulations 1990 (WA)",
+       "s": "36",
+       "sc": 0.4704
+      },
+      {
+       "c": "Anglo-Persian Oil Company Limited's (Private) Act 1919 (WA)",
+       "s": "14",
+       "sc": 0.4546
+      },
+      {
+       "c": "Supreme Court (Fees) Regulations 2002 (WA)",
+       "s": "Sch 1 cl 4",
+       "sc": 0.4367
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.3146537216617783,
+     "g": 0,
+     "q": "how do I bake sourdough bread at home",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "32J",
+       "sc": 0.3147
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "32K",
+       "sc": 0.3048
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "55A",
+       "sc": 0.3039
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5364876396304339,
+     "g": 0,
+     "q": "stamp duty on a racehorse syndicate share in Antarctica",
+     "top": [
+      {
+       "c": "Bank of Western Australia Act 1995 (WA)",
+       "s": "18",
+       "sc": 0.5365
+      },
+      {
+       "c": "Mining On Private Property Act 1898 (WA)",
+       "s": "56",
+       "sc": 0.5354
+      },
+      {
+       "c": "Insurance Commission of Western Australia Regulations 1986 (WA)",
+       "s": "5",
+       "sc": 0.5185
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5396338831536975,
+     "g": 0,
+     "q": "conveyancing settlement procedure in Victoria",
+     "top": [
+      {
+       "c": "Settlement Agents Code of Conduct 2016 (WA)",
+       "s": "29",
+       "sc": 0.5396
+      },
+      {
+       "c": "Settlement Agents Code of Conduct 2016 (WA)",
+       "s": "35",
+       "sc": 0.5175
+      },
+      {
+       "c": "Trustees Act 1962 (WA)",
+       "s": "110",
+       "sc": 0.5027
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5485794870979235,
+     "g": 0,
+     "q": "criminal sentencing guidelines in the Northern Territory",
+     "top": [
+      {
+       "c": "Criminal Appeals Act 2004 (WA)",
+       "s": "41",
+       "sc": 0.5486
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "571",
+       "sc": 0.536
+      },
+      {
+       "c": "COVID-19 Response and Economic Recovery Omnibus Act 2020 (WA)",
+       "s": "55",
+       "sc": 0.5313
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.641340383074527,
+     "g": 0,
+     "q": "what must a healthcare provider do after a My Health Record is accessed without authorisation",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WD",
+       "sc": 0.6413
+      },
+      {
+       "c": "Health Services (Conciliation and Review) Regulations 2010 (WA)",
+       "s": "Sch 3 cl 15",
+       "sc": 0.632
+      },
+      {
+       "c": "Health Services (Information) Regulations 2017 (WA)",
+       "s": "4",
+       "sc": 0.5605
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.613423177998919,
+     "g": 0,
+     "q": "what is the threshold for a notifiable privacy breach under the New Zealand Privacy Act 2020",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "6A",
+       "sc": 0.6134
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "13",
+       "sc": 0.5986
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "26WD",
+       "sc": 0.5817
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5173806147760964,
+     "g": 0,
+     "q": "how does a consumer opt out of the sale of their personal information in California",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "15AC",
+       "sc": 0.5174
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "15AD",
+       "sc": 0.5117
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "21P",
+       "sc": 0.5041
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6669038812287844,
+     "g": 0,
+     "q": "what privacy obligations apply to Queensland government agencies handling personal information",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "Sch 1 cl 9",
+       "sc": 0.6669
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "100",
+       "sc": 0.6517
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "2A",
+       "sc": 0.6425
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6070120038242837,
+     "g": 0,
+     "q": "what privacy safeguards apply to an accredited data recipient under the Consumer Data Right",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "22E",
+       "sc": 0.607
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "80TE",
+       "sc": 0.6062
+      },
+      {
+       "c": "Health Practitioner Regulation National Law Regulation 2018 (WA)",
+       "s": "33",
+       "sc": 0.6016
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5185840289110104,
+     "g": 0,
+     "q": "rules for sending unsolicited commercial electronic messages to customers",
+     "top": [
+      {
+       "c": "Electricity Industry (Network Quality and Reliability of Supply) Code 2005 (WA)",
+       "s": "11A",
+       "sc": 0.5186
+      },
+      {
+       "c": "Electricity Industry (Network Quality and Reliability of Supply) Code 2005 (WA)",
+       "s": "11",
+       "sc": 0.517
+      },
+      {
+       "c": "COVID-19 Response and Economic Recovery Omnibus Act 2020 (WA)",
+       "s": "71",
+       "sc": 0.5058
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5156880613365781,
+     "g": 0,
+     "q": "how long must a telecommunications provider retain customer metadata",
+     "top": [
+      {
+       "c": "Road Traffic (Towing of Vehicles) Regulations 2020 (WA)",
+       "s": "8",
+       "sc": 0.5157
+      },
+      {
+       "c": "Animal Welfare (Transport, Saleyards and Depots) (Cattle and Sheep) Regulations 2020 (WA)",
+       "s": "51",
+       "sc": 0.4875
+      },
+      {
+       "c": "Settlement Agents Code of Conduct 2016 (WA)",
+       "s": "28",
+       "sc": 0.487
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5665351967756918,
+     "g": 0,
+     "q": "how long does an agency have to decide a freedom of information request",
+     "top": [
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "35",
+       "sc": 0.5665
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "34",
+       "sc": 0.5633
+      },
+      {
+       "c": "Privacy Act 1988 (Cth)",
+       "s": "74",
+       "sc": 0.5515
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.586609752412732,
+     "g": 0,
+     "q": "is it lawful to record a private conversation with a colleague in Western Australia",
+     "top": [
+      {
+       "c": "Albany Hardwood Plantation Agreement Act 1993 (WA)",
+       "s": "Sch 1 cl 3",
+       "sc": 0.5866
+      },
+      {
+       "c": "Collie Hardwood Plantation Agreement Act 1995 (WA)",
+       "s": "Sch 1 cl 3",
+       "sc": 0.5866
+      },
+      {
+       "c": "Iron Ore Processing (Mineralogy Pty. Ltd.) Agreement Act 2002 (WA)",
+       "s": "Sch 1 cl 46",
+       "sc": 0.5654
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.48884374991654694,
+     "g": 0,
+     "q": "how do I put my phone number on the Do Not Call Register",
+     "top": [
+      {
+       "c": "Minimum Conditions of Employment Regulations 2022 (WA)",
+       "s": "2",
+       "sc": 0.4888
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "35",
+       "sc": 0.4123
+      },
+      {
+       "c": "Chattel Securities Regulations 1988 (WA)",
+       "s": "Sch 1 cl 4",
+       "sc": 0.4105
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6342279811637599,
+     "g": 0,
+     "q": "what penalty rate applies to Sunday work under the General Retail Industry Award",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "135A",
+       "sc": 0.6342
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "139",
+       "sc": 0.5956
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "23B",
+       "sc": 0.5929
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6027190504876222,
+     "g": 0,
+     "q": "what classification level applies to a level 3 employee under the Clerks Private Sector Award",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "168E",
+       "sc": 0.6027
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "168L",
+       "sc": 0.5962
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "143B",
+       "sc": 0.5826
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.651442644555029,
+     "g": 0,
+     "q": "what is the current national minimum wage per hour",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "295",
+       "sc": 0.6514
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "299",
+       "sc": 0.6132
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "282",
+       "sc": 0.5986
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6000928115462593,
+     "g": 0,
+     "q": "how much notice must a landlord give to end a periodic residential tenancy in WA",
+     "top": [
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "42",
+       "sc": 0.6001
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "41",
+       "sc": 0.5921
+      },
+      {
+       "c": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+       "s": "40",
+       "sc": 0.5874
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5890381848955304,
+     "g": 0,
+     "q": "do I have to register my dog with the local council in WA",
+     "top": [
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "10",
+       "sc": 0.589
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "88",
+       "sc": 0.5814
+      },
+      {
+       "c": "Planning and Development (Development Assessment Panels) Regulations 2011 (WA)",
+       "s": "25",
+       "sc": 0.5344
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6233262231859279,
+     "g": 0,
+     "q": "what are the duties of a PCBU under Western Australian work health and safety law",
+     "top": [
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "789FH",
+       "sc": 0.6233
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "333R",
+       "sc": 0.6167
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "527L",
+       "sc": 0.6142
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6368808276088247,
+     "g": 0,
+     "q": "how do I lodge a caveat over a property title in Western Australia",
+     "top": [
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "345",
+       "sc": 0.6369
+      },
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "342",
+       "sc": 0.6321
+      },
+      {
+       "c": "Offshore Minerals Act 2003 (WA)",
+       "s": "346",
+       "sc": 0.6235
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5956724287856455,
+     "g": 0,
+     "q": "how are strata by-laws enforced against a lot owner in WA",
+     "top": [
+      {
+       "c": "Land Tax Assessment Act 2002 (WA)",
+       "s": "Sch 1 cl 2",
+       "sc": 0.5957
+      },
+      {
+       "c": "Bayulu Community By-laws 2006 (WA)",
+       "s": "1",
+       "sc": 0.5773
+      },
+      {
+       "c": "By-laws for the Control of Hoardings (WA)",
+       "s": "13",
+       "sc": 0.5748
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.5769552963010784,
+     "g": 0,
+     "q": "what is the time limit for lodging a workers compensation claim in WA",
+     "top": [
+      {
+       "c": "Taxation Administration Regulations 2003 (WA)",
+       "s": "13J",
+       "sc": 0.577
+      },
+      {
+       "c": "Fair Work Act 2009 (Cth)",
+       "s": "130",
+       "sc": 0.5579
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "156",
+       "sc": 0.5132
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.616274505006029,
+     "g": 0,
+     "q": "what are the requirements for applying for a liquor licence in Western Australia",
+     "top": [
+      {
+       "c": "Charitable Collections Regulations 1947 (WA)",
+       "s": "4",
+       "sc": 0.6163
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "185",
+       "sc": 0.5986
+      },
+      {
+       "c": "Liquor Control (Juwurlinji Restricted Area) Regulations 2009 (WA)",
+       "s": "7",
+       "sc": 0.5844
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.4598761512284239,
+     "g": 0,
+     "q": "how many demerit points do you get for exceeding the speed limit in WA",
+     "top": [
+      {
+       "c": "Legislation Act 2021 (WA)",
+       "s": "8",
+       "sc": 0.4599
+      },
+      {
+       "c": "Bank of Western Australia Act 1995 (WA)",
+       "s": "42J",
+       "sc": 0.4469
+      },
+      {
+       "c": "Legislation Act 2021 (WA)",
+       "s": "13",
+       "sc": 0.4445
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.6229059420121164,
+     "g": 0,
+     "q": "when is a building permit required under the Building Act 2011 in WA",
+     "top": [
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "183",
+       "sc": 0.6229
+      },
+      {
+       "c": "Heritage Act 2018 (WA)",
+       "s": "67",
+       "sc": 0.565
+      },
+      {
+       "c": "Agriculture and Related Resources Protection (European House Borer) Regulations 2006 (WA)",
+       "s": "14",
+       "sc": 0.5598
+      }
+     ],
+     "tr": null,
+     "ts": null
+    },
+    {
+     "best": 0.4298881316876748,
+     "g": 0,
+     "q": "how do I stop my cat from scratching the furniture",
+     "top": [
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "18",
+       "sc": 0.4299
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "34",
+       "sc": 0.4294
+      },
+      {
+       "c": "Cat Act 2011 (WA)",
+       "s": "28",
+       "sc": 0.4274
+      }
+     ],
+     "tr": null,
+     "ts": null
+    }
+   ],
+   "sweep": [
+    {
+     "fn": 10,
+     "fp": 33,
+     "precision": 0.5352,
+     "recall": 0.7917,
+     "threshold": 0.3,
+     "tn": 0,
+     "tp": 38
+    },
+    {
+     "fn": 10,
+     "fp": 32,
+     "precision": 0.5429,
+     "recall": 0.7917,
+     "threshold": 0.35,
+     "tn": 1,
+     "tp": 38
+    },
+    {
+     "fn": 10,
+     "fp": 32,
+     "precision": 0.5429,
+     "recall": 0.7917,
+     "threshold": 0.4,
+     "tn": 1,
+     "tp": 38
+    },
+    {
+     "fn": 11,
+     "fp": 31,
+     "precision": 0.5441,
+     "recall": 0.7708,
+     "threshold": 0.45,
+     "tn": 2,
+     "tp": 37
+    },
+    {
+     "fn": 11,
+     "fp": 26,
+     "precision": 0.5873,
+     "recall": 0.7708,
+     "threshold": 0.5,
+     "tn": 7,
+     "tp": 37
+    },
+    {
+     "fn": 15,
+     "fp": 20,
+     "precision": 0.6226,
+     "recall": 0.6875,
+     "threshold": 0.55,
+     "tn": 13,
+     "tp": 33
+    },
+    {
+     "fn": 18,
+     "fp": 12,
+     "precision": 0.7143,
+     "recall": 0.625,
+     "threshold": 0.6,
+     "tn": 21,
+     "tp": 30
+    },
+    {
+     "fn": 25,
+     "fp": 2,
+     "precision": 0.92,
+     "recall": 0.4792,
+     "threshold": 0.65,
+     "tn": 31,
+     "tp": 23
+    },
+    {
+     "fn": 35,
+     "fp": 0,
+     "precision": 1.0,
+     "recall": 0.2708,
+     "threshold": 0.7,
+     "tn": 33,
+     "tp": 13
+    },
+    {
+     "fn": 39,
+     "fp": 0,
+     "precision": 1.0,
+     "recall": 0.1875,
+     "threshold": 0.75,
+     "tn": 33,
+     "tp": 9
+    },
+    {
+     "fn": 47,
+     "fp": 0,
+     "precision": 1.0,
+     "recall": 0.0208,
+     "threshold": 0.8,
+     "tn": 33,
+     "tp": 1
+    }
+   ]
+  }
+ }
+}
