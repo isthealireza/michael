@@ -19,6 +19,7 @@ from michael.domains import DomainConfigError
 from michael.draft import DraftingError
 from michael.embeddings import EmbeddingError
 from michael.ingest import IngestionError
+from michael.migrations import MigrationError
 from michael.sources import SourceFetchFailed, SourceRefused
 
 
@@ -49,6 +50,7 @@ EXPECTED_FAILURES = (
     DraftingError,
     EmbeddingError,
     IngestionError,
+    MigrationError,
     SourceFetchFailed,
     SourceRefused,
 )
@@ -66,6 +68,16 @@ def build_parser() -> argparse.ArgumentParser:
     sub = parser.add_subparsers(dest="command", required=True)
 
     sub.add_parser("schema", help="create the database schema (idempotent)")
+
+    migrate = sub.add_parser("migrate", help="apply, roll back or list schema migrations")
+    migrate.add_argument(
+        "--rollback",
+        metavar="ID",
+        help="roll ONE migration back, by its four-digit id. Never 'the last one'.",
+    )
+    migrate.add_argument(
+        "--status", action="store_true", help="list migrations and whether each has been applied"
+    )
     sub.add_parser("gate-schema", help="create the michael-gate schema (idempotent)")
     sub.add_parser("domains", help="print the domain routing table")
     sub.add_parser("hosts", help="print the ingestion host allowlist")
@@ -174,6 +186,15 @@ def _run(args: argparse.Namespace) -> int:
     match args.command:
         case "schema":
             _print(tools.apply_schema())
+        case "migrate":
+            from michael import migrations
+
+            if args.status:
+                _print(migrations.status())
+            elif args.rollback:
+                _print(migrations.rollback(args.rollback))
+            else:
+                _print(migrations.apply())
         case "gate-schema":
             from michael.gate.schema import apply_gate_schema
 

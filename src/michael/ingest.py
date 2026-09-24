@@ -688,13 +688,22 @@ class IngestionError(RuntimeError):
 
 @dataclass(frozen=True, slots=True)
 class Provision:
-    """One section of a document, with its offsets into the document text."""
+    """One citable unit of a document, with its offsets into the document text.
+
+    ``section_number`` is the identifier as the document itself writes it -
+    ``15A``, ``Sch 1 cl 3``, ``12``, or the sentinel ``(whole document)``.
+    ``unit_type`` says what KIND of identifier that is, and therefore how it
+    must be cited; see :data:`michael.schema.UNIT_TYPES`. The field is here
+    rather than derived from the document's type because one judgment
+    produces more than one kind.
+    """
 
     section_number: str
     heading: str
     text: str
     char_start: int
     char_end: int
+    unit_type: str = "section"
 
 
 @dataclass(frozen=True, slots=True)
@@ -706,6 +715,11 @@ class IngestResult:
     sha256: str
     provisions: int
     created: bool
+    #: Anything about the split a reader must not have to infer from a count.
+    #: A judgment whose report carries no paragraph numbers says so here, so
+    #: "1 provision" is never read as a splitter failure - or, worse, as
+    #: paragraph numbers that were there.
+    note: str = ""
 
 
 def split_sections(text: str) -> list[Provision]:
@@ -754,6 +768,7 @@ def split_sections(text: str) -> list[Provision]:
                 text=stripped,
                 char_start=0,
                 char_end=len(text),
+                unit_type="document",
             )
         ]
 
@@ -823,6 +838,338 @@ def split_sections(text: str) -> list[Provision]:
             )
         )
     return provisions
+
+
+# --- judgments ------------------------------------------------------------
+#
+# A judgment is not legislation and must not be split as if it were.
+# split_sections() looks for a section heading - a number followed by a
+# capitalised title on its own line - and a judgment has none. What it finds
+# instead is the first line of each numbered paragraph, which it then stores
+# in `section_number` with the paragraph's opening words as a `heading`, and
+# pinpoint() renders as "s 2". Measured on the three judgments seeded into the
+# local corpus, it also picked up, as if they were paragraphs of the judgment
+# itself: paragraphs 10-14 of St Barbara Mines quoted inside Cromwell's
+# paragraph 40, paragraphs 11-18 of Drillsearch quoted inside paragraph 42,
+# paragraphs 52, 53, 143 and 145 of an affidavit, and the text of ss 659AA and
+# 659B of the Corporations Act. Every one of those was stored under a pinpoint
+# asserting it was a numbered unit of Cromwell. That is not a formatting
+# defect; it is a citation that names the wrong court, in the wrong case, on
+# the wrong point.
+
+#: Where the reasons begin. Australian superior-court reports put this on its
+#: own line, in capitals, immediately before the first numbered paragraph.
+#:
+#: The line may be qualified - "EX TEMPORE REASONS FOR DECISION", "FURTHER
+#: REASONS FOR JUDGMENT", "REVISED REASONS FOR JUDGMENT" - so the heading is
+#: not required to begin the line. What IS required is that the whole line is
+#: in capitals: that is what separates a heading from a sentence of ordinary
+#: prose mentioning "the reasons for judgment below", which would otherwise
+#: move the start of the reasons into the middle of a paragraph. Measured:
+#: requiring the line to *start* with "REASONS" missed Adlam v Bauer [1999]
+#: FCA 634 entirely, and the splitter then anchored its paragraph numbering
+#: on the date line "10 MAY 1999" and emitted one provision instead of 14.
+REASONS_HEADING = re.compile(
+    r"^[ \t]*(?:[A-Z][^a-z\n]*[ \t])?"
+    r"REASONS?\s+FOR\s+(?:JUDGMENT|DECISION|RULING|SENTENCE|ORDER)S?\b[^\n]*$",
+    re.MULTILINE,
+)
+
+#: Where the orders begin: "THE COURT ORDERS THAT:", "THE COURT DECLARES
+#: THAT:", "THE COURT DIRECTS THAT:". Matched on the shape rather than on a
+#: list of verbs, so an unusual one is still found.
+ORDERS_OPENER = re.compile(
+    r"^[ \t]*(?:THE\s+COURT|IT\s+IS)\b[^\n:]{0,60}\bTHAT\s*:[ \t]*$",
+    re.MULTILINE | re.IGNORECASE,
+)
+
+#: The associate's certificate that closes the reasons. It is not part of any
+#: paragraph and, left in, it is absorbed into the last one - where it reads
+#: as the court's own words.
+CERTIFICATE = re.compile(r"^[ \t]*I\s+certify\s+that\b", re.MULTILINE)
+
+#: The certificate says what the report is divided into: "the preceding
+#: eight (8) numbered paragraphs", or "this and the preceding three (3)
+#: pages". That is the report stating its own unit of citation, which is
+#: better evidence than any shape rule, and it is the one signal that
+#: distinguishes a genuinely unnumbered judgment from one this code failed to
+#: parse.
+CERTIFIED_UNIT = re.compile(
+    r"I\s+certify\s+that[\s\S]{0,200}?\b(?P<kind>numbered\s+paragraphs?|pages?)\b",
+    re.IGNORECASE,
+)
+
+
+def certified_unit(text: str) -> str | None:
+    """What the report's own certificate says it is divided into.
+
+    ``"paragraph"``, ``"page"``, or ``None`` when there is no certificate (the
+    High Court does not write one). A report certified in *pages* has no
+    paragraph numbering, whatever numbered lines it may contain: Commissioner
+    of Taxation v Northumberland Development Co Pty Ltd [1995] FCA 588 is
+    certified in pages and carries a numbered list of three propositions
+    inside the third judgment, which without this check is stored as
+    "paragraphs 1, 2 and 3" of a judgment that has none.
+    """
+    kinds = {m.group("kind").lower() for m in CERTIFIED_UNIT.finditer(text)}
+    if any("paragraph" in kind for kind in kinds):
+        return "paragraph"
+    if kinds:
+        return "page"
+    return None
+
+
+#: The first line of a numbered paragraph: the number, an optional "." or ")",
+#: then the text. Both spacings occur in the corpus - the Federal Court writes
+#: reasons as "12 The applicant..." and orders as "1. The application..." - so
+#: neither is required.
+#:
+#: The text must begin with a capital, an opening quote or an opening bracket.
+#: Without that, "2020 was the first year..." and a wrapped line beginning
+#: with a bare figure both match, and a spurious paragraph boundary invents a
+#: pinpoint that cites part of one paragraph as another.
+PARAGRAPH_RE = re.compile(
+    "^(?P<indent>[ \t]*)(?P<number>\\d{1,4})[.)]?[ \t]+(?=[\"'‘’“”(\\[]?[A-Z])",
+    re.MULTILINE,
+)
+
+#: What a judgment with no paragraph numbering is stored as. Not a paragraph
+#: and not a section: a whole document, cited as one.
+WHOLE_DOCUMENT = "(whole document)"
+
+#: What the block of orders and declarations is stored as. Orders are NOT
+#: given paragraph numbers - see :func:`split_judgment`.
+ORDERS_NUMBER = "(orders)"
+
+#: How much of a paragraph's opening sentence is kept as its heading. A
+#: judgment paragraph has no heading of its own, and `heading` is weighted
+#: above `text` in the search vector, so this is a locator for a human reading
+#: a result list - not a title, and never presented as one.
+PARAGRAPH_HEADING_CHARS = 120
+
+
+def _reasons_start(text: str) -> int | None:
+    """Where the reasons for judgment begin, or None if the report says nowhere."""
+    match = REASONS_HEADING.search(text)
+    return match.end() if match is not None else None
+
+
+def _paragraph_heading(body: str) -> str:
+    """The paragraph's opening words, for a result list to show."""
+    first = " ".join(PARAGRAPH_RE.sub("", body, count=1).split())
+    if len(first) <= PARAGRAPH_HEADING_CHARS:
+        return first
+    return first[:PARAGRAPH_HEADING_CHARS].rsplit(" ", 1)[0]
+
+
+def numbered_paragraphs(text: str) -> tuple[list[tuple[int, int]], int]:
+    """Pick the judgment's own paragraph markers out of ``text``.
+
+    Returns ``(markers, rejected)`` where ``markers`` is ``(position, number)``
+    in document order with strictly increasing numbers, and ``rejected`` counts
+    the numbered lines that were not treated as paragraph starts.
+
+    Two filters, in this order.
+
+    **Indentation.** A judgment indents what it quotes. A numbered line that
+    is not at the same indent as the judgment's own paragraph 1 belongs to a
+    quotation - of another judgment, of an affidavit, of a statute - and is
+    not a paragraph of this judgment. The anchor is taken from the document
+    rather than fixed at column 0 because both occur: the Federal Court's
+    modern reports start paragraphs at column 0 and indent quotations by six
+    spaces, while its 2003-era reports indent paragraphs by four and
+    quotations by nine or more.
+
+    **Strictly increasing.** Whatever survives the indent filter must still
+    count upwards. A number that does not is not made into a boundary, so the
+    text it introduces stays inside the paragraph that is quoting it.
+
+    Both filters can only ever *refuse* to start a new provision, so neither
+    can lose text and neither can invent a number: a rejected marker means no
+    new provision begins there, and the enclosing paragraph runs through it to
+    the next real one.
+
+    Numbering begins at paragraph 1 and nothing before it is considered. A
+    numbered line that precedes the first "1." cannot be part of a run that
+    starts at 1, and treating it as one poisons the strictly-increasing filter
+    for the whole document: in Adlam v Bauer [1999] FCA 634 the date line "10
+    MAY 1999" reads as paragraph 10, after which every real paragraph from 1
+    to 9 is below the running maximum and is rejected.
+    """
+    candidates = [
+        (m.start(), len(m.group("indent").expandtabs(4)), int(m.group("number")))
+        for m in PARAGRAPH_RE.finditer(text)
+    ]
+    first = next((i for i, (_, _, number) in enumerate(candidates) if number == 1), None)
+    if first is None:
+        # No paragraph 1 anywhere. Either the report is unnumbered and these
+        # are quotations, or the numbering is one this code does not
+        # understand. Either way it is not safe to number anything from it.
+        return [], len(candidates)
+    anchor = candidates[first][1]
+    markers: list[tuple[int, int]] = []
+    highest = 0
+    for position, indent, number in candidates[first:]:
+        # The next number in the run is taken whatever its indent. Extraction
+        # loses a paragraph's indent occasionally - measured on Flashback
+        # Holdings v Showtime DVD (No 6) [2010] FCA 694, where paragraph 10
+        # alone of 47 sits at column 0 while the rest sit at column 4 - and
+        # without this its text is absorbed into paragraph 9 and would be
+        # quoted under [9]. This cannot let quoted matter back in except in
+        # the one case where a quotation's number is exactly the number this
+        # judgment's next paragraph would have had: every wider collision the
+        # corpus actually contains (a quoted run restarting at 1, an
+        # affidavit's paragraphs 52 and 143, another judgment's 10-14) is
+        # still rejected, because none of them is highest + 1.
+        if number != highest + 1 and (indent != anchor or number <= highest):
+            continue
+        markers.append((position, number))
+        highest = number
+    return markers, len(candidates) - len(markers)
+
+
+def split_judgment(text: str) -> list[Provision]:
+    """Split a judgment into the units a court is actually cited by.
+
+    Three kinds of unit come out of this, and which kinds appear depends on
+    the report:
+
+    ``paragraph``
+        A numbered paragraph of the reasons. Cited, per the Australian Guide
+        to Legal Citation, as ``at [12]``.
+
+    ``order``
+        The orders and declarations the court made, as ONE provision numbered
+        ``(orders)``. They are not given paragraph numbers, and this is the
+        deliberate answer to the collision the corpus actually contains: a
+        judgment's orders are numbered from 1 and its reasons then restart
+        from 1, so "paragraph 1" names two different pieces of text in one
+        document. Numbering the orders separately - "order 1" - does not fix
+        it either: a report can carry more than one such block (ACCC v George
+        Weston Foods [2003] FCA 601 opens "THE COURT DECLARES THAT: 1." and
+        then "THE COURT ORDERS THAT: 1."), so "order 1" collides with itself.
+        AGLC has no pinpoint form for an order, and inventing one to render a
+        number the court did not use for citation is the error this phase
+        exists to remove. So the orders keep their text, keep their own
+        internal numbering inside that text, and are cited as the block they
+        are.
+
+    ``document``
+        The whole report, when it carries no paragraph numbering at all.
+        Older reports - Muir v Open Brethren [1956] HCA 14, United
+        Firefighters' Union v Metropolitan Fire Brigades Board [1998] FCA 1119
+        - are continuous prose whose certificate counts *pages*, not
+        paragraphs. There is nothing to number and nothing is invented: one
+        provision, cited as the case.
+
+    The cover sheet - catchwords, counsel, "Number of paragraphs: 145" - is
+    dropped, and only when the report's own structure says where it ends (an
+    orders block, or a reasons heading). It is apparatus, not the court's
+    words, and there is no pinpoint under which it could honestly be cited.
+    The associate's certificate at the foot is dropped for the same reason.
+
+    :data:`MIN_PROVISION_CHARS` is deliberately NOT applied here. "42 I
+    agree." is a complete paragraph of a judgment and a citable one; dropping
+    it would lose the disposition and shift its text into paragraph 41, which
+    would then be quoted under the wrong pinpoint.
+    """
+    reasons_at = _reasons_start(text)
+    search_to = reasons_at if reasons_at is not None else len(text)
+    orders_match = ORDERS_OPENER.search(text, 0, search_to)
+
+    provisions: list[Provision] = []
+    if orders_match is not None:
+        orders_end = reasons_at if reasons_at is not None else len(text)
+        block = text[orders_match.start() : orders_end]
+        if block.strip():
+            provisions.append(
+                Provision(
+                    section_number=ORDERS_NUMBER,
+                    heading="Orders",
+                    text=block.strip(),
+                    char_start=orders_match.start(),
+                    char_end=orders_end,
+                    unit_type="order",
+                )
+            )
+
+    reasons_from = reasons_at if reasons_at is not None else 0
+    tail = text[reasons_from:]
+
+    # The paragraphs are found BEFORE the certificate is cut, and the cut is
+    # then made at the first certificate that follows the last paragraph. A
+    # judgment with separate reasons per judge carries one certificate per
+    # set: Lu v Minister for Immigration & Multicultural Affairs [2000] FCA
+    # 178 certifies Kiefel J's paragraph 1 before the other members' reasons
+    # begin at paragraph 2. Cutting at the first certificate found would end
+    # the judgment there and store 1 paragraph of 18.
+    markers, _rejected = ([], 0) if certified_unit(text) == "page" else numbered_paragraphs(tail)
+    after = markers[-1][0] if markers else 0
+    certificate = CERTIFICATE.search(tail, after)
+    reasons_to = reasons_from + (certificate.start() if certificate else len(tail))
+    reasons = text[reasons_from:reasons_to]
+    markers = [(position, number) for position, number in markers if position < len(reasons)]
+
+    if not markers:
+        stripped = reasons.strip()
+        if not stripped:
+            return provisions
+        provisions.append(
+            Provision(
+                section_number=WHOLE_DOCUMENT,
+                heading="",
+                text=stripped,
+                char_start=reasons_from,
+                char_end=reasons_to,
+                unit_type="document",
+            )
+        )
+        return provisions
+
+    for index, (position, number) in enumerate(markers):
+        end = markers[index + 1][0] if index + 1 < len(markers) else len(reasons)
+        # A certificate inside a paragraph's span ends that paragraph. A
+        # judgment with separate reasons per judge certifies each set, so the
+        # certificate closing one judge's reasons sits between that judge's
+        # last paragraph and the next judge's first - and absorbed into the
+        # former it reads as the court's own words under that paragraph's
+        # pinpoint. The certificate is left out of both, so the span of a
+        # paragraph is not always adjacent to the next one's.
+        inner = CERTIFICATE.search(reasons, position, end)
+        if inner is not None:
+            end = inner.start()
+        body = reasons[position:end].strip()
+        if not body:
+            continue
+        provisions.append(
+            Provision(
+                section_number=str(number),
+                heading=_paragraph_heading(body),
+                text=body,
+                char_start=reasons_from + position,
+                char_end=reasons_from + end,
+                unit_type="paragraph",
+            )
+        )
+    return provisions
+
+
+def unnumbered_note(provisions: list[Provision]) -> str:
+    """What to report about a judgment that carried no paragraph numbers.
+
+    Empty when there is nothing to report, and never silently empty for the
+    case it exists for: a judgment without paragraph numbers has to be
+    reported rather than given invented ones, and a count of provisions alone
+    does not say which of the two happened.
+    """
+    if any(p.unit_type == "paragraph" for p in provisions):
+        return ""
+    if any(p.unit_type == "document" for p in provisions):
+        return (
+            "no numbered paragraphs found; stored as one (whole document) provision "
+            "and cited without a pinpoint"
+        )
+    return ""
 
 
 def detect_headings_only(provisions: list[Provision]) -> str | None:
@@ -946,12 +1293,21 @@ def ingest_document(
     """
     _validate(jurisdiction, doc_type, sha256)
 
-    provisions = split_sections(text)
+    # A judgment is split by the unit a court is cited by, which is not the
+    # unit legislation is cited by. See split_judgment.
+    is_judgment = doc_type == "case"
+    provisions = split_judgment(text) if is_judgment else split_sections(text)
     if not provisions:
         raise IngestionError(f"{citation}: no text to ingest")
-    headings_only_reason = detect_headings_only(provisions)
-    if headings_only_reason is not None:
-        raise IngestionError(f"{citation}: refused as headings-only - {headings_only_reason}")
+    if not is_judgment:
+        # detect_headings_only is calibrated on legislation: it asks whether
+        # provisions carry subsection markers and vary in length. A judgment's
+        # paragraphs carry neither property by nature, so running it here
+        # would refuse real judgments for being judgments.
+        headings_only_reason = detect_headings_only(provisions)
+        if headings_only_reason is not None:
+            raise IngestionError(f"{citation}: refused as headings-only - {headings_only_reason}")
+    note = unnumbered_note(provisions) if is_judgment else ""
 
     def write(target: Connection[DictRow]) -> IngestResult:
         return _write(
@@ -965,6 +1321,7 @@ def ingest_document(
             doc_type=doc_type,
             fetched_at=fetched_at or datetime.now(UTC),
             provisions=provisions,
+            note=note,
         )
 
     if conn is not None:
@@ -987,6 +1344,7 @@ def _write(
     doc_type: str,
     fetched_at: datetime,
     provisions: list[Provision],
+    note: str = "",
 ) -> IngestResult:
     with conn.cursor() as cur:
         cur.execute(
@@ -1019,10 +1377,10 @@ def _write(
             cur.execute(
                 """
                 INSERT INTO provisions
-                    (document_id, section_number, heading, text, embedding,
+                    (document_id, section_number, unit_type, heading, text, embedding,
                      char_start, char_end, token_count)
                 VALUES (
-                    %s, %s, %s, %s, %s::vector, %s, %s,
+                    %s, %s, %s, %s, %s, %s::vector, %s, %s,
                     (SELECT coalesce(sum(cardinality(positions)), 0)
                        FROM unnest(to_tsvector('english', %s)))
                 )
@@ -1031,6 +1389,7 @@ def _write(
                 (
                     document_id,
                     provision.section_number,
+                    provision.unit_type,
                     provision.heading,
                     provision.text,
                     vector_literal(vector),
@@ -1041,6 +1400,8 @@ def _write(
             )
 
         reason = f"ingested {len(provisions)} provisions"
+        if note:
+            reason = f"{reason} - {note}"
         cur.execute(
             """
             INSERT INTO ingestion_log (url, host, outcome, reason, sha256, document_id)
@@ -1074,6 +1435,7 @@ def _write(
         sha256=sha256,
         provisions=len(provisions),
         created=True,
+        note=note,
     )
 
 

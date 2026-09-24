@@ -44,6 +44,7 @@ cp .env.example .env    # then fill it in; .env is git-ignored
 docker compose up -d
 uv sync --all-groups
 uv run michael schema
+uv run michael migrate     # apply_schema() cannot alter an existing table
 ```
 
 Seed the corpus (needs the `corpus` extra):
@@ -64,6 +65,41 @@ uv run michael ingest https://www.legislation.gov.au/... \
 Only `legislation.wa.gov.au`, `legislation.gov.au`, `fairwork.gov.au` and
 `austlii.edu.au` (and their subdomains) are fetchable. Every other host is
 refused and logged. There is no configuration key that widens this.
+
+## Migrations
+
+`apply_schema()` is `CREATE TABLE IF NOT EXISTS` throughout: it builds a
+database that does not exist yet and by design never alters one that does. It
+therefore cannot add a column to a table already holding the corpus.
+`db/migrations/` and `src/michael/migrations.py` are the other half.
+
+```bash
+uv run michael migrate --status        # what is on disk and what has run
+uv run michael migrate                 # apply everything not yet recorded
+uv run michael migrate --rollback 0001 # reverse one, by id
+```
+
+A migration is a pair of files, `<0000>_<name>.up.sql` and
+`<0000>_<name>.down.sql`. **A migration with no `.down.sql` does not load**,
+so an irreversible one cannot be added by forgetting to write the reverse.
+Each runs in one transaction, and `schema_migrations` records the id, name and
+the sha256 of the forward SQL that was applied — a file edited after it ran is
+reported as *drifted* rather than silently re-run or silently ignored.
+
+Applying is guarded twice: by the ledger, and by the SQL itself being written
+`IF NOT EXISTS` / `IF EXISTS`, so a database whose ledger was lost converges
+instead of failing. `tests/test_migrations.py` tests that it applies, that it
+rolls back, that applying twice is safe, and that applying twice is *still*
+safe with the ledger row deleted.
+
+Rollback is by id, never "the last one": reversing whatever happens to be
+newest is how the wrong migration gets undone on a machine nobody checked
+first. `0001`'s rollback drops the column, which discards which rows were
+paragraphs, orders or whole documents; that is re-derivable only by
+re-ingesting, and the `.down.sql` says so rather than pretending otherwise.
+
+An existing database needs the migration; `uv run michael schema` alone is no
+longer enough. The integration suite applies it in its own fixtures.
 
 ## Using it
 
@@ -153,6 +189,148 @@ retired from it once that Act was ingested, because they stopped being absent.
 On the 2026-09-24 re-check **no query was retired** — all ten pre-existing
 known-absent queries remain genuinely uncovered.
 
+#### Adding case law: the delta, measured LOCALLY
+
+Measured 2026-09-24 against the **local** corpus (205 legislation documents
+and 6 judgments), not production. The labelled set gained 8 known-good and 6
+known-absent case-law queries, so `calibration/labelled_queries.json` now
+holds 56 known-good and 39 known-absent. Case-law entries carry `kind: case`
+and, on the known-good side, the `unit` the target is stored under.
+`calibration/calibrate.py` takes `--kind {all,legislation,case}` and
+`--corpus {all,legislation}`; `--corpus legislation` reproduces the corpus as
+it was before case law was ingested, without removing anything from it.
+
+| run | zero-FP threshold | recall there | highest known-absent | top-10 ceiling |
+|---|---|---|---|---|
+| A — legislation queries, case law excluded | 0.70 | 0.250 (12/48) | 0.667 | 0.771 (37/48) |
+| B — legislation queries, case law present | 0.70 | 0.250 (12/48) | 0.667 | 0.771 (37/48) |
+| C — all queries, case law present | 0.80 | 0.036 (2/56) | 0.761 | 0.804 (45/56) |
+| D — case-law queries only | 0.80 | 0.125 (1/8) | 0.761 | 1.000 (8/8) |
+
+**A and B are identical at every threshold, row for row.** Adding 6 judgments
+and 258 units to the corpus changes legislation retrieval not at all. Case law
+does not crowd legislation out.
+
+**B to C makes the overlap worse and the ceiling better.** The ceiling rises
+from 0.771 to 0.804 because all 8 case-law targets rank in the top 10, 7 of
+them at rank 1. But the highest known-absent score rises from 0.667 to 0.761,
+so the lowest zero-false-positive threshold moves from 0.70 to 0.80 and recall
+there collapses from 0.250 to 0.036.
+
+**The new worst false positive is not case law.** The 0.761 is
+`Fair Work Act 2009 (Cth) s 536H` returned for "the implied freedom of
+political communication as stated in Lange v Australian Broadcasting
+Corporation". The second worst, 0.669, is `Settlement Agents Code of Conduct
+2016 (WA) s 13` returned for a question about Amadio. Both are *legislation*
+rows returned for questions about judgments the corpus does not hold. Adding
+case-law questions did not introduce a case-law failure; it exposed the same
+pre-existing defect the production table already records — the fused score
+does not order "covered" above "not covered" — on a class of question nobody
+had asked before.
+
+**Caveat on run D.** Case-law recall of 1.000 down to threshold 0.55 is not
+evidence that case-law retrieval scales. The local corpus holds six judgments;
+a case-law query has almost nothing to be confused by. Re-measure before
+reading anything into it.
+
+No threshold change is proposed. `RETRIEVAL_MIN_SCORE` stays at 0.60 and the
+production table above remains the reference measurement.
+
+### Case law is split and cited as case law
+
+Judgments do not go through `split_sections()`. `ingest_document()` dispatches
+on `doc_type`: `case` is split by `split_judgment()`, everything else by
+`split_sections()`. A judgment is cut into the units a court is actually cited
+by, and `provisions.unit_type` records which kind each row is:
+
+| `unit_type` | what it is | pinpoint |
+|---|---|---|
+| `section` | a section or Schedule clause of an Act, Regulation or Award | `s 15A`, `Sch 1 cl 3` |
+| `paragraph` | a numbered paragraph of a court's reasons | `at [12]` (AGLC) |
+| `order` | the orders and declarations the court made, as one block | `(orders)` |
+| `document` | a document with no internal numbering | `(whole document)` |
+
+So `Muir v Open Brethren [1956] HCA 14 s 2` is now
+`Muir v Open Brethren [1956] HCA 14 (whole document)`, and paragraph 6 of
+Cromwell Corporation v ARA Real Estate is
+`... [2020] FCA 1492 at [6] (snapshot 2020-10-16)`.
+
+Case law can now be seeded:
+
+```bash
+uv run michael seed --limit 200 --doc-type case
+```
+
+**Three things the splitter refuses to guess.**
+
+*A judgment with no paragraph numbers is reported, never numbered.* Older
+reports — Muir v Open Brethren [1956] HCA 14, United Firefighters' Union v
+Metropolitan Fire Brigades Board [1998] FCA 1119 — are continuous prose whose
+certificate counts *pages*, not paragraphs. They are stored as one
+`(whole document)` row and `seed` reports it:
+
+```json
+{"documents": 6, "created": 6, "provisions": 258,
+ "notes": [{"citation": "Muir v Open Brethren [1956] HCA 14",
+            "note": "no numbered paragraphs found; stored as one (whole document) provision and cited without a pinpoint"}]}
+```
+
+Measured on the first 60 case records of the corpus: 13 of 60 carry no
+paragraph numbering at all.
+
+*Quoted matter is not a unit of the quoting judgment.* A judgment indents
+what it quotes, and only lines at the same indent as the judgment's own
+paragraph 1 are paragraph starts; whatever survives that must still count
+upwards. Both filters can only decline to start a new provision, so neither
+can lose text: the quotation stays inside the paragraph that quotes it.
+
+*Orders are not given paragraph numbers.* See "Restarted numbering" below.
+
+**Accuracy.** A Federal Court report states its own paragraph count
+("Number of paragraphs: 145", or the associate's certificate). Over the first
+60 case records of the Open Australian Legal Corpus in scope: 45 agree exactly
+with the declared count, 13 carry no numbering and are reported as such, 1 has
+no declared count, and 1 "disagrees" — Lu v Minister for Immigration &
+Multicultural Affairs [2000] FCA 178, where the splitter finds 19 and the
+first certificate says 18, because that report certifies each judge's reasons
+separately and 19 = Kiefel J's paragraph 1 + the other members' 18. The
+splitter is right and the check is coarse.
+
+### Restarted numbering: a judgment's orders are not paragraph 1
+
+A judgment numbers its orders from 1 and its reasons then restart from 1, so
+"paragraph 1" names two different pieces of text in one document. Both
+multi-paragraph judgments in the local seed do this: Cromwell Corporation v
+ARA Real Estate [2020] FCA 1492 runs orders 1-2 then reasons 1-145, and AGV20
+v Minister [2023] FCA 1430 runs orders 1-4 then reasons 1-8. Under the section
+splitter each produced two rows for "1" in the same document, rendering the
+same pinpoint.
+
+The orders are stored as **one** provision numbered `(orders)`. They are not
+renumbered, and they are not dropped — the operative disposition stays in the
+corpus, with its own internal numbering inside its own text.
+
+The runner-up was to number them separately, `order 1` / `order 2`. It was
+rejected on measurement: a report can carry more than one such block, and ACCC
+v George Weston Foods [2003] FCA 601 opens "THE COURT DECLARES THAT: 1." and
+then "THE COURT ORDERS THAT: 1.", so `order 1` collides with itself. AGLC has
+no pinpoint form for an order, and inventing one to render a number the court
+did not use for citation is the error this phase exists to remove.
+
+Measured after re-ingesting the 6 seeded judgments: **258 case-law rows, 258
+distinct pinpoints, 0 duplicate groups.** (The 181 duplicate groups in the
+local corpus as a whole are all legislation, and are the pre-existing item
+recorded in `.orca/PRODUCTION-READY.md` E1.)
+
+The two rows this section used to print as evidence of the defect are now
+regression tests. `section_number = 2 / heading = "(1842) 5 Beav., at p. 303
+[49 E.R., at p. 594]."` is a numbered *footnote* of Muir; a footnote is not a
+unit of a judgment and is never given a pinpoint
+(`tests/test_ingest.py::test_a_numbered_footnote_never_becomes_a_citable_unit`).
+`section_number = 6 / heading = "The Tang respondents are:"` is paragraph 6 of
+Cromwell, and now renders `... at [6]`
+(`tests/test_retrieve.py::test_the_readme_row_6_renders_as_an_aglc_paragraph_pinpoint`).
+
 ## Verification
 
 `draft.citations_of()` guarantees the citation list: every pinpoint under
@@ -217,27 +395,37 @@ and writes the outline to `templates/drafts/` for review.
 
 ## Known limitations
 
-**Case law is chunked and cited as if it were legislation.** `split_sections()`
-matches numbered judgment paragraphs and stores them in `section_number`, with
-the paragraph's first line in `heading`. `pinpoint()` then renders them as
-`Muir v Open Brethren [1956] HCA 14 s 2` — citing a judgment paragraph as a
-*section*, which is wrong. Observed on a real seed:
+**Employment queries can never return case law.** `domains.yaml` filters the
+`employment` domain to `doc_types: [act, regulation, award]`, so no employment
+question reaches a judgment however well it matches. `contracts`, `consumer`,
+`property` and `corporate` include `case`; `work_health_safety` and `privacy`
+do not. This is configuration, not code, and predates the case-law phase — but
+it is now load-bearing in a way it was not when the corpus held no judgments.
 
-```
-section_number | heading
-2              | (1842) 5 Beav., at p. 303 [49 E.R., at p. 594].
-6              | The Tang respondents are:
-```
+**Material after the associate's certificate is dropped.** A judgment
+sometimes annexes a document after the certificate — ACCC v George Weston
+Foods [2003] FCA 601 reproduces a 32,728-character s 155 notice as Schedule 1.
+It is not the court's reasons and has no pinpoint, so it is not stored and
+cannot be quoted. The cover sheet (catchwords, counsel, "Number of
+paragraphs") is dropped for the same reason.
 
-Until this is fixed, seed legislation only:
+**A quotation numbered exactly one above the running count is taken as the
+next paragraph.** The indent filter catches every collision the corpus
+actually contains, and the next-in-run rule exists because extraction
+occasionally loses a paragraph's indent (measured: Flashback Holdings v
+Showtime DVD (No 6) [2010] FCA 694, paragraph 10 of 47). A quotation whose
+number happens to be `highest + 1` at the same moment would be taken as a
+paragraph. Not observed in the 60 judgments measured; stated because it is
+reachable.
 
-```bash
-uv run michael seed --limit 200 --doc-type act --doc-type regulation
-```
-
-The fix needs a decision on whether cases are chunked by paragraph and cited as
-`[2]`, or handled by a separate splitter. The section splitter is correct for
-legislation, which is what the acceptance test exercises.
+**`_paragraph_spans` mis-anchors on a body with blanked scaffolding.** Not
+introduced here, but found while testing it: for a `DRAFT - NO TEMPLATE`
+outline, `verify._verifiable_body()` blanks generated lines to runs of spaces
+and `_fix_offsets` then re-finds blocks at the wrong offsets, so the outline
+yields no claims at all. The outcome is what `verify_draft` already documents
+("0 claims, this draft holds no verifiable prose"), so nothing is currently
+wrong with an output — but it is right for the wrong reason, and a test
+asserting "no claim mentions X" over an outline cannot fail.
 
 **The threshold does not separate covered from uncovered questions.** Measured
 2026-09-24 against the production corpus with 48 known-good and 33 known-absent

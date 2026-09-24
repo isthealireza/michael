@@ -1,380 +1,547 @@
 {
   "corpus": "Production as at 2026-09-24: 205 documents / 8,915 provisions, with corpus_stats refreshed 2026-09-24 04:14:44Z (provisions 8,915, avg_tokens 103.7493, drift 0). 107 WA acts, 93 WA regulations, and 5 Commonwealth acts - the Fair Work Act 2009 (Cth) in 4 volumes and the Privacy Act 1988 (Cth) (352 provisions, compilation snapshot 2026-06-04). Measured after the 2026-09-23 Schedule-relabel and note-merge repairs, which is the state retrieval actually runs on. doc_type holds only 'act' and 'regulation': there is no award and no case law in the corpus.",
-  "note": "Queries are paraphrases, not verbatim provision text, so the test is not trivially lexical. Targets are identified by citation and section, not by database id, so the set survives a reseed. The absent set must be re-checked whenever the corpus grows: two Fair Work queries were retired from it once the Act was ingested, because they stopped being absent. Section identifiers here are pinpoints, not row ids, so a labelling fix changes them: 'Casual employees of small business employers' was recorded as s 47A while Schedule 1's clauses carried plain numbers, and is 'Sch 1 cl 47A' now that they are labelled. Re-run this set after ANY splitter change, not only after a corpus change - a relabelled provision fails here silently and looks like a retrieval regression. Every known-absent entry carries the reason the corpus cannot answer it, and each reason is a checkable claim about what is NOT in the corpus, not an impression of difficulty. HISTORY on corpus_stats: this set was first scored on 2026-09-24 while corpus_stats.provisions read 8982 against an actual 8915 - a note-merge had deleted 67 provisions without refreshing the row, and BM25 reads N and avgdl from it. The row was then refreshed (8982 -> 8915 provisions, avg_tokens 103.0361 -> 103.7493) and the whole set re-scored. The effect was negligible and is recorded here so nobody re-opens it: max |delta| on a fused score was 0.00025, mean 0.00011, 74 of 81 queries fell slightly. Every headline figure was unchanged - highest known-absent 0.6669, recall ceiling 38/48, lowest zero-FP threshold 0.70 at recall 0.271. The only sweep cell that moved was FP at 0.60, 12 -> 11, because one known-absent query sat on the boundary at 0.600093 and landed at 0.599957. That is a tie-break, not an improvement. Per-query scores for both runs are in .orca/reports/2026-09-24-phase1-threshold-scores.json.",
+  "note": "Queries are paraphrases, not verbatim provision text, so the test is not trivially lexical. Targets are identified by citation and section, not by database id, so the set survives a reseed. The absent set must be re-checked whenever the corpus grows: two Fair Work queries were retired from it once the Act was ingested, because they stopped being absent. Section identifiers here are pinpoints, not row ids, so a labelling fix changes them: 'Casual employees of small business employers' was recorded as s 47A while Schedule 1's clauses carried plain numbers, and is 'Sch 1 cl 47A' now that they are labelled. Re-run this set after ANY splitter change, not only after a corpus change - a relabelled provision fails here silently and looks like a retrieval regression. Every known-absent entry carries the reason the corpus cannot answer it, and each reason is a checkable claim about what is NOT in the corpus, not an impression of difficulty. HISTORY on corpus_stats: this set was first scored on 2026-09-24 while corpus_stats.provisions read 8982 against an actual 8915 - a note-merge had deleted 67 provisions without refreshing the row, and BM25 reads N and avgdl from it. The row was then refreshed (8982 -> 8915 provisions, avg_tokens 103.0361 -> 103.7493) and the whole set re-scored. The effect was negligible and is recorded here so nobody re-opens it: max |delta| on a fused score was 0.00025, mean 0.00011, 74 of 81 queries fell slightly. Every headline figure was unchanged - highest known-absent 0.6669, recall ceiling 38/48, lowest zero-FP threshold 0.70 at recall 0.271. The only sweep cell that moved was FP at 0.60, 12 -> 11, because one known-absent query sat on the boundary at 0.600093 and landed at 0.599957. That is a tie-break, not an improvement. Per-query scores for both runs are in .orca/reports/2026-09-24-phase1-threshold-scores.json.  Case-law entries carry kind=case and, on the known-good side, the unit type the target is stored under; every case-law target is a numbered paragraph of a judgment, cited at [n]. They were added in the case-law phase and measured against the LOCAL corpus only.",
   "known_good": [
     {
       "query": "must a cat be sterilised before it can be registered",
       "citation": "Cat Act 2011 (WA)",
-      "section": "18"
+      "section": "18",
+      "kind": "legislation"
     },
     {
       "query": "what are the grounds for appealing a criminal conviction",
       "citation": "Criminal Appeals Act 2004 (WA)",
-      "section": "8"
+      "section": "8",
+      "kind": "legislation"
     },
     {
       "query": "duty to minimise risk arising from dangerous goods",
       "citation": "Dangerous Goods Safety Act 2004 (WA)",
-      "section": "8"
+      "section": "8",
+      "kind": "legislation"
     },
     {
       "query": "how is a food business registered",
       "citation": "Food Act 2008 (WA)",
-      "section": "110"
+      "section": "110",
+      "kind": "legislation"
     },
     {
       "query": "does the Commissioner keep a register of pawnbroker licences",
       "citation": "Pawnbrokers and Second-hand Dealers Act 1994 (WA)",
-      "section": "28"
+      "section": "28",
+      "kind": "legislation"
     },
     {
       "query": "can a trustee surrender an onerous lease",
       "citation": "Trustees Act 1962 (WA)",
-      "section": "35"
+      "section": "35",
+      "kind": "legislation"
     },
     {
       "query": "land tax exemption where the owner is living in residential care",
       "citation": "Land Tax Assessment Act 2002 (WA)",
-      "section": "26B"
+      "section": "26B",
+      "kind": "legislation"
     },
     {
       "query": "what powers does the Tribunal have over heritage agreements",
       "citation": "Heritage Act 2018 (WA)",
-      "section": "101"
+      "section": "101",
+      "kind": "legislation"
     },
     {
       "query": "compensation payable to a park operator when a long-stay tenant holds over",
       "citation": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
-      "section": "69"
+      "section": "69",
+      "kind": "legislation"
     },
     {
       "query": "applying for a warrant to enter premises holding dangerous goods",
       "citation": "Dangerous Goods Safety Act 2004 (WA)",
-      "section": "42"
+      "section": "42",
+      "kind": "legislation"
     },
     {
       "query": "can I resell a concert ticket for more than I paid for it",
       "citation": "Ticket Scalping Act 2021 (WA)",
-      "section": "7"
+      "section": "7",
+      "kind": "legislation"
     },
     {
       "query": "how does someone create a carbon right over a parcel of land",
       "citation": "Carbon Rights Act 2003 (WA)",
-      "section": "5"
+      "section": "5",
+      "kind": "legislation"
     },
     {
       "query": "what can a repairer do with goods a customer never came back to collect",
       "citation": "Disposal of Uncollected Goods Act 1970 (WA)",
-      "section": "8"
+      "section": "8",
+      "kind": "legislation"
     },
     {
       "query": "I have come across an old shipwreck, am I obliged to report it",
       "citation": "Maritime Archaeology Act 1973 (WA)",
-      "section": "17"
+      "section": "17",
+      "kind": "legislation"
     },
     {
       "query": "meaning of casual employee",
       "citation": "Fair Work Act 2009 (Cth)",
-      "section": "15A"
+      "section": "15A",
+      "kind": "legislation"
     },
     {
       "query": "casual employees of small business employers",
       "citation": "Fair Work Act 2009 (Cth)",
-      "section": "Sch 1 cl 47A"
+      "section": "Sch 1 cl 47A",
+      "kind": "legislation"
     },
     {
       "query": "giving employees the Casual Employment Information Statement",
       "citation": "Fair Work Act 2009 (Cth)",
-      "section": "125B"
+      "section": "125B",
+      "kind": "legislation"
     },
     {
       "query": "the National Employment Standards are minimum standards",
       "citation": "Fair Work Act 2009 (Cth)",
-      "section": "61"
+      "section": "61",
+      "kind": "legislation"
     },
     {
       "query": "dismissing an employee in order to re-engage them as a casual",
       "citation": "Fair Work Act 2009 (Cth)",
-      "section": "359B"
+      "section": "359B",
+      "kind": "legislation"
     },
     {
       "query": "if a hospital already reported a records breach under health records law, must it notify again under the Privacy Act",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WD"
+      "section": "26WD",
+      "kind": "legislation"
     },
     {
       "query": "when does unauthorised access to personal information count as a data breach the entity must act on",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WE"
+      "section": "26WE",
+      "kind": "legislation"
     },
     {
       "query": "what must the notification to the Commissioner about a data breach describe",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WK"
+      "section": "26WK",
+      "kind": "legislation"
     },
     {
       "query": "who does a business have to notify once it decides there has been a data breach",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WL"
+      "section": "26WL",
+      "kind": "legislation"
     },
     {
       "query": "can the regulator force a business to notify a data breach it has not reported",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WR"
+      "section": "26WR",
+      "kind": "legislation"
     },
     {
       "query": "is a law enforcement body excused from notifying a data breach",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WN"
+      "section": "26WN",
+      "kind": "legislation"
     },
     {
       "query": "if we sent customer data to a supplier overseas and they lose it, is that treated as our breach",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WC"
+      "section": "26WC",
+      "kind": "legislation"
     },
     {
       "query": "we fixed the problem before anyone was hurt, do we still have to report the incident",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WF"
+      "section": "26WF",
+      "kind": "legislation"
     },
     {
       "query": "what factors decide whether a leak is likely to cause serious harm",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WG"
+      "section": "26WG",
+      "kind": "legislation"
     },
     {
       "query": "how long do we have to investigate when we only suspect personal information has leaked",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WH"
+      "section": "26WH",
+      "kind": "legislation"
     },
     {
       "query": "what happens when another Commonwealth law forbids disclosing what the breach statement would reveal",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WP"
+      "section": "26WP",
+      "kind": "legislation"
     },
     {
       "query": "can the Commissioner excuse an organisation from having to notify a particular breach",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WQ"
+      "section": "26WQ",
+      "kind": "legislation"
     },
     {
       "query": "can the regulator compel documents and answers while investigating a suspected breach",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "26WU"
+      "section": "26WU",
+      "kind": "legislation"
     },
     {
       "query": "does a company need a written privacy policy and what has to be in it",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 1"
+      "section": "Sch 1 cl 1",
+      "kind": "legislation"
     },
     {
       "query": "can a customer deal with a business without giving their real name",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 2"
+      "section": "Sch 1 cl 2",
+      "kind": "legislation"
     },
     {
       "query": "when may an organisation collect personal details about someone at all",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 3"
+      "section": "Sch 1 cl 3",
+      "kind": "legislation"
     },
     {
       "query": "what should a business do with personal details it never asked for",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 4"
+      "section": "Sch 1 cl 4",
+      "kind": "legislation"
     },
     {
       "query": "what must customers be told at the point their details are collected",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 5"
+      "section": "Sch 1 cl 5",
+      "kind": "legislation"
     },
     {
       "query": "can we reuse information gathered for one reason for a different reason",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 6"
+      "section": "Sch 1 cl 6",
+      "kind": "legislation"
     },
     {
       "query": "when can a company use a customer list for marketing and how does someone opt out",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 7"
+      "section": "Sch 1 cl 7",
+      "kind": "legislation"
     },
     {
       "query": "what must we do before sending personal details to a recipient outside Australia",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 8"
+      "section": "Sch 1 cl 8",
+      "kind": "legislation"
     },
     {
       "query": "obligation to keep customer records accurate and up to date",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 10"
+      "section": "Sch 1 cl 10",
+      "kind": "legislation"
     },
     {
       "query": "what must a business do to keep personal details safe and when must it destroy them",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 11"
+      "section": "Sch 1 cl 11",
+      "kind": "legislation"
     },
     {
       "query": "can an individual demand a copy of what a company holds about them",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 12"
+      "section": "Sch 1 cl 12",
+      "kind": "legislation"
     },
     {
       "query": "how do I get a company to fix wrong information it holds about me",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 1 cl 13"
+      "section": "Sch 1 cl 13",
+      "kind": "legislation"
     },
     {
       "query": "is a small shop with low turnover covered by the privacy rules at all",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "6D"
+      "section": "6D",
+      "kind": "legislation"
     },
     {
       "query": "what penalty applies when an organisation seriously interferes with an individual's privacy",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "13G"
+      "section": "13G",
+      "kind": "legislation"
     },
     {
       "query": "can a person sue someone directly for a serious invasion of their privacy",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 2 cl 7"
+      "section": "Sch 2 cl 7",
+      "kind": "legislation"
     },
     {
       "query": "how long after a privacy invasion can a claim still be brought",
       "citation": "Privacy Act 1988 (Cth)",
-      "section": "Sch 2 cl 14"
+      "section": "Sch 2 cl 14",
+      "kind": "legislation"
+    },
+    {
+      "query": "must a court resolve a challenge to its own jurisdiction before deciding the application in front of it",
+      "citation": "Cromwell Corporation Limited v ARA Real Estate Investors XXI Pte Ltd [2020] FCA 1492",
+      "section": "18",
+      "unit": "paragraph",
+      "kind": "case"
+    },
+    {
+      "query": "is a proceeding begun in response to a proportional takeover bid a court proceeding in relation to that bid",
+      "citation": "Cromwell Corporation Limited v ARA Real Estate Investors XXI Pte Ltd [2020] FCA 1492",
+      "section": "21",
+      "unit": "paragraph",
+      "kind": "case"
+    },
+    {
+      "query": "what did the court do when the applicant did not appear and gave no explanation for the non-appearance",
+      "citation": "AGV20 v Minister for Immigration, Citizenship and Multicultural Affairs [2023] FCA 1430",
+      "section": "6",
+      "unit": "paragraph",
+      "kind": "case"
+    },
+    {
+      "query": "the matter was called outside the courtroom after no written submissions were filed in support of the application",
+      "citation": "AGV20 v Minister for Immigration, Citizenship and Multicultural Affairs [2023] FCA 1430",
+      "section": "5",
+      "unit": "paragraph",
+      "kind": "case"
+    },
+    {
+      "query": "is it unlawful for someone providing goods services or facilities to discriminate against a person because of that person's disability",
+      "citation": "Bickle v State of Victoria (Victoria Police) [2020] FCA 168",
+      "section": "8",
+      "unit": "paragraph",
+      "kind": "case"
+    },
+    {
+      "query": "pleading that a respondent refused to investigate a crime and so discriminated directly on the ground of disability",
+      "citation": "Bickle v State of Victoria (Victoria Police) [2020] FCA 168",
+      "section": "3",
+      "unit": "paragraph",
+      "kind": "case"
+    },
+    {
+      "query": "was legal professional privilege waived over documents handed over under compulsion of law",
+      "citation": "Australian Competition & Consumer Commission v George Weston Foods Limited & Anor [2003] FCA 601",
+      "section": "2",
+      "unit": "paragraph",
+      "kind": "case"
+    },
+    {
+      "query": "a notice requiring a chief executive to produce documents and give oral evidence to the competition regulator",
+      "citation": "Australian Competition & Consumer Commission v George Weston Foods Limited & Anor [2003] FCA 601",
+      "section": "4",
+      "unit": "paragraph",
+      "kind": "case"
     }
   ],
   "known_absent": [
     {
       "query": "ASX continuous disclosure obligations for listed entities",
-      "why": "Corporations Act, Commonwealth. Verified 2026-09-24: no document whose citation matches 'Corporations Act' is in the corpus."
+      "why": "Corporations Act, Commonwealth. Verified 2026-09-24: no document whose citation matches 'Corporations Act' is in the corpus.",
+      "kind": "legislation"
     },
     {
       "query": "franchising code of conduct cooling off period",
-      "why": "Commonwealth competition and consumer law. Verified 2026-09-24: no document matching 'Competition and Consumer' is in the corpus."
+      "why": "Commonwealth competition and consumer law. Verified 2026-09-24: no document matching 'Competition and Consumer' is in the corpus.",
+      "kind": "legislation"
     },
     {
       "query": "GDPR data subject access request response deadline",
-      "why": "European law, not Australian. The corpus holds only WA and Commonwealth documents (schema CHECK constraint)."
+      "why": "European law, not Australian. The corpus holds only WA and Commonwealth documents (schema CHECK constraint).",
+      "kind": "legislation"
     },
     {
       "query": "New York rent stabilization ordinance succession rights",
-      "why": "foreign jurisdiction"
+      "why": "foreign jurisdiction",
+      "kind": "legislation"
     },
     {
       "query": "patent claim construction and the doctrine of equivalents",
-      "why": "patent law is not in the corpus. Verified 2026-09-24: no document matching 'Patents' is present."
+      "why": "patent law is not in the corpus. Verified 2026-09-24: no document matching 'Patents' is present.",
+      "kind": "legislation"
     },
     {
       "query": "Medicare bulk billing incentive payment rates",
-      "why": "Commonwealth health administration. The only Commonwealth acts in the corpus are the Fair Work Act and the Privacy Act."
+      "why": "Commonwealth health administration. The only Commonwealth acts in the corpus are the Fair Work Act and the Privacy Act.",
+      "kind": "legislation"
     },
     {
       "query": "how do I bake sourdough bread at home",
-      "why": "not a legal question at all; lexically tempting against the Food Act"
+      "why": "not a legal question at all; lexically tempting against the Food Act",
+      "kind": "legislation"
     },
     {
       "query": "stamp duty on a racehorse syndicate share in Antarctica",
-      "why": "nonsense query that previously scored 0.53"
+      "why": "nonsense query that previously scored 0.53",
+      "kind": "legislation"
     },
     {
       "query": "conveyancing settlement procedure in Victoria",
-      "why": "Victorian property law; the corpus holds WA property law only"
+      "why": "Victorian property law; the corpus holds WA property law only",
+      "kind": "legislation"
     },
     {
       "query": "criminal sentencing guidelines in the Northern Territory",
-      "why": "NT law is not in the corpus. Verified 2026-09-24: no document matching 'Sentencing' is present either."
+      "why": "NT law is not in the corpus. Verified 2026-09-24: no document matching 'Sentencing' is present either.",
+      "kind": "legislation"
     },
     {
       "query": "what must a healthcare provider do after a My Health Record is accessed without authorisation",
-      "why": "NEAR MISS. The My Health Records Act 2012 (Cth) is not in the corpus (verified 2026-09-24). Privacy Act s 26WD names that Act only to excuse a second Privacy Act notification; it never states that Act's own obligations."
+      "why": "NEAR MISS. The My Health Records Act 2012 (Cth) is not in the corpus (verified 2026-09-24). Privacy Act s 26WD names that Act only to excuse a second Privacy Act notification; it never states that Act's own obligations.",
+      "kind": "legislation"
     },
     {
       "query": "what is the threshold for a notifiable privacy breach under the New Zealand Privacy Act 2020",
-      "why": "NEAR MISS. New Zealand law. Reads almost identically to Part IIIC of the Privacy Act 1988 (Cth), which is in the corpus, but no NZ instrument is."
+      "why": "NEAR MISS. New Zealand law. Reads almost identically to Part IIIC of the Privacy Act 1988 (Cth), which is in the corpus, but no NZ instrument is.",
+      "kind": "legislation"
     },
     {
       "query": "how does a consumer opt out of the sale of their personal information in California",
-      "why": "NEAR MISS. US state law. The corpus holds only WA and Commonwealth documents."
+      "why": "NEAR MISS. US state law. The corpus holds only WA and Commonwealth documents.",
+      "kind": "legislation"
     },
     {
       "query": "what privacy obligations apply to Queensland government agencies handling personal information",
-      "why": "NEAR MISS. The Information Privacy Act 2009 (Qld) is not in the corpus; the corpus holds no Queensland document at all."
+      "why": "NEAR MISS. The Information Privacy Act 2009 (Qld) is not in the corpus; the corpus holds no Queensland document at all.",
+      "kind": "legislation"
     },
     {
       "query": "what privacy safeguards apply to an accredited data recipient under the Consumer Data Right",
-      "why": "NEAR MISS. The CDR privacy safeguards sit in the Competition and Consumer Act 2010 (Cth), which is not in the corpus (verified 2026-09-24)."
+      "why": "NEAR MISS. The CDR privacy safeguards sit in the Competition and Consumer Act 2010 (Cth), which is not in the corpus (verified 2026-09-24).",
+      "kind": "legislation"
     },
     {
       "query": "rules for sending unsolicited commercial electronic messages to customers",
-      "why": "NEAR MISS. The Spam Act 2003 (Cth) is not in the corpus (verified 2026-09-24). APP 7 governs direct marketing but does not set the electronic-message consent, identification and unsubscribe rules this asks for."
+      "why": "NEAR MISS. The Spam Act 2003 (Cth) is not in the corpus (verified 2026-09-24). APP 7 governs direct marketing but does not set the electronic-message consent, identification and unsubscribe rules this asks for.",
+      "kind": "legislation"
     },
     {
       "query": "how long must a telecommunications provider retain customer metadata",
-      "why": "NEAR MISS. The Telecommunications (Interception and Access) Act 1979 (Cth) is not in the corpus (verified 2026-09-24)."
+      "why": "NEAR MISS. The Telecommunications (Interception and Access) Act 1979 (Cth) is not in the corpus (verified 2026-09-24).",
+      "kind": "legislation"
     },
     {
       "query": "how long does an agency have to decide a freedom of information request",
-      "why": "NEAR MISS. Neither the FOI Act 1982 (Cth) nor the FOI Act 1992 (WA) is in the corpus (verified 2026-09-24). APP 12 gives access to personal information held by an entity, not an FOI processing deadline."
+      "why": "NEAR MISS. Neither the FOI Act 1982 (Cth) nor the FOI Act 1992 (WA) is in the corpus (verified 2026-09-24). APP 12 gives access to personal information held by an entity, not an FOI processing deadline.",
+      "kind": "legislation"
     },
     {
       "query": "is it lawful to record a private conversation with a colleague in Western Australia",
-      "why": "NEAR MISS. The Surveillance Devices Act 1998 (WA) is not in the corpus (verified 2026-09-24)."
+      "why": "NEAR MISS. The Surveillance Devices Act 1998 (WA) is not in the corpus (verified 2026-09-24).",
+      "kind": "legislation"
     },
     {
       "query": "how do I put my phone number on the Do Not Call Register",
-      "why": "NEAR MISS. The Do Not Call Register Act 2006 (Cth) is not in the corpus (verified 2026-09-24)."
+      "why": "NEAR MISS. The Do Not Call Register Act 2006 (Cth) is not in the corpus (verified 2026-09-24).",
+      "kind": "legislation"
     },
     {
       "query": "what penalty rate applies to Sunday work under the General Retail Industry Award",
-      "why": "NEAR MISS. doc_type in the corpus holds only 'act' and 'regulation' (verified 2026-09-24): there is no modern award at all, though the Fair Work Act that creates them is present."
+      "why": "NEAR MISS. doc_type in the corpus holds only 'act' and 'regulation' (verified 2026-09-24): there is no modern award at all, though the Fair Work Act that creates them is present.",
+      "kind": "legislation"
     },
     {
       "query": "what classification level applies to a level 3 employee under the Clerks Private Sector Award",
-      "why": "NEAR MISS. Same reason: no modern award is in the corpus."
+      "why": "NEAR MISS. Same reason: no modern award is in the corpus.",
+      "kind": "legislation"
     },
     {
       "query": "what is the current national minimum wage per hour",
-      "why": "NEAR MISS. The rate is set by an annual wage review determination of the Fair Work Commission, an instrument the corpus does not hold. No provision in the corpus states a dollar figure for it."
+      "why": "NEAR MISS. The rate is set by an annual wage review determination of the Fair Work Commission, an instrument the corpus does not hold. No provision in the corpus states a dollar figure for it.",
+      "kind": "legislation"
     },
     {
       "query": "how much notice must a landlord give to end a periodic residential tenancy in WA",
-      "why": "NEAR MISS. The Residential Tenancies Act 1987 (WA) is not in the corpus (verified 2026-09-24). Only the Residential Parks (Long-stay Tenants) Act 2006 (WA) is, and it governs long-stay park agreements, not ordinary residential tenancies."
+      "why": "NEAR MISS. The Residential Tenancies Act 1987 (WA) is not in the corpus (verified 2026-09-24). Only the Residential Parks (Long-stay Tenants) Act 2006 (WA) is, and it governs long-stay park agreements, not ordinary residential tenancies.",
+      "kind": "legislation"
     },
     {
       "query": "do I have to register my dog with the local council in WA",
-      "why": "NEAR MISS. The Dog Act 1976 (WA) is not in the corpus (verified 2026-09-24), while the Cat Act 2011 (WA) with its registration scheme is - so this is lexically and structurally adjacent to covered material."
+      "why": "NEAR MISS. The Dog Act 1976 (WA) is not in the corpus (verified 2026-09-24), while the Cat Act 2011 (WA) with its registration scheme is - so this is lexically and structurally adjacent to covered material.",
+      "kind": "legislation"
     },
     {
       "query": "what are the duties of a PCBU under Western Australian work health and safety law",
-      "why": "NEAR MISS. The Work Health and Safety Act 2020 (WA) is not in the corpus (verified 2026-09-24: no 'Work Health' or 'Occupational Safety' document). The Dangerous Goods Safety Act 2004 (WA) is, and carries similar safety-duty language."
+      "why": "NEAR MISS. The Work Health and Safety Act 2020 (WA) is not in the corpus (verified 2026-09-24: no 'Work Health' or 'Occupational Safety' document). The Dangerous Goods Safety Act 2004 (WA) is, and carries similar safety-duty language.",
+      "kind": "legislation"
     },
     {
       "query": "how do I lodge a caveat over a property title in Western Australia",
-      "why": "NEAR MISS. The Transfer of Land Act 1893 (WA) is not in the corpus (verified 2026-09-24)."
+      "why": "NEAR MISS. The Transfer of Land Act 1893 (WA) is not in the corpus (verified 2026-09-24).",
+      "kind": "legislation"
     },
     {
       "query": "how are strata by-laws enforced against a lot owner in WA",
-      "why": "NEAR MISS. The Strata Titles Act 1985 (WA) is not in the corpus (verified 2026-09-24)."
+      "why": "NEAR MISS. The Strata Titles Act 1985 (WA) is not in the corpus (verified 2026-09-24).",
+      "kind": "legislation"
     },
     {
       "query": "what is the time limit for lodging a workers compensation claim in WA",
-      "why": "NEAR MISS. The Workers' Compensation and Injury Management Act is not in the corpus (verified 2026-09-24)."
+      "why": "NEAR MISS. The Workers' Compensation and Injury Management Act is not in the corpus (verified 2026-09-24).",
+      "kind": "legislation"
     },
     {
       "query": "what are the requirements for applying for a liquor licence in Western Australia",
-      "why": "NEAR MISS. The Liquor Control Act 1988 (WA) is not in the corpus (verified 2026-09-24). Four Liquor Control restricted-area regulations ARE present, so the topic looks covered and is not."
+      "why": "NEAR MISS. The Liquor Control Act 1988 (WA) is not in the corpus (verified 2026-09-24). Four Liquor Control restricted-area regulations ARE present, so the topic looks covered and is not.",
+      "kind": "legislation"
     },
     {
       "query": "how many demerit points do you get for exceeding the speed limit in WA",
-      "why": "NEAR MISS. The Road Traffic Act 1974 (WA) and the demerit-point scheme are not in the corpus (verified 2026-09-24); only the Road Traffic (Towing of Vehicles) Regulations 2020 (WA) is."
+      "why": "NEAR MISS. The Road Traffic Act 1974 (WA) and the demerit-point scheme are not in the corpus (verified 2026-09-24); only the Road Traffic (Towing of Vehicles) Regulations 2020 (WA) is.",
+      "kind": "legislation"
     },
     {
       "query": "when is a building permit required under the Building Act 2011 in WA",
-      "why": "NEAR MISS. The Building Act 2011 (WA) is not in the corpus (verified 2026-09-24), though planning and development regulations are."
+      "why": "NEAR MISS. The Building Act 2011 (WA) is not in the corpus (verified 2026-09-24), though planning and development regulations are.",
+      "kind": "legislation"
     },
     {
       "query": "how do I stop my cat from scratching the furniture",
-      "why": "not a legal question at all; lexically tempting against the Cat Act 2011 (WA), which is in the corpus."
+      "why": "not a legal question at all; lexically tempting against the Cat Act 2011 (WA), which is in the corpus.",
+      "kind": "legislation"
+    },
+    {
+      "query": "what did the High Court decide about native title in Mabo v Queensland (No 2)",
+      "why": "Not in the local corpus: the only judgments seeded are Muir, Cromwell, AGV20, United Firefighters, Bickle and ACCC v George Weston Foods.",
+      "kind": "case"
+    },
+    {
+      "query": "the duty of care a manufacturer owes the ultimate consumer of a bottled drink",
+      "why": "Donoghue v Stevenson is not in the local corpus, and the corpus holds no negligence statute either.",
+      "kind": "case"
+    },
+    {
+      "query": "the test for unconscionable conduct stated in Commercial Bank of Australia v Amadio",
+      "why": "Not in the local corpus.",
+      "kind": "case"
+    },
+    {
+      "query": "when is a clause void as a penalty following Andrews v Australia and New Zealand Banking Group",
+      "why": "Not in the local corpus.",
+      "kind": "case"
+    },
+    {
+      "query": "the implied freedom of political communication as stated in Lange v Australian Broadcasting Corporation",
+      "why": "Not in the local corpus.",
+      "kind": "case"
+    },
+    {
+      "query": "what did the court hold about the Briginshaw standard of proof in civil penalty proceedings",
+      "why": "Briginshaw v Briginshaw is not in the local corpus.",
+      "kind": "case"
     }
   ]
 }

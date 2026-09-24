@@ -156,13 +156,48 @@ def closing_blocks(
 
 
 def citations_of(provisions: tuple[RetrievedProvision, ...]) -> tuple[str, ...]:
-    """Pinpoint citations, de-duplicated, in retrieval order."""
+    """Pinpoint citations, de-duplicated, in retrieval order.
+
+    Unit-agnostic by construction: the form of each citation is
+    ``RetrievedProvision.pinpoint()``'s business, so a judgment paragraph
+    comes through as ``... at [12]`` and a section as ``... s 15A`` without
+    this function knowing the difference. What it does guarantee is that a
+    citation appears here only if a row carrying it was retrieved.
+    """
     seen: list[str] = []
     for provision in provisions:
         pinpoint = provision.pinpoint()
         if pinpoint not in seen:
             seen.append(pinpoint)
     return tuple(seen)
+
+
+#: What one retrieved unit is called in an outline, by unit type. The outline
+#: is read by a practitioner, so a judgment paragraph must not be introduced
+#: as a "provision" - that word means legislation, and the whole point of
+#: separating the unit types is that the reader can see which they are
+#: looking at.
+UNIT_NOUNS = {
+    "section": "provision",
+    "paragraph": "paragraph",
+    "order": "orders",
+    "document": "authority",
+}
+
+
+def _unit_noun(provision: RetrievedProvision) -> str:
+    return UNIT_NOUNS.get(provision.unit_type, "provision")
+
+
+def _unit_label(provision: RetrievedProvision) -> str:
+    """A heading for a unit that has none of its own."""
+    if provision.unit_type == "paragraph":
+        return f"Paragraph [{provision.section_number}]"
+    if provision.unit_type == "order":
+        return "Orders"
+    if provision.unit_type == "document":
+        return provision.citation
+    return f"Section {provision.section_number}"
 
 
 def wrong_jurisdiction_warnings(
@@ -297,12 +332,13 @@ def outline_without_template(
     clause_lines: list[str] = []
     if provisions:
         for index, provision in enumerate(provisions, start=1):
-            label = provision.heading.strip() or f"Section {provision.section_number}"
+            label = provision.heading.strip() or _unit_label(provision)
             quote = " ".join(provision.text.split())[:300]
             clause_lines += [
                 f"### {index}. {label}",
                 "",
-                f"- Nearest retrieved provision (relevance not confirmed): {provision.pinpoint()}",
+                f"- Nearest retrieved {_unit_noun(provision)} (relevance not confirmed): "
+                f"{provision.pinpoint()}",
                 f'- Operative words: "{quote}"',
                 f"- Source: {provision.source_url}",
                 "- Clause to be drafted from the above. Terms not supplied: "

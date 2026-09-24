@@ -424,6 +424,12 @@ def seed_corpus(*, limit: int | None = None, doc_types: list[str] | None = None)
         "documents": len(results),
         "created": sum(1 for r in results if r.created),
         "provisions": sum(r.provisions for r in results),
+        # Anything the splitter had to report about a document, so it reaches
+        # the operator rather than only the ingestion log. A judgment with no
+        # numbered paragraphs is stored as one whole-document row, and an
+        # operator reading only the counts would have no way to tell that from
+        # a document that was split.
+        "notes": [{"citation": r.citation, "note": r.note} for r in results if r.note],
     }
 
 

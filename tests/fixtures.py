@@ -29,6 +29,11 @@ def provision(
     jurisdiction: str = "commonwealth",
     citation: str = "Fair Work Act 2009 (Cth)",
     score: float = 0.82,
+    unit_type: str = "section",
+    doc_type: str = "act",
+    source_url: str = FAIR_WORK_URL,
+    snapshot_date: date = SNAPSHOT,
+    text: str = PLACEHOLDER,
 ) -> RetrievedProvision:
     return RetrievedProvision(
         provision_id=abs(hash((citation, section_number))) % 100_000,
@@ -36,18 +41,42 @@ def provision(
         jurisdiction=jurisdiction,
         title=citation,
         citation=citation,
-        source_url=FAIR_WORK_URL,
-        snapshot_date=SNAPSHOT,
+        source_url=source_url,
+        snapshot_date=snapshot_date,
         sha256="0" * 64,
-        doc_type="act",
+        doc_type=doc_type,
         section_number=section_number,
+        unit_type=unit_type,
         heading=heading,
-        text=PLACEHOLDER,
+        text=text,
         char_start=0,
-        char_end=len(PLACEHOLDER),
+        char_end=len(text),
         lexical_score=score,
         vector_score=score,
         score=score,
+    )
+
+
+#: Judgment units, as the corpus stores them after the case-law splitter. The
+#: citations and paragraph numbers are real - they are the rows the README
+#: recorded being mis-cited as sections - but no judgment text is reproduced,
+#: for the reason in this module's docstring.
+MUIR = "Muir v Open Brethren [1956] HCA 14"
+CROMWELL = "Cromwell Corporation Limited v ARA Real Estate Investors XXI Pte Ltd [2020] FCA 1492"
+HCA_URL = "https://eresources.hcourt.gov.au/showbyHandle/1/10325"
+
+
+def judgment_paragraph(
+    *, number: str, heading: str, citation: str = CROMWELL, score: float = 0.82
+) -> RetrievedProvision:
+    return provision(
+        section_number=number,
+        heading=heading,
+        citation=citation,
+        score=score,
+        unit_type="paragraph",
+        doc_type="case",
+        source_url=HCA_URL,
     )
 
 

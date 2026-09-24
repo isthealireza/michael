@@ -48,13 +48,41 @@ class RetrievedProvision:
     lexical_score: float
     vector_score: float
     score: float
+    #: Which kind of unit ``section_number`` names; see
+    #: :data:`michael.schema.UNIT_TYPES`. Defaults to ``"section"`` so a row
+    #: read from a database that has not had migration 0001 applied, and any
+    #: caller constructing one by hand, behaves exactly as before.
+    unit_type: str = "section"
 
     def pinpoint(self) -> str:
-        """The citation a statement based on this provision must carry."""
-        section = (
-            f"s {self.section_number}" if self.section_number[:1].isdigit() else self.section_number
-        )
-        return f"{self.citation} {section} (snapshot {self.snapshot_date.isoformat()})"
+        """The citation a statement based on this provision must carry.
+
+        Rendered in the form the authority is actually cited in, which is not
+        the same form for all of them:
+
+        * legislation, by section or Schedule clause - ``s 15A``, ``Sch 1 cl 3``
+        * a judgment's reasons, by paragraph, per the Australian Guide to
+          Legal Citation - ``at [2]``
+        * a judgment's orders - ``(orders)``; AGLC gives no pinpoint form for
+          an order and one is not invented here
+        * a document with no internal numbering - ``(whole document)``
+
+        Before this, every unit was rendered as a section, so paragraph 2 of
+        Muir v Open Brethren [1956] HCA 14 was cited as "s 2" - a citation
+        that asserts the High Court's reasons are a statutory provision.
+        """
+        return f"{self.citation} {self.locator()} (snapshot {self.snapshot_date.isoformat()})"
+
+    def locator(self) -> str:
+        """The pinpoint alone, without the citation or the snapshot date."""
+        number = self.section_number
+        if self.unit_type == "paragraph":
+            return f"at [{number}]"
+        if self.unit_type in ("order", "document"):
+            # Already a parenthesised sentinel - "(orders)", "(whole
+            # document)" - written by the splitter, not a number.
+            return number
+        return f"s {number}" if number[:1].isdigit() else number
 
 
 @dataclass(frozen=True, slots=True)
@@ -254,14 +282,22 @@ def named_jurisdiction_mismatch(query: str) -> str | None:
     return match.group(0)
 
 
+#: Restricted to ``unit_type = 'section'``. The query forms this lookup is
+#: reached by - "section 47", "s 47", "Sch 1 cl 3" - ask for legislation, and
+#: once case law is in the corpus a bare number matches judgment paragraphs
+#: too: "what does section 12 say" would answer with paragraph 12 of an
+#: unrelated judgment, under an identifier lookup that reports itself as an
+#: exact match rather than a ranked guess. A judgment paragraph is cited
+#: "at [12]", never "s 12", so nothing that belongs here is excluded by this.
 SECTION_LOOKUP_SQL = """
-SELECT p.id AS provision_id, p.document_id, p.section_number, p.heading, p.text,
-       p.char_start, p.char_end, p.token_count,
+SELECT p.id AS provision_id, p.document_id, p.section_number, p.unit_type,
+       p.heading, p.text, p.char_start, p.char_end, p.token_count,
        d.jurisdiction, d.title, d.citation, d.source_url, d.snapshot_date,
        d.sha256, d.doc_type
   FROM provisions p
   JOIN documents d ON d.id = p.document_id
- WHERE (
+ WHERE p.unit_type = 'section'
+   AND (
          upper(p.section_number) = upper(%(section)s)
          OR (%(schedule_sibling)s::text IS NOT NULL AND p.section_number ~* %(schedule_sibling)s)
        )
@@ -339,6 +375,7 @@ def _section_lookup(query: str, *, routing: Routing) -> RetrievalResult | None:
             sha256=str(row["sha256"]),
             doc_type=str(row["doc_type"]),
             section_number=str(row["section_number"]),
+            unit_type=str(row["unit_type"]),
             heading=str(row["heading"]),
             text=str(row["text"]),
             char_start=int(row["char_start"]),
@@ -409,8 +446,8 @@ SELECT p.id, t.lexeme, cardinality(t.positions) AS tf
 """
 
 PROVISION_SQL = """
-SELECT p.id AS provision_id, p.document_id, p.section_number, p.heading, p.text,
-       p.char_start, p.char_end, p.token_count,
+SELECT p.id AS provision_id, p.document_id, p.section_number, p.unit_type,
+       p.heading, p.text, p.char_start, p.char_end, p.token_count,
        d.jurisdiction, d.title, d.citation, d.source_url, d.snapshot_date,
        d.sha256, d.doc_type
   FROM provisions p
@@ -551,6 +588,7 @@ def search(
                 sha256=str(row["sha256"]),
                 doc_type=str(row["doc_type"]),
                 section_number=str(row["section_number"]),
+                unit_type=str(row["unit_type"]),
                 heading=str(row["heading"]),
                 text=str(row["text"]),
                 char_start=int(row["char_start"]),

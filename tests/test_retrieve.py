@@ -10,10 +10,12 @@ number.
 from __future__ import annotations
 
 from michael.retrieve import (
+    RetrievedProvision,
     extract_act_phrase,
     extract_section_number,
     named_jurisdiction_mismatch,
 )
+from tests import fixtures
 
 
 def test_the_word_section_is_recognised() -> None:
@@ -164,3 +166,119 @@ def test_abbreviation_embedded_in_a_longer_word_does_not_match() -> None:
     assert named_jurisdiction_mismatch("the vicinity of the property") is None
     assert named_jurisdiction_mismatch("a contact for this matter") is None
     assert named_jurisdiction_mismatch("compact and exact obligations") is None
+
+
+# --- pinpoint rendering ----------------------------------------------------
+#
+# The README's "Known limitations" recorded case law being cited as if it were
+# legislation, with two observed rows from a real seed:
+#
+#     section_number | heading
+#     2              | (1842) 5 Beav., at p. 303 [49 E.R., at p. 594].
+#     6              | The Tang respondents are:
+#
+# Row 2 is a numbered FOOTNOTE of Muir v Open Brethren [1956] HCA 14; row 6 is
+# paragraph 6 of Cromwell Corporation v ARA Real Estate [2020] FCA 1492. Both
+# rendered as "s 2" and "s 6" - a pinpoint asserting that a passage of
+# reasons, or a footnote, is a section of an Act. The splitter side of these
+# two rows is pinned in tests/test_ingest.py; what is pinned here is that
+# neither can ever be rendered with an "s".
+
+
+def test_the_readme_row_6_renders_as_an_aglc_paragraph_pinpoint() -> None:
+    """`Cromwell ... [2020] FCA 1492 s 6` becomes `... at [6]`."""
+    row = fixtures.judgment_paragraph(number="6", heading="The Tang respondents are:")
+    assert row.locator() == "at [6]"
+    assert row.pinpoint() == f"{fixtures.CROMWELL} at [6] (snapshot {fixtures.SNAPSHOT})"
+    assert " s 6 " not in row.pinpoint()
+
+
+def test_the_readme_row_2_is_never_rendered_as_a_section() -> None:
+    """Muir carries no paragraph numbering at all, so it is cited as the case
+    and nothing is invented for it. The footnote that produced "s 2" is not a
+    unit and has no pinpoint of its own."""
+    row = fixtures.provision(
+        section_number="(whole document)",
+        heading="",
+        citation=fixtures.MUIR,
+        unit_type="document",
+        doc_type="case",
+    )
+    assert row.locator() == "(whole document)"
+    assert row.pinpoint() == f"{fixtures.MUIR} (whole document) (snapshot {fixtures.SNAPSHOT})"
+    assert " s " not in row.pinpoint()
+
+
+def test_a_judgment_paragraph_is_cited_per_the_aglc() -> None:
+    """The form the task specifies: `Muir v Open Brethren [1956] HCA 14 at [2]`."""
+    row = fixtures.judgment_paragraph(number="2", heading="", citation=fixtures.MUIR)
+    assert row.pinpoint().startswith(f"{fixtures.MUIR} at [2] ")
+
+
+def test_legislation_is_still_cited_by_section() -> None:
+    """The other half: nothing about a statutory pinpoint changed."""
+    row = fixtures.provision(section_number="15A", heading="Meaning of casual employee")
+    assert row.locator() == "s 15A"
+    assert row.pinpoint() == (f"Fair Work Act 2009 (Cth) s 15A (snapshot {fixtures.SNAPSHOT})")
+
+
+def test_a_schedule_clause_is_still_cited_as_a_schedule_clause() -> None:
+    row = fixtures.provision(section_number="Sch 1 cl 3", heading="Fixture clause")
+    assert row.locator() == "Sch 1 cl 3"
+
+
+def test_a_judgments_orders_are_not_given_an_invented_number() -> None:
+    """The restarted-run decision, as a test. A judgment numbers its orders
+    from 1 and then restarts its reasons at 1, and a report can carry more
+    than one such block ("THE COURT DECLARES THAT: 1." then "THE COURT ORDERS
+    THAT: 1."). AGLC has no pinpoint form for an order, so none is invented:
+    the orders are cited as the block they are."""
+    row = fixtures.provision(
+        section_number="(orders)",
+        heading="Orders",
+        citation=fixtures.CROMWELL,
+        unit_type="order",
+        doc_type="case",
+    )
+    assert row.locator() == "(orders)"
+    assert "at [" not in row.pinpoint()
+    assert " s " not in row.pinpoint()
+
+
+def test_orders_and_paragraph_one_of_the_same_judgment_do_not_share_a_pinpoint() -> None:
+    """The collision, end to end. Under the section splitter both were stored
+    as "1" of the same document and rendered the same pinpoint."""
+    orders = fixtures.provision(
+        section_number="(orders)",
+        heading="Orders",
+        citation=fixtures.CROMWELL,
+        unit_type="order",
+        doc_type="case",
+    )
+    first = fixtures.judgment_paragraph(number="1", heading="By originating application")
+    assert orders.pinpoint() != first.pinpoint()
+
+
+def test_an_unmigrated_row_still_renders_as_a_section() -> None:
+    """`unit_type` defaults to "section", so a row read from a database that
+    has not had migration 0001 applied behaves exactly as it did before."""
+    row = RetrievedProvision(
+        provision_id=1,
+        document_id=1,
+        jurisdiction="wa",
+        title="t",
+        citation="Fixture Act 2000 (WA)",
+        source_url="u",
+        snapshot_date=fixtures.SNAPSHOT,
+        sha256="0" * 64,
+        doc_type="act",
+        section_number="4",
+        heading="h",
+        text="t",
+        char_start=0,
+        char_end=1,
+        lexical_score=0.0,
+        vector_score=0.0,
+        score=0.0,
+    )
+    assert row.locator() == "s 4"

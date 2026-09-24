@@ -31,10 +31,17 @@ supported" with access to its own recollection of the Fair Work Act will
 confirm a claim the corpus does not hold, which is precisely the failure this
 exists to catch.
 
-A note for the phase that adds case law. Every unit-of-text decision here is
-behind :class:`ClaimUnit`; ``SENTENCE`` is the only one registered today. A
-paragraph unit registers itself beside it and nothing else in this file, in
-``draft.py`` or in ``tools.py`` changes.
+Every unit-of-text decision here is behind :class:`ClaimUnit`. ``SENTENCE``
+cuts statutory prose; ``PARAGRAPH`` cuts prose whose support is a judgment's
+ratio, which no single sentence of it carries. ``split_claims`` takes either
+one unit for the whole draft or a :data:`UnitSelector` that chooses per block,
+so one draft can mix both. What a unit ruled on is recorded on the claim and
+named in the judge prompt.
+
+What the evidence *is* is behind :class:`Evidence` and
+:data:`EVIDENCE_KINDS`: legislation supports a claim by stating it, a judgment
+by what it decided, and :data:`JUDGE_INSTRUCTIONS` gives the judge both rules
+and marks every provision with the kind it is.
 """
 
 from __future__ import annotations
@@ -50,7 +57,6 @@ import httpx
 
 from michael.config import ConfigError, settings
 from michael.draft import MISSING_RE, Draft
-from michael.retrieve import RetrievedProvision
 
 Verdict = Literal["SUPPORTED", "PARTIAL", "UNSUPPORTED"]
 
@@ -100,7 +106,11 @@ _GENERATED_LINE = re.compile(
     r"|The outline below is"
     r"|No provisions were retrieved for this request"
     r"|-\s*(?:Party [AB]|Commencement"
-    r"|Nearest retrieved provision|Operative words|Source"
+    # "Nearest retrieved provision" for legislation; "Nearest retrieved
+    # paragraph" and "Nearest retrieved orders" for a judgment, which
+    # draft.outline_without_template() writes so the line names the unit it
+    # actually cites.
+    r"|Nearest retrieved (?:provision|paragraph|orders)|Operative words|Source"
     r"|Clause to be drafted)\b"
     r")",
     re.MULTILINE,
@@ -138,7 +148,17 @@ applied to prose nobody in this repository wrote, so it errs open."""
 
 _LEGAL_REFERENCE = re.compile(
     r"\bAct\b|\bRegulations?\b|\bAward\b|\bNational Employment Standards\b"
-    r"|\bs\.?\s?\d|\bsection\s+\d|\bSch(?:edule)?\.?\s*\d",
+    r"|\bs\.?\s?\d|\bsection\s+\d|\bSch(?:edule)?\.?\s*\d"
+    # Case law. A medium-neutral citation ("[2024] HCA 1", "[2020] FCA 1492"),
+    # a report-series citation ("(2023) 277 CLR 1"), and an AGLC paragraph
+    # pinpoint ("at [12]"). Without these, a sentence whose subject is the
+    # document and whose content is a claim about an authority - "This
+    # outline follows Muir v Open Brethren [1956] HCA 14 at [2]" - is dropped
+    # by _DOCUMENT_SUBJECT before any judge sees it, which is the one failure
+    # direction that rule is written to avoid.
+    r"|\[\d{4}\]\s*[A-Z][A-Za-z]{1,7}\s*\d"
+    r"|\(\d{4}\)\s*\d+\s*[A-Z]{2,6}\s*\d"
+    r"|\bat\s+\[\d{1,4}\]",
     re.IGNORECASE,
 )
 """Enough of a statutory reference to override :data:`_DOCUMENT_SUBJECT`.
@@ -194,10 +214,46 @@ class SentenceUnit:
         return spans
 
 
-SENTENCE: ClaimUnit = SentenceUnit()
+@dataclass(frozen=True, slots=True)
+class ParagraphUnit:
+    """One blank-line separated block, ruled on whole.
 
-#: Registered unit types, by name. The case-law phase adds "paragraph" here.
-UNITS: dict[str, ClaimUnit] = {SENTENCE.name: SENTENCE}
+    The unit for prose grounded in case law. A judgment supports a proposition
+    by its ratio, which is carried by a passage rather than by any one
+    sentence of it: cut into sentences, "His Honour rejected that
+    construction." and "The section is therefore not engaged." are each
+    unrulable on their own, and a judge asked about either in isolation has to
+    answer UNSUPPORTED however well the paragraph as a whole carries it.
+    """
+
+    name: str = "paragraph"
+
+    def split(self, text: str) -> list[tuple[int, int]]:
+        spans: list[tuple[int, int]] = []
+        for start, end in _paragraph_spans(text):
+            block = text[start:end]
+            lead = len(block) - len(block.lstrip())
+            trail = len(block) - len(block.rstrip())
+            if block.strip():
+                spans.append((start + lead, end - trail))
+        return spans
+
+
+SENTENCE: ClaimUnit = SentenceUnit()
+PARAGRAPH: ClaimUnit = ParagraphUnit()
+
+#: Registered unit types, by name.
+UNITS: dict[str, ClaimUnit] = {SENTENCE.name: SENTENCE, PARAGRAPH.name: PARAGRAPH}
+
+#: Chooses the unit for one block of the draft. The seam the Phase 3 handover
+#: asked for: ``split_claims`` took a single unit for the whole draft, and a
+#: draft that cites both an Act and a judgment needs both - sentence-level for
+#: statutory prose, paragraph-level where the support is a ratio. A selector
+#: is called once per blank-line separated block and returns the unit that
+#: block is cut with; the chosen unit's name is recorded on every claim it
+#: produces, so the judge prompt names it and two kinds can coexist in one
+#: draft without either being special-cased.
+UnitSelector = Callable[[str], ClaimUnit]
 
 
 def _paragraph_spans(text: str) -> list[tuple[int, int]]:
@@ -352,10 +408,18 @@ def _is_claim(sentence: str) -> bool:
     return len(re.findall(r"[A-Za-z][\w'-]*", naked)) >= MIN_CLAIM_WORDS
 
 
-def split_claims(draft_text: str, *, unit: ClaimUnit = SENTENCE) -> tuple[tuple[Claim, ...], int]:
+def split_claims(
+    draft_text: str, *, unit: ClaimUnit | UnitSelector = SENTENCE
+) -> tuple[tuple[Claim, ...], int]:
     """Cut a draft into atomic claims. Returns the claims and how many were skipped.
 
-    A sentence carrying a ``[MISSING: ...]`` marker is skipped rather than
+    ``unit`` is either one :class:`ClaimUnit` applied to the whole draft, or a
+    :data:`UnitSelector` called once per blank-line separated block, which is
+    how a draft that mixes statutory prose and case-law discussion is cut with
+    the right unit for each. A unit is recognised by having a ``split``
+    method; anything else callable is treated as a selector.
+
+    A claim carrying a ``[MISSING: ...]`` marker is skipped rather than
     judged. Its operative value was never supplied, so there is nothing for a
     provision to support, and it is already in front of the practitioner under
     OPEN ITEMS. The count comes back so the VERIFICATION section can say how
@@ -365,7 +429,7 @@ def split_claims(draft_text: str, *, unit: ClaimUnit = SENTENCE) -> tuple[tuple[
     body = _verifiable_body(draft_text or "")
     claims: list[Claim] = []
     skipped = 0
-    for start, end in unit.split(body):
+    for chosen, start, end in _spans(body, unit):
         sentence = body[start:end]
         if not _is_claim(sentence):
             continue
@@ -378,21 +442,85 @@ def split_claims(draft_text: str, *, unit: ClaimUnit = SENTENCE) -> tuple[tuple[
                 text=" ".join(sentence.split()),
                 start=start,
                 end=end,
-                unit=unit.name,
+                unit=chosen.name,
             )
         )
     return tuple(claims), skipped
 
 
+def _spans(body: str, unit: ClaimUnit | UnitSelector) -> list[tuple[ClaimUnit, int, int]]:
+    """Every candidate span of ``body``, each with the unit that produced it."""
+    if hasattr(unit, "split"):
+        fixed: ClaimUnit = unit  # type: ignore[assignment]
+        return [(fixed, start, end) for start, end in fixed.split(body)]
+    select: UnitSelector = unit
+    out: list[tuple[ClaimUnit, int, int]] = []
+    for start, end in _paragraph_spans(body):
+        block = body[start:end]
+        chosen = select(block)
+        # The chosen unit is applied to the block alone, so its offsets are
+        # block-relative and are shifted back. Annotation writes at these
+        # offsets and an offset that drifts inserts a marker mid-word.
+        out += [(chosen, start + a, start + b) for a, b in chosen.split(block)]
+    return out
+
+
 # --- step 2: ask the judge (the only model call) ---------------------------
 
 
-def provision_id_of(provision: RetrievedProvision) -> str:
+class Evidence(Protocol):
+    """What this module needs of a retrieved unit in order to judge against it.
+
+    Widened from :class:`~michael.retrieve.RetrievedProvision` as the Phase 3
+    handover asked. Verification depends on four things - an id, what kind of
+    unit it is, its heading and its text - and on being able to render its
+    pinpoint. It does not depend on scores, offsets or a jurisdiction, and
+    typing it to the retrieval dataclass made it impossible to hand this
+    module evidence from anywhere else, including a test fixture that is not a
+    full retrieval row.
+    """
+
+    @property
+    def provision_id(self) -> int: ...
+
+    @property
+    def unit_type(self) -> str: ...
+
+    @property
+    def heading(self) -> str: ...
+
+    @property
+    def text(self) -> str: ...
+
+    def pinpoint(self) -> str: ...
+
+
+#: How each unit type is described to the judge, and what SUPPORTED means for
+#: it. See :data:`JUDGE_INSTRUCTIONS`.
+EVIDENCE_KINDS: dict[str, str] = {
+    "section": "legislation",
+    "paragraph": "judgment",
+    "order": "judgment",
+    "document": "judgment",
+}
+
+
+def evidence_kind(provision: Evidence) -> str:
+    """ "legislation" or "judgment" - which rule the judge applies to this unit.
+
+    Unknown unit types fall back to "legislation", which is the stricter of
+    the two: it requires the text to *state* the claim. An unrecognised unit
+    is therefore harder to support, not easier.
+    """
+    return EVIDENCE_KINDS.get(provision.unit_type, "legislation")
+
+
+def provision_id_of(provision: Evidence) -> str:
     """The id the judge cites a provision by.
 
-    A string, not the database integer, because the case-law phase adds units
-    with their own id space ("paragraph 47 of judgment 12") and a membership
-    check that only understands integers would have to be rewritten for it.
+    A string, not the database integer, because units have their own id
+    spaces ("paragraph 47 of judgment 12") and a membership check that only
+    understands integers would have to be rewritten for each.
     """
     return str(provision.provision_id)
 
@@ -407,12 +535,31 @@ provisions below do not say it, it is UNSUPPORTED. That is the point of this
 task: a claim the provisions do not carry must be reported, however correct it
 may be.
 
+Each PROVISION below carries a kind, and the kind decides what SUPPORTED means
+for it. Apply the rule for the kind of the provision you are relying on.
+
+  kind="legislation" - a section or clause of an Act, Regulation or Award.
+    SUPPORTED requires the provision's TEXT TO STATE the claim, including
+    every number, party, condition and qualifier in it.
+
+  kind="judgment" - a numbered paragraph of a court's reasons, or a court's
+    orders. A judgment does not support a proposition by containing its words;
+    it supports it by what the court DECIDED and the reasoning it gave for
+    deciding it. So:
+      SUPPORTED   - the claim states the rule the paragraph decided or
+                    applied, or the fact the court found, even if the wording
+                    differs.
+      UNSUPPORTED - the paragraph only records a party's submission, quotes
+                    another case or a statute without adopting it, or recites
+                    a fact of that case which the claim then states as a rule.
+    A claim that attributes to the court something the court was reporting
+    rather than deciding is UNSUPPORTED, however closely the words match.
+
 For EVERY claim you must return one object:
   {"claim_id": "<exact id>", "verdict": "SUPPORTED"|"PARTIAL"|"UNSUPPORTED",
    "provision_ids": ["<id>", ...], "reason": "<one sentence>"}
 
-  SUPPORTED   - the provision text states this, including every number, party,
-                condition and qualifier in the claim.
+  SUPPORTED   - as defined above for the kind of provision relied on.
   PARTIAL     - the provisions carry part of it: the substance is there but a
                 number, a party, a scope or a qualifier differs or is absent.
   UNSUPPORTED - nothing in the provisions carries it.
@@ -431,7 +578,7 @@ Answer with a single JSON object and no other text:
 {"verdicts": [ ... ]}"""
 
 
-def build_prompt(claims: Sequence[Claim], provisions: Sequence[RetrievedProvision]) -> str:
+def build_prompt(claims: Sequence[Claim], provisions: Sequence[Evidence]) -> str:
     """Assemble the judge prompt from the claims and the retrieved text only.
 
     The provision text is verbatim from retrieval. It is capped per provision
@@ -450,7 +597,8 @@ def build_prompt(claims: Sequence[Claim], provisions: Sequence[RetrievedProvisio
             text = text[:budget]
             suffix = "\n[TRUNCATED - this provision continues beyond what is shown]"
         blocks.append(
-            f'<provision id="{provision_id_of(provision)}">\n'
+            f'<provision id="{provision_id_of(provision)}" '
+            f'kind="{evidence_kind(provision)}">\n'
             f"citation: {provision.pinpoint()}\n"
             f"heading: {provision.heading}\n"
             f"text:\n{text}{suffix}\n"
@@ -646,9 +794,9 @@ def validate_verdicts(
 def verify_draft(
     draft_text: str,
     *,
-    provisions: Sequence[RetrievedProvision],
+    provisions: Sequence[Evidence],
     judge: JudgeFn | None = None,
-    unit: ClaimUnit = SENTENCE,
+    unit: ClaimUnit | UnitSelector = SENTENCE,
 ) -> Verification:
     """Check every claim in ``draft_text`` against ``provisions`` and nothing else.
 

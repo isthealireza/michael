@@ -13,6 +13,20 @@ from michael.db import writable
 DOC_TYPES = ("act", "regulation", "award", "case")
 JURISDICTIONS = ("wa", "commonwealth")
 
+#: What KIND of unit one provision row is, so a pinpoint can be rendered in
+#: the form its authority actually uses. Legislation is cited by section;
+#: a judgment's reasons are cited by paragraph, under the Australian Guide to
+#: Legal Citation, as ``at [12]``. Recorded per row rather than derived from
+#: ``documents.doc_type``, because a single judgment carries more than one
+#: kind: numbered paragraphs of reasons, a block of orders, and - when the
+#: report has no paragraph numbering at all - one whole-document row.
+#:
+#: Added by db/migrations/0001_provision_unit_type. It is declared here as
+#: well so a database created from scratch matches one that was migrated;
+#: the migration is what moves an existing database, and it is written to be
+#: a no-op when this DDL already created the column.
+UNIT_TYPES = ("section", "paragraph", "order", "document")
+
 
 def schema_sql(embedding_dim: int) -> str:
     """Return the full DDL. Idempotent: safe to apply repeatedly."""
@@ -43,6 +57,8 @@ CREATE TABLE IF NOT EXISTS provisions (
     id             bigserial PRIMARY KEY,
     document_id    bigint  NOT NULL REFERENCES documents (id) ON DELETE CASCADE,
     section_number text    NOT NULL,
+    unit_type      text    NOT NULL DEFAULT 'section'
+                   CHECK (unit_type IN ('section', 'paragraph', 'order', 'document')),
     heading        text    NOT NULL DEFAULT '',
     text           text    NOT NULL,
     embedding      vector({embedding_dim}),
@@ -61,6 +77,7 @@ CREATE TABLE IF NOT EXISTS provisions (
 );
 
 CREATE INDEX IF NOT EXISTS provisions_document_id_idx ON provisions (document_id);
+CREATE INDEX IF NOT EXISTS provisions_unit_type_idx ON provisions (unit_type);
 CREATE INDEX IF NOT EXISTS provisions_search_idx ON provisions USING gin (search_vector);
 CREATE INDEX IF NOT EXISTS provisions_embedding_idx
     ON provisions USING hnsw (embedding vector_cosine_ops);

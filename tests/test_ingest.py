@@ -23,12 +23,15 @@ from michael.ingest import (
     Provision,
     _opening_schedule,
     _validate,
+    certified_unit,
     detect_headings_only,
     extract_text,
     normalise_corpus_records,
     schedule_spans,
     snapshot_date_of,
+    split_judgment,
     split_sections,
+    unnumbered_note,
 )
 from michael.schema import JURISDICTIONS
 from michael.sources import FetchedSource, SourceRefused
@@ -1959,4 +1962,456 @@ def test_a_suppressed_row_stays_in_its_section_rather_than_falling_out_of_the_co
         assert later.char_start == earlier.char_end, (
             f"text between {earlier.section_number} and {later.section_number} "
             f"belongs to no provision"
+        )
+
+
+# --- judgments -------------------------------------------------------------
+#
+# The fixtures below reproduce, in synthetic text, every shape measured on the
+# real corpus judgments seeded locally (see .handoff/phase4-readme.md for the
+# stored rows). No real judgment text is copied in: what is under test is the
+# structure, and a fixture that states its own expected answer is a better
+# test than a 98,000-character report nobody can read in a diff.
+
+FIXTURE_JUDGMENT = """Federal Court of Australia
+
+Fixture Pty Ltd v Example Corporation [2099] FCA 1
+
+Catchwords:                 PRACTICE AND PROCEDURE - fixture matter
+
+Number of paragraphs:       4
+
+ORDERS
+
+THE COURT ORDERS THAT:
+
+1. The application is dismissed.
+2. The applicant pay the respondent's costs of the application.
+Note: Entry of orders is dealt with in Rule 39.32 of the Federal Court Rules 2011.
+
+REASONS FOR JUDGMENT
+
+FIXTURE J
+1 The applicant seeks an order under the fixture rule.
+2 The respondent relies on Another Party v Third Party [2098] FCA 9, where the
+Court said at [10] to [11]:
+      10. The fixture rule is not engaged where the applicant already holds the
+      information it seeks.
+      11. That is so whether or not a cause of action has been pleaded.
+3 Section 5 of the Fixture Act 2098 (Cth) provides:
+      5 Fixture orders
+      The Court may make a fixture order if satisfied of the matters set out in
+      subsection (2).
+4 For those reasons the application is dismissed.
+I certify that the preceding four (4) numbered paragraphs are a true copy of the
+Reasons for Judgment of the Honourable Justice Fixture.
+
+Associate:
+Dated: 1 January 2099
+"""
+
+FIXTURE_JUDGMENT_UNNUMBERED = """Federal Court of Australia
+
+Fixture Union v Fixture Board [2099] FCA 2
+
+REASONS FOR JUDGMENT
+
+THE COURT
+This is an appeal against a decision given on 2 December 2098. The proceeding
+concerns the construction of one word in the fixture award.
+
+We agree with the primary judge that the normal meaning of the word is an area
+of land delineated for a purpose.
+
+In these circumstances the appeal should be dismissed.
+
+I certify that this and the preceding three (3) pages are a true copy of the
+reasons for judgment of the Court.
+
+Associate:
+Dated: 1 January 2099
+"""
+
+FIXTURE_JUDGMENT_FOOTNOTES = """High Court of Australia
+
+Fixture v Another Fixture [2099] HCA 3
+
+    This appeal concerns the residuary bequest contained in the last will of
+    the testator.
+
+    It is not seriously contended that if the earlier part of the provision
+    stood alone it would not be valid as a charitable trust.
+
+     1. (1899) 5 Fixture 300 [49 F.R. 593].
+     2. (1899) 5 Fixture, at p. 303 [49 F.R., at p. 594].
+
+    The real question is whether the words confine that part of the bequest.
+"""
+
+
+def _numbers(provisions: list[Provision], unit_type: str) -> list[str]:
+    return [p.section_number for p in provisions if p.unit_type == unit_type]
+
+
+def test_a_judgment_paragraph_is_stored_as_a_paragraph_not_a_section() -> None:
+    """The defect this phase exists to fix. README "Known limitations" recorded
+    judgment paragraphs landing in `section_number` as if they were sections of
+    an Act; `pinpoint()` then rendered "s 2" for a passage of reasons."""
+    provisions = split_judgment(FIXTURE_JUDGMENT)
+    assert _numbers(provisions, "paragraph") == ["1", "2", "3", "4"]
+    assert not _numbers(provisions, "section")
+
+
+def test_orders_and_reasons_both_numbered_from_one_do_not_collide() -> None:
+    """Measured on the seeded corpus: Cromwell Corporation v ARA Real Estate
+    [2020] FCA 1492 runs orders 1, 2 and then reasons 1..145, and AGV20 v
+    Minister [2023] FCA 1430 runs orders 1-4 and then reasons 1-8. Under the
+    section splitter each produced two rows for "1" in the same document."""
+    provisions = split_judgment(FIXTURE_JUDGMENT)
+    numbers = [p.section_number for p in provisions]
+    assert len(numbers) == len(set(numbers)), numbers
+    assert _numbers(provisions, "order") == ["(orders)"]
+    orders = next(p for p in provisions if p.unit_type == "order")
+    # The orders keep their own numbering inside their text; what they do not
+    # get is a pinpoint that competes with a paragraph of the reasons.
+    assert "1. The application is dismissed." in orders.text
+    assert "2. The applicant pay the respondent's costs" in orders.text
+
+
+def test_a_judgment_with_no_numbered_paragraphs_is_reported_not_numbered() -> None:
+    """Muir v Open Brethren [1956] HCA 14 - the case the README names - has no
+    numbered paragraphs at all. Nothing is invented for it, and the fact is
+    reported rather than left to be inferred from a provision count of 1."""
+    provisions = split_judgment(FIXTURE_JUDGMENT_UNNUMBERED)
+    assert _numbers(provisions, "paragraph") == []
+    assert _numbers(provisions, "document") == ["(whole document)"]
+    assert "no numbered paragraphs" in unnumbered_note(provisions)
+
+
+def test_a_split_judgment_with_paragraphs_reports_no_unnumbered_note() -> None:
+    assert unnumbered_note(split_judgment(FIXTURE_JUDGMENT)) == ""
+
+
+def test_a_quoted_judgment_paragraph_is_not_a_paragraph_of_this_judgment() -> None:
+    """Measured: the section splitter stored paragraphs 10-14 of St Barbara
+    Mines, quoted inside Cromwell's paragraph 40, as paragraphs of Cromwell."""
+    provisions = split_judgment(FIXTURE_JUDGMENT)
+    assert "10" not in _numbers(provisions, "paragraph")
+    assert "11" not in _numbers(provisions, "paragraph")
+    quoting = next(p for p in provisions if p.section_number == "2")
+    # Not dropped: the quotation stays inside the paragraph that quotes it.
+    assert "The fixture rule is not engaged" in quoting.text
+
+
+def test_a_quoted_statutory_section_is_not_a_paragraph_of_this_judgment() -> None:
+    """Measured: ss 659AA and 659B of the Corporations Act, reproduced inside
+    Cromwell's reasons, were stored as provisions of the judgment."""
+    provisions = split_judgment(FIXTURE_JUDGMENT)
+    assert "5" not in _numbers(provisions, "paragraph")
+    quoting = next(p for p in provisions if p.section_number == "3")
+    assert "The Court may make a fixture order" in quoting.text
+
+
+def test_a_numbered_footnote_never_becomes_a_citable_unit() -> None:
+    """The README's observed rows, as a regression.
+
+    README.md recorded a judgment stored with `section_number = 2` and
+    `heading = "(1842) 5 Beav., at p. 303 [49 E.R., at p. 594]."` - a footnote
+    of Muir v Open Brethren, cited as if it were section 2 of an Act. A
+    footnote is not a unit of the judgment and must not be given a pinpoint.
+    """
+    provisions = split_judgment(FIXTURE_JUDGMENT_FOOTNOTES)
+    assert [p.section_number for p in provisions] == ["(whole document)"]
+    assert provisions[0].unit_type == "document"
+    assert "(1899) 5 Fixture, at p. 303" in provisions[0].text
+
+
+def test_the_certificate_is_not_part_of_the_last_paragraph() -> None:
+    """The associate's certificate is apparatus. Absorbed into the last
+    paragraph it reads as the court's own words under that paragraph's
+    pinpoint."""
+    last = split_judgment(FIXTURE_JUDGMENT)[-1]
+    assert last.section_number == "4"
+    assert "I certify that" not in last.text
+
+
+def test_the_cover_sheet_is_not_stored_as_a_unit() -> None:
+    """Catchwords and counsel are apparatus with no pinpoint to cite them by."""
+    provisions = split_judgment(FIXTURE_JUDGMENT)
+    assert not any("Catchwords" in p.text for p in provisions)
+    assert not any("Number of paragraphs" in p.text for p in provisions)
+
+
+def test_a_report_certified_in_pages_is_not_given_paragraph_numbers() -> None:
+    """Measured on Commissioner of Taxation v Northumberland Development Co
+    [1995] FCA 588: certified in pages, with a numbered list of three
+    propositions inside the reasons that otherwise reads as paragraphs 1-3."""
+    text = FIXTURE_JUDGMENT_UNNUMBERED.replace(
+        "In these circumstances the appeal should be dismissed.",
+        "Three matters arise:\n1. The first matter.\n2. The second matter.\n3. The third matter.",
+    )
+    assert certified_unit(text) == "page"
+    provisions = split_judgment(text)
+    assert _numbers(provisions, "paragraph") == []
+    assert _numbers(provisions, "document") == ["(whole document)"]
+
+
+def test_certified_unit_reads_the_reports_own_words() -> None:
+    assert certified_unit(FIXTURE_JUDGMENT) == "paragraph"
+    assert certified_unit(FIXTURE_JUDGMENT_UNNUMBERED) == "page"
+    assert certified_unit(FIXTURE_JUDGMENT_FOOTNOTES) is None
+
+
+def test_a_qualified_reasons_heading_is_still_a_reasons_heading() -> None:
+    """Measured on Adlam v Bauer [1999] FCA 634, headed "EX TEMPORE REASONS
+    FOR DECISION". Missing the heading moved the start of the reasons to the
+    top of the report, where the date line "10 MAY 1999" anchored the
+    numbering and 13 of 14 paragraphs were lost."""
+    text = FIXTURE_JUDGMENT.replace("REASONS FOR JUDGMENT", "EX TEMPORE REASONS FOR DECISION")
+    provisions = split_judgment(text)
+    assert _numbers(provisions, "paragraph") == ["1", "2", "3", "4"]
+    # The numbers alone are not enough: with the heading missed, the orders
+    # block swallows the whole report and the next-in-run rule re-derives the
+    # same four numbers out of it. What must hold is that the orders stop
+    # where the reasons start.
+    orders = next(p for p in provisions if p.unit_type == "order")
+    assert "The applicant seeks an order" not in orders.text
+
+
+def test_a_reasons_heading_with_a_parenthetical_is_still_found() -> None:
+    """Measured on ASIC v Southcorp Ltd [2003] FCA 804: "REASONS FOR JUDGMENT
+    (No 1)"."""
+    text = FIXTURE_JUDGMENT.replace("REASONS FOR JUDGMENT", "REASONS FOR JUDGMENT (No 1)")
+    provisions = split_judgment(text)
+    assert _numbers(provisions, "paragraph") == ["1", "2", "3", "4"]
+    orders = next(p for p in provisions if p.unit_type == "order")
+    assert "The applicant seeks an order" not in orders.text
+
+
+def test_a_sentence_mentioning_reasons_for_judgment_is_not_a_heading() -> None:
+    """The heading rule is case-sensitive and requires the line to be in
+    capitals, because a lower-case mention in prose would move the start of
+    the reasons into the middle of a paragraph."""
+    text = FIXTURE_JUDGMENT.replace(
+        "1 The applicant seeks an order under the fixture rule.",
+        "1 The applicant relies on the reasons for judgment of the primary judge.",
+    )
+    assert _numbers(split_judgment(text), "paragraph") == ["1", "2", "3", "4"]
+
+
+def test_paragraph_numbers_are_strictly_increasing() -> None:
+    """The guarantee the pinpoint rests on: one number, one paragraph."""
+    numbers = [int(n) for n in _numbers(split_judgment(FIXTURE_JUDGMENT), "paragraph")]
+    assert numbers == sorted(numbers)
+    assert len(numbers) == len(set(numbers))
+
+
+def test_a_paragraph_whose_indent_was_lost_is_still_the_next_paragraph() -> None:
+    """Measured on Flashback Holdings v Showtime DVD (No 6) [2010] FCA 694,
+    where paragraph 10 alone of 47 sits at column 0 while the rest sit at
+    column 4. Without the next-in-run rule its text is absorbed into
+    paragraph 9 and would be quoted under [9]."""
+    text = FIXTURE_JUDGMENT.replace(
+        "\n1 The applicant seeks", "\n    1 The applicant seeks"
+    ).replace("\n2 The respondent relies", "\n    2 The respondent relies")
+    assert _numbers(split_judgment(text), "paragraph") == ["1", "2", "3", "4"]
+
+
+def test_no_text_is_lost_between_consecutive_paragraphs() -> None:
+    """A rejected marker must never mean dropped text: the enclosing paragraph
+    runs through it to the next real one."""
+    provisions = [p for p in split_judgment(FIXTURE_JUDGMENT) if p.unit_type == "paragraph"]
+    for earlier, later in zip(provisions, provisions[1:], strict=False):
+        assert earlier.char_end == later.char_start
+    assert "The fixture rule is not engaged" in provisions[1].text
+    assert "The Court may make a fixture order" in provisions[2].text
+
+
+def test_numbered_paragraphs_reports_what_it_rejected() -> None:
+    _markers, rejected = ingest.numbered_paragraphs(FIXTURE_JUDGMENT)
+    assert rejected > 0
+
+
+def test_case_law_is_split_by_the_judgment_splitter(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Dispatch. `ingest_document` chooses the splitter from the document type,
+    so nothing downstream has to know which was used."""
+    written: dict[str, object] = {}
+
+    def fake_write(conn: object, **kwargs: object) -> ingest.IngestResult:
+        written.update(kwargs)
+        return ingest.IngestResult(
+            document_id=1, citation="c", sha256="0" * 64, provisions=0, created=True
+        )
+
+    monkeypatch.setattr(ingest, "_write", fake_write)
+    ingest.ingest_document(
+        jurisdiction="commonwealth",
+        title="Fixture Pty Ltd v Example Corporation [2099] FCA 1",
+        citation="Fixture Pty Ltd v Example Corporation [2099] FCA 1",
+        source_url="(corpus record)",
+        snapshot_date=date(2099, 1, 1),
+        sha256="a" * 64,
+        doc_type="case",
+        text=FIXTURE_JUDGMENT,
+        conn=SimpleNamespace(),  # type: ignore[arg-type]
+    )
+    provisions = written["provisions"]
+    assert isinstance(provisions, list)
+    assert {p.unit_type for p in provisions} == {"order", "paragraph"}
+
+
+def test_legislation_is_still_split_by_the_section_splitter(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The other half of the dispatch: nothing about legislation changed."""
+    written: dict[str, object] = {}
+
+    def fake_write(conn: object, **kwargs: object) -> ingest.IngestResult:
+        written.update(kwargs)
+        return ingest.IngestResult(
+            document_id=1, citation="c", sha256="0" * 64, provisions=0, created=True
+        )
+
+    monkeypatch.setattr(ingest, "_write", fake_write)
+    ingest.ingest_document(
+        jurisdiction="wa",
+        title="Fixture Employment Standards Act 2000",
+        citation="Fixture Employment Standards Act 2000 (WA)",
+        source_url="(corpus record)",
+        snapshot_date=date(2000, 1, 1),
+        sha256="a" * 64,
+        doc_type="act",
+        text=SAMPLE,
+        conn=SimpleNamespace(),  # type: ignore[arg-type]
+    )
+    provisions = written["provisions"]
+    assert isinstance(provisions, list)
+    assert [p.section_number for p in provisions] == ["1", "15A", "23AB"]
+    assert {p.unit_type for p in provisions} == {"section"}
+
+
+def test_a_whole_document_row_is_not_typed_as_a_section() -> None:
+    """`(whole document)` was never a section; migration 0001 backfills the
+    existing rows and the splitter now says so at the source."""
+    provisions = split_sections("Prose with no section headings at all, at some length.")
+    assert [p.unit_type for p in provisions] == ["document"]
+
+
+def test_numbering_ignores_a_numbered_line_before_paragraph_one() -> None:
+    """Measured on Adlam v Bauer [1999] FCA 634: the date line "10 MAY 1999"
+    reads as paragraph 10, after which every real paragraph from 1 to 9 is
+    below the running maximum and is rejected."""
+    text = (
+        "10 MAY 2099\n\n"
+        "1 The first paragraph of the reasons, at some length.\n"
+        "2 The second paragraph of the reasons, at some length.\n"
+    )
+    markers, _rejected = ingest.numbered_paragraphs(text)
+    assert [number for _position, number in markers] == [1, 2]
+
+
+FIXTURE_JUDGMENT_TWO_SETS = """Federal Court of Australia
+
+Fixture Pty Ltd v Example Corporation (No 2) [2099] FCAFC 1
+
+REASONS FOR JUDGMENT
+
+FIRST J
+1 I have had the benefit of reading the reasons of Second J in draft form,
+and I agree with them.
+I certify that the preceding one (1) numbered paragraph is a true copy of the
+Reasons for Judgment of the Honourable Justice First.
+
+Associate:
+
+REASONS FOR JUDGMENT
+
+SECOND J
+2 The applicant seeks an order under the fixture rule.
+3 For the reasons that follow the application is dismissed.
+I certify that the preceding two (2) numbered paragraphs are a true copy of the
+Reasons for Judgment of the Honourable Justice Second.
+
+Associate:
+"""
+
+
+def test_a_judgment_with_one_certificate_per_judge_keeps_every_paragraph() -> None:
+    """Measured on Lu v Minister for Immigration & Multicultural Affairs
+    [2000] FCA 178: Kiefel J's paragraph 1 is certified before the other
+    members' reasons begin at paragraph 2. Cutting at the first certificate
+    found ends the judgment there and stores 1 paragraph of 19."""
+    provisions = split_judgment(FIXTURE_JUDGMENT_TWO_SETS)
+    assert _numbers(provisions, "paragraph") == ["1", "2", "3"]
+    assert not any("I certify that" in p.text for p in provisions)
+
+
+FIXTURE_JUDGMENT_UNIFORM = """Federal Court of Australia
+
+Fixture Pty Ltd v Example Corporation (No 3) [2099] FCA 4
+
+REASONS FOR JUDGMENT
+
+FIXTURE J
+1 The applicant applied for an order and the respondent opposed the order.
+2 The applicant applied for an order and the respondent opposed the order.
+3 The applicant applied for an order and the respondent opposed the order.
+4 The applicant applied for an order and the respondent opposed the order.
+"""
+
+
+def test_the_headings_only_guard_is_not_applied_to_a_judgment(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """detect_headings_only asks whether provisions carry subsection markers
+    and vary in length. A judgment's paragraphs carry neither property by
+    nature, so running it over a judgment refuses real judgments for being
+    judgments."""
+    provisions = split_judgment(FIXTURE_JUDGMENT_UNIFORM)
+    # The guard WOULD flag this document - that is what makes the test able to
+    # fail - and ingestion must take it anyway.
+    assert detect_headings_only(provisions) is not None
+
+    written: dict[str, object] = {}
+
+    def fake_write(conn: object, **kwargs: object) -> ingest.IngestResult:
+        written.update(kwargs)
+        return ingest.IngestResult(
+            document_id=1, citation="c", sha256="0" * 64, provisions=0, created=True
+        )
+
+    monkeypatch.setattr(ingest, "_write", fake_write)
+    ingest.ingest_document(
+        jurisdiction="commonwealth",
+        title="Fixture Pty Ltd v Example Corporation (No 3) [2099] FCA 4",
+        citation="Fixture Pty Ltd v Example Corporation (No 3) [2099] FCA 4",
+        source_url="(corpus record)",
+        snapshot_date=date(2099, 1, 1),
+        sha256="a" * 64,
+        doc_type="case",
+        text=FIXTURE_JUDGMENT_UNIFORM,
+        conn=SimpleNamespace(),  # type: ignore[arg-type]
+    )
+    stored = written["provisions"]
+    assert isinstance(stored, list)
+    assert [p.section_number for p in stored] == ["1", "2", "3", "4"]
+
+
+def test_a_headings_only_page_of_legislation_is_still_refused() -> None:
+    """The other half: the guard is not weakened, only scoped."""
+    stub = "\n\n".join(
+        f"{n} Fixture heading {n}\n    This section is about fixture heading {n}."
+        for n in range(1, 5)
+    )
+    with pytest.raises(IngestionError, match="headings-only"):
+        ingest.ingest_document(
+            jurisdiction="wa",
+            title="Fixture Guide Act 2000",
+            citation="Fixture Guide Act 2000 (WA)",
+            source_url="(corpus record)",
+            snapshot_date=date(2000, 1, 1),
+            sha256="a" * 64,
+            doc_type="act",
+            text=stub,
+            conn=SimpleNamespace(),  # type: ignore[arg-type]
         )

@@ -314,3 +314,41 @@ def test_the_hermes_persona_is_byte_identical_to_the_system_prompt() -> None:
     assert hashlib.sha256(soul.read_bytes()).hexdigest() == prompt_hash, (
         "hermes/SOUL.md is stale; run: uv run python hermes/render_config.py"
     )
+
+
+def test_an_unnumbered_judgment_is_reported_to_the_operator(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """A judgment with no paragraph numbers is stored as one whole-document
+    row. Read from the counts alone that is indistinguishable from a document
+    that was split, so the splitter's note is carried out to the operator
+    rather than left in the ingestion log."""
+    from michael import ingest as ingestion
+
+    results = [
+        ingestion.IngestResult(
+            document_id=1,
+            citation="Muir v Open Brethren [1956] HCA 14",
+            sha256="0" * 64,
+            provisions=1,
+            created=True,
+            note="no numbered paragraphs found; stored as one (whole document) provision",
+        ),
+        ingestion.IngestResult(
+            document_id=2,
+            citation="Fixture Pty Ltd v Example Corporation [2099] FCA 1",
+            sha256="1" * 64,
+            provisions=5,
+            created=True,
+        ),
+    ]
+    monkeypatch.setattr(ingestion, "seed_from_corpus", lambda **kw: results)
+    out = tools.seed_corpus(limit=2, doc_types=["case"])
+    assert out["documents"] == 2
+    assert out["provisions"] == 6
+    assert out["notes"] == [
+        {
+            "citation": "Muir v Open Brethren [1956] HCA 14",
+            "note": "no numbered paragraphs found; stored as one (whole document) provision",
+        }
+    ]

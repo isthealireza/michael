@@ -9,6 +9,7 @@ import pytest
 from michael.draft import (
     CLOSING_NOTICE,
     NO_TEMPLATE_LABEL,
+    citations_of,
     closing_blocks,
     draft_from_template,
     fill,
@@ -17,7 +18,12 @@ from michael.draft import (
     unresolved,
     wrong_jurisdiction_warnings,
 )
-from tests.fixtures import FAIR_WORK_PROVISIONS, provision
+from tests.fixtures import (
+    CROMWELL,
+    FAIR_WORK_PROVISIONS,
+    judgment_paragraph,
+    provision,
+)
 
 TEMPLATE = """# Contract
 
@@ -177,3 +183,62 @@ def test_the_real_casual_contract_template_is_found_and_states_what_it_is_based_
     assert "Fair Work Act 2009 (Cth) s 15A" in rendered
     assert CLOSING_NOTICE in rendered
     assert "that is not a statement" in rendered.lower()
+
+
+# --- both unit types -------------------------------------------------------
+
+
+def test_citations_of_renders_each_unit_in_its_own_form() -> None:
+    """`citations_of` is unit-agnostic: the form is `pinpoint()`'s business.
+    What it must not do is flatten a judgment paragraph into a section."""
+    citations = citations_of(
+        (
+            provision(section_number="15A", heading="Meaning of casual employee"),
+            judgment_paragraph(number="6", heading="The Tang respondents are:"),
+        )
+    )
+    assert citations[0].startswith("Fair Work Act 2009 (Cth) s 15A ")
+    assert citations[1].startswith(f"{CROMWELL} at [6] ")
+
+
+def test_citations_of_still_de_duplicates_across_unit_types() -> None:
+    para = judgment_paragraph(number="6", heading="The Tang respondents are:")
+    assert len(citations_of((para, para))) == 1
+
+
+def test_an_outline_names_a_judgment_paragraph_as_a_paragraph() -> None:
+    """An outline is read by a practitioner. "Nearest retrieved provision"
+    against a judgment paragraph misdescribes the authority in the one line
+    the reader relies on to tell legislation from case law."""
+    draft = outline_without_template(
+        request="fixture request about a judgment",
+        provisions=(judgment_paragraph(number="6", heading="The Tang respondents are:"),),
+        domain="employment",
+        write_template=False,
+    )
+    assert "Nearest retrieved paragraph (relevance not confirmed):" in draft.body
+    assert "Nearest retrieved provision" not in draft.body
+    assert f"{CROMWELL} at [6] " in draft.body
+
+
+def test_an_outline_still_names_legislation_a_provision() -> None:
+    draft = outline_without_template(
+        request="fixture request about an Act",
+        provisions=(provision(section_number="15A", heading="Meaning of casual employee"),),
+        domain="employment",
+        write_template=False,
+    )
+    assert "Nearest retrieved provision (relevance not confirmed):" in draft.body
+
+
+def test_an_outline_labels_an_unheaded_judgment_paragraph_by_its_paragraph_number() -> None:
+    """A judgment paragraph has no heading of its own, so the fallback label
+    must not read "Section 6"."""
+    draft = outline_without_template(
+        request="fixture request",
+        provisions=(judgment_paragraph(number="6", heading=""),),
+        domain="employment",
+        write_template=False,
+    )
+    assert "### 1. Paragraph [6]" in draft.body
+    assert "Section 6" not in draft.body

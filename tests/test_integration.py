@@ -2,7 +2,7 @@
 
 Excluded from the default run. They need the container up:
 
-    docker compose up -d && uv run michael schema
+    docker compose up -d && uv run michael schema && uv run michael migrate
     uv run pytest -m integration
 
 Embeddings are stubbed with a deterministic bag-of-words hash so the tests do
@@ -93,7 +93,7 @@ def fake_embedding(text: str) -> list[float]:
 
 @pytest.fixture
 def michael_db(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
-    from michael import config, embeddings, ingest, schema
+    from michael import config, embeddings, ingest, migrations, schema
 
     monkeypatch.setenv("EMBEDDING_DIM", str(DIM))
     monkeypatch.setenv("EMBEDDING_API_KEY", "stubbed-for-integration-tests")
@@ -110,6 +110,10 @@ def michael_db(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     monkeypatch.setattr("michael.retrieve.embed_one", lambda text, **kw: fake_embedding(text))
 
     schema.apply_schema()
+    # apply_schema() only CREATEs; a test database created before a
+    # migration existed still needs the migration run against it, the
+    # same way the real one does.
+    migrations.apply()
     for citation, text in (
         ("Fixture Employment Standards Act 2000 (Cth-Test)", FIXTURE_TEXT),
         ("Fixture Marine Navigation Act 2000 (Cth-Test)", UNRELATED_TEXT),
@@ -132,7 +136,7 @@ def michael_db(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
 def michael_db_with_schedule_collision(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
     """Same corpus as :func:`michael_db`, plus a Schedule clause colliding with
     a plain section number - see :data:`SCHEDULE_COLLISION_TEXT`."""
-    from michael import config, embeddings, ingest, schema
+    from michael import config, embeddings, ingest, migrations, schema
 
     monkeypatch.setenv("EMBEDDING_DIM", str(DIM))
     monkeypatch.setenv("EMBEDDING_API_KEY", "stubbed-for-integration-tests")
@@ -149,6 +153,10 @@ def michael_db_with_schedule_collision(monkeypatch: pytest.MonkeyPatch) -> Itera
     monkeypatch.setattr("michael.retrieve.embed_one", lambda text, **kw: fake_embedding(text))
 
     schema.apply_schema()
+    # apply_schema() only CREATEs; a test database created before a
+    # migration existed still needs the migration run against it, the
+    # same way the real one does.
+    migrations.apply()
     ingest.ingest_document(
         jurisdiction="commonwealth",
         title="Fixture Schedule Collision Act 2026 (Cth-Test)",
@@ -250,3 +258,185 @@ def test_the_answering_connection_cannot_write(michael_db: None) -> None:
 
     with readonly() as conn, conn.cursor() as cur, pytest.raises(psycopg.Error):
         cur.execute("INSERT INTO documents (jurisdiction) VALUES ('wa')")
+
+
+# --- case law --------------------------------------------------------------
+
+FIXTURE_JUDGMENT_TEXT = """Federal Court of Australia
+
+Fixture Judgment Pty Ltd v Example Corporation [2099] FCA 7
+
+Number of paragraphs:       3
+
+ORDERS
+
+THE COURT ORDERS THAT:
+
+1. The application for a lighthouse keeping order is dismissed.
+2. The applicant pay the respondent's costs of the application.
+
+REASONS FOR JUDGMENT
+
+FIXTURE J
+1 The applicant seeks a lighthouse keeping order under the fixture rule.
+2 A lighthouse keeper must maintain the light, but that duty does not create
+the order the applicant seeks in this proceeding.
+3 For those reasons the application is dismissed.
+I certify that the preceding three (3) numbered paragraphs are a true copy of
+the Reasons for Judgment of the Honourable Justice Fixture.
+"""
+
+
+CASE_CITATION = "Fixture Judgment Pty Ltd v Example Corporation [2099] FCA 7"
+
+
+@pytest.fixture
+def michael_db_with_case_law(monkeypatch: pytest.MonkeyPatch) -> Iterator[None]:
+    """The legislation corpus plus one judgment, split by the case-law
+    splitter and stored with its unit types."""
+    from michael import config, embeddings, ingest, migrations, schema
+
+    monkeypatch.setenv("EMBEDDING_DIM", str(DIM))
+    monkeypatch.setenv("EMBEDDING_API_KEY", "stubbed-for-integration-tests")
+    config.settings.cache_clear()
+
+    try:
+        with psycopg.connect(config.settings().database_url, connect_timeout=3):
+            pass
+    except psycopg.Error as exc:
+        pytest.skip(f"michael-postgres is not reachable: {exc}")
+
+    monkeypatch.setattr(embeddings, "embed", lambda texts, **kw: [fake_embedding(t) for t in texts])
+    monkeypatch.setattr(ingest, "embed", lambda texts, **kw: [fake_embedding(t) for t in texts])
+    monkeypatch.setattr("michael.retrieve.embed_one", lambda text, **kw: fake_embedding(text))
+
+    schema.apply_schema()
+    migrations.apply()
+    # Re-ingested from scratch every run. The same citation and sha256 is a
+    # no-op by design (ingestion is idempotent), so a document left behind by
+    # an earlier run would be read back instead of written - and a test about
+    # what the INSERT writes would be passing on last week's rows.
+    from michael.db import writable
+
+    with writable() as conn, conn.cursor() as cur:
+        cur.execute("DELETE FROM documents WHERE citation = %s", (CASE_CITATION,))
+        conn.commit()
+    for citation, text, doc_type in (
+        ("Fixture Marine Navigation Act 2000 (Cth-Test)", UNRELATED_TEXT, "act"),
+        (
+            "Fixture Judgment Pty Ltd v Example Corporation [2099] FCA 7",
+            FIXTURE_JUDGMENT_TEXT,
+            "case",
+        ),
+    ):
+        ingest.ingest_document(
+            jurisdiction="commonwealth",
+            title=citation,
+            citation=citation,
+            source_url="https://www.legislation.gov.au/fixture",
+            snapshot_date=date(2026, 7, 1),
+            sha256=hashlib.sha256(text.encode("utf-8")).hexdigest(),
+            doc_type=doc_type,
+            text=text,
+        )
+    schema.refresh_corpus_stats()
+    yield
+
+
+def _stored_units() -> list[tuple[str, str]]:
+    from michael.db import writable
+
+    with writable() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT p.unit_type, p.section_number
+              FROM provisions p JOIN documents d ON d.id = p.document_id
+             WHERE d.citation = %s
+             ORDER BY p.char_start
+            """,
+            (CASE_CITATION,),
+        )
+        return [(str(r["unit_type"]), str(r["section_number"])) for r in cur.fetchall()]
+
+
+def test_a_judgments_unit_types_are_stored_not_defaulted(
+    michael_db_with_case_law: None,
+) -> None:
+    """The column has to carry what the splitter decided. Defaulted to
+    'section' in the INSERT, every paragraph is cited "s 1" again and no test
+    above this layer can tell."""
+    assert _stored_units() == [
+        ("order", "(orders)"),
+        ("paragraph", "1"),
+        ("paragraph", "2"),
+        ("paragraph", "3"),
+    ]
+
+
+def test_a_stored_judgment_paragraph_renders_an_aglc_pinpoint(
+    michael_db_with_case_law: None,
+) -> None:
+    """End to end, through real retrieval: the pinpoint a draft would carry."""
+    from michael import retrieve
+
+    # "contracts", not "employment": domains.yaml filters employment retrieval
+    # to [act, regulation, award], so no employment query can ever return case
+    # law at all. See the handoff note.
+    from michael.domains import Routing, load_domains
+
+    contracts = next(d for d in load_domains() if d.name == "contracts")
+    result = retrieve.search(
+        "lighthouse keeper must maintain the light",
+        routing=Routing(domain=contracts, matched_keywords=("contract",), recognised=True),
+        min_score=0.0,
+    )
+    paragraphs = [p for p in result.provisions if p.doc_type == "case"]
+    assert paragraphs, result.reason
+    assert paragraphs[0].unit_type == "paragraph"
+    assert paragraphs[0].pinpoint().startswith(f"{CASE_CITATION} at [")
+    assert " s " not in paragraphs[0].pinpoint()
+
+
+def test_a_section_lookup_does_not_return_a_judgment_paragraph(
+    michael_db_with_case_law: None,
+) -> None:
+    """ "section 2" asks for legislation. Once case law is in the corpus a bare
+    number matches judgment paragraphs too, and the identifier lookup reports
+    itself as an exact match rather than a ranked guess - so an unrelated
+    judgment's paragraph 2 would be returned as section 2."""
+    from michael.domains import route
+    from michael.retrieve import _section_lookup
+
+    # Asserted on the identifier lookup itself. Asserting on search() would
+    # pass either way: with no section 1 in the corpus the lookup returns None
+    # and the hybrid arm answers, and the hybrid arm is allowed to rank case
+    # law. What must not happen is the lookup reporting paragraph 1 of a
+    # judgment as an exact identifier match for "section 1".
+    query = "what does section 1 say"
+    assert _section_lookup(query, routing=route(query)) is None
+
+    # The positive control, so this cannot pass by the lookup being broken:
+    # the Act's own section 7 is still found.
+    found = _section_lookup("what does section 7 say", routing=route("what does section 7 say"))
+    assert found is not None
+    assert [p.section_number for p in found.provisions] == ["7"]
+
+
+def test_a_judgment_and_an_act_can_share_a_number_without_sharing_a_pinpoint(
+    michael_db_with_case_law: None,
+) -> None:
+    from michael.db import writable
+
+    with writable() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT count(*) AS n FROM (
+                SELECT d.citation, p.unit_type, p.section_number
+                  FROM provisions p JOIN documents d ON d.id = p.document_id
+                 WHERE d.doc_type = 'case'
+                 GROUP BY 1, 2, 3 HAVING count(*) > 1
+            ) duplicates
+            """
+        )
+        row = cur.fetchone()
+        assert row is not None and row["n"] == 0

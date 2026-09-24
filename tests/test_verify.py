@@ -34,7 +34,12 @@ from michael.verify import (
     validate_verdicts,
     verify_draft,
 )
-from tests.fixtures import FAIR_WORK_PROVISIONS, provision
+from tests.fixtures import (
+    CROMWELL,
+    FAIR_WORK_PROVISIONS,
+    judgment_paragraph,
+    provision,
+)
 
 PROVISION_IDS = [str(p.provision_id) for p in FAIR_WORK_PROVISIONS]
 
@@ -788,3 +793,197 @@ def test_the_real_judge_does_not_support_a_number_the_provision_contradicts() ->
         f"the real judge called an injected wrong number SUPPORTED: {ruling.reason}"
     )
     assert result.judge_model == config.settings().verify_judge_model
+
+
+# --- both unit types -------------------------------------------------------
+#
+# The four seams the Phase 3 handover named, each with the failure it exists
+# to prevent.
+
+JUDGMENT_PROVISIONS = (
+    judgment_paragraph(number="6", heading="The Tang respondents are:"),
+    judgment_paragraph(number="7", heading="Cromwell applies for preliminary discovery"),
+)
+
+
+def test_a_paragraph_unit_is_registered_beside_the_sentence_unit() -> None:
+    assert set(verify.UNITS) == {"sentence", "paragraph"}
+    assert verify.UNITS["paragraph"] is verify.PARAGRAPH
+
+
+def test_the_paragraph_unit_rules_on_a_whole_block_not_a_sentence() -> None:
+    """A judgment supports a proposition by its ratio, which runs across
+    several sentences. Cut into sentences, each half is unrulable on its own
+    and a judge has to answer UNSUPPORTED however well the passage carries
+    it."""
+    body = (
+        "The Court rejected that construction of the rule. It held that the "
+        "applicant must already believe it has a cause of action."
+    )
+    sentences, _ = split_claims(body, unit=verify.SENTENCE)
+    paragraphs, _ = split_claims(body, unit=verify.PARAGRAPH)
+    assert len(sentences) == 2
+    assert len(paragraphs) == 1
+    assert paragraphs[0].text == body
+    assert paragraphs[0].unit == "paragraph"
+
+
+def test_a_selector_cuts_each_block_with_its_own_unit() -> None:
+    """The handover's ask: `split_claims` took one unit for the whole draft,
+    and a draft citing both an Act and a judgment needs both."""
+    body = (
+        "Section 117 requires a period of written notice. The period depends "
+        "on the employee's years of continuous service.\n\n"
+        "The Court rejected that construction. It held the rule was not engaged.\n"
+    )
+
+    def select(block: str) -> verify.ClaimUnit:
+        return verify.PARAGRAPH if "Court" in block else verify.SENTENCE
+
+    claims, _ = split_claims(body, unit=select)
+    assert [c.unit for c in claims] == ["sentence", "sentence", "paragraph"]
+
+
+def test_a_selector_keeps_offsets_pointing_at_the_original_text() -> None:
+    """Annotation writes markers back at these offsets. An offset that drifts
+    inserts a marker into the middle of a word."""
+    body = (
+        "Section 117 requires a period of notice.\n\n"
+        "The Court rejected that construction of the rule entirely.\n"
+    )
+
+    def select(block: str) -> verify.ClaimUnit:
+        return verify.PARAGRAPH if "Court" in block else verify.SENTENCE
+
+    claims, _ = split_claims(body, unit=select)
+    for claim in claims:
+        assert " ".join(body[claim.start : claim.end].split()) == claim.text
+
+
+def test_the_judge_prompt_marks_each_provision_with_its_kind() -> None:
+    """A judgment does not support a claim by stating it, so the judge has to
+    be told which rule applies to which piece of evidence."""
+    claims, _ = split_claims("The Court rejected that construction of the rule.")
+    prompt = build_prompt(claims, [*FAIR_WORK_PROVISIONS, *JUDGMENT_PROVISIONS])
+    assert 'kind="legislation"' in prompt
+    assert 'kind="judgment"' in prompt
+    # Counted with the closing bracket: the instructions name both kinds too.
+    assert prompt.count('kind="judgment">') == 2
+    assert prompt.count('kind="legislation">') == len(FAIR_WORK_PROVISIONS)
+
+
+def test_the_judge_instructions_define_support_for_each_kind() -> None:
+    assert 'kind="legislation"' in verify.JUDGE_INSTRUCTIONS
+    assert 'kind="judgment"' in verify.JUDGE_INSTRUCTIONS
+    # The distinction the handover asked for, in the judge's own instructions.
+    assert "TEXT TO STATE" in verify.JUDGE_INSTRUCTIONS
+    assert "what the court DECIDED" in verify.JUDGE_INSTRUCTIONS
+    assert "records a party's submission" in verify.JUDGE_INSTRUCTIONS
+
+
+def test_an_unknown_unit_type_is_judged_by_the_stricter_rule() -> None:
+    """Fail closed: an unrecognised unit must be harder to support, not
+    easier."""
+    unknown = provision(section_number="1", heading="h", unit_type="something-new")
+    assert verify.evidence_kind(unknown) == "legislation"
+
+
+def test_every_judgment_unit_type_is_judged_as_a_judgment() -> None:
+    for unit_type in ("paragraph", "order", "document"):
+        row = provision(section_number="x", heading="h", unit_type=unit_type, doc_type="case")
+        assert verify.evidence_kind(row) == "judgment"
+
+
+def test_the_prompt_carries_the_aglc_pinpoint_for_a_judgment() -> None:
+    claims, _ = split_claims("The Court rejected that construction of the rule.")
+    prompt = build_prompt(claims, JUDGMENT_PROVISIONS)
+    assert f"{CROMWELL} at [6] " in prompt
+    assert " s 6 " not in prompt
+
+
+def test_verify_draft_judges_case_law_evidence_through_the_same_path() -> None:
+    """`verify_draft` is typed to :class:`Evidence`, not to the retrieval
+    dataclass, and must fail closed on case-law evidence exactly as it does on
+    legislation."""
+    body = "The Court rejected that construction of the rule entirely.\n"
+    claims, _ = split_claims(body)
+    verification = verify_draft(
+        body,
+        provisions=JUDGMENT_PROVISIONS,
+        judge=judge_saying(
+            {
+                claims[0].claim_id: {
+                    "verdict": "SUPPORTED",
+                    "provision_ids": [str(JUDGMENT_PROVISIONS[0].provision_id)],
+                }
+            }
+        ),
+    )
+    assert [r.verdict for r in verification.rulings] == ["SUPPORTED"]
+
+
+def test_a_judge_citing_a_provision_id_not_retrieved_still_fails_closed() -> None:
+    """The guarantee, on the case-law path: an id outside the retrieved set
+    resolves to UNSUPPORTED."""
+    body = "The Court rejected that construction of the rule entirely.\n"
+    claims, _ = split_claims(body)
+    verification = verify_draft(
+        body,
+        provisions=JUDGMENT_PROVISIONS,
+        judge=judge_saying(
+            {claims[0].claim_id: {"verdict": "SUPPORTED", "provision_ids": ["999999"]}}
+        ),
+    )
+    assert [r.verdict for r in verification.rulings] == ["UNSUPPORTED"]
+
+
+def test_a_case_citation_keeps_a_self_referential_sentence_in_the_check() -> None:
+    """_DOCUMENT_SUBJECT drops a sentence whose subject is the artefact, and
+    _LEGAL_REFERENCE overrides it. Without case-citation forms, a sentence
+    making a claim about an authority was dropped before any judge saw it -
+    the one failure direction that rule exists to avoid."""
+    for sentence in (
+        "This outline follows Muir v Open Brethren [1956] HCA 14 at [2].",
+        "This draft applies the rule stated in (2023) 277 CLR 1.",
+        "This document adopts the reasoning at [12] of the judgment.",
+    ):
+        claims, _ = split_claims(sentence)
+        assert [c.text for c in claims] == [sentence], sentence
+
+
+def test_a_self_referential_sentence_with_no_authority_is_still_dropped() -> None:
+    """The mirror image: the override must not swallow the rule."""
+    claims, _ = split_claims("This document has been prepared for internal use only.")
+    assert claims == ()
+
+
+def test_the_case_law_outlines_own_lines_are_taken_out_of_the_body() -> None:
+    """`_GENERATED_LINE` excludes lines draft.py writes itself. The case-law
+    outline writes "Nearest retrieved paragraph", which the old pattern did
+    not know, so the line was left in the body to be judged as if it were
+    drafted prose.
+
+    Asserted on `_verifiable_body` rather than on the claims: an outline
+    yields no claims at all either way (verify_draft says so in its own note),
+    so a test asserting "no claim mentions it" cannot fail and is not
+    evidence.
+    """
+    outline = drafting.outline_without_template(
+        request="fixture request",
+        provisions=(judgment_paragraph(number="6", heading="The Tang respondents are:"),),
+        domain="employment",
+        write_template=False,
+    )
+    assert "Nearest retrieved paragraph" in outline.body
+    assert "Nearest retrieved paragraph" not in verify._verifiable_body(outline.body)
+
+
+def test_a_legislation_outlines_own_lines_are_still_taken_out() -> None:
+    outline = drafting.outline_without_template(
+        request="fixture request",
+        provisions=(provision(section_number="15A", heading="Meaning of casual employee"),),
+        domain="employment",
+        write_template=False,
+    )
+    assert "Nearest retrieved provision" in outline.body
+    assert "Nearest retrieved provision" not in verify._verifiable_body(outline.body)
