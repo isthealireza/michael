@@ -89,6 +89,7 @@ class Settings:
     templates_dir: Path
     ingestion_log: Path
     domains_file: Path
+    migrations_dir: Path
     system_prompt_file: Path
     elements_file: Path
 
@@ -128,6 +129,7 @@ def settings() -> Settings:
         templates_dir=_path("MICHAEL_TEMPLATES_DIR", "templates"),
         ingestion_log=_path("MICHAEL_INGESTION_LOG", "sources/ingestion.log.jsonl"),
         domains_file=_path("MICHAEL_DOMAINS_FILE", "domains.yaml"),
+        migrations_dir=_path("MICHAEL_MIGRATIONS_DIR", "db/migrations"),
         system_prompt_file=_path("MICHAEL_SYSTEM_PROMPT", "MICHAEL.md"),
         elements_file=_path("MICHAEL_ELEMENTS_FILE", "elements.yaml"),
     )

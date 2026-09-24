@@ -95,6 +95,10 @@ mcp_servers:
       EMBEDDING_MODEL: "openai/text-embedding-3-small"
       MICHAEL_DATABASE_URL: "${MICHAEL_DATABASE_URL}"
       MICHAEL_DOMAINS_FILE: "/opt/michael/domains.yaml"
+      # An installed package has no repository root: PROJECT_ROOT resolves
+      # to .venv/lib/python3.13 here, so the default migrations directory
+      # pointed inside the venv while the files ship at /opt/michael/db.
+      MICHAEL_MIGRATIONS_DIR: "/opt/michael/db/migrations"
       MICHAEL_INGESTION_LOG: "/opt/michael/sources/ingestion.log.jsonl"
       MICHAEL_RO_DATABASE_URL: "${MICHAEL_RO_DATABASE_URL}"
       MICHAEL_SOURCES_DIR: "/opt/michael/sources"

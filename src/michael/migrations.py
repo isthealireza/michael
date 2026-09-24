@@ -9,7 +9,7 @@ other half.
 Three properties, each of which is a test rather than a promise:
 
 * **Reversible.** Every migration is a pair of files, ``<id>_<name>.up.sql``
-  and ``<id>_<name>.down.sql``, in :data:`MIGRATIONS_DIR`. A migration with no
+  and ``<id>_<name>.down.sql``, in the configured migrations directory. A migration with no
   ``.down.sql`` is not loadable, so an irreversible one cannot be added by
   forgetting to write the reverse.
 * **Idempotent.** Applying is guarded twice: the ledger records what has run,
@@ -31,10 +31,27 @@ import re
 from dataclasses import dataclass
 from pathlib import Path
 
-from michael.config import PROJECT_ROOT
+from michael.config import PROJECT_ROOT, settings
 from michael.db import readonly, writable
 
-MIGRATIONS_DIR = PROJECT_ROOT / "db" / "migrations"
+#: Where the migration files live, when the caller does not say.
+#:
+#: Configurable, and it has to be. PROJECT_ROOT is derived from this module's
+#: own location, which is the repository root from a source checkout and
+#: `.venv/lib/python3.13` from an installed package - so on the deployed
+#: container the default resolved to
+#: `/opt/michael/.venv/lib/python3.13/db/migrations` while the files sat at
+#: `/opt/michael/db/migrations`. `michael migrate` found nothing, applied
+#: nothing, and reported an applied migration as "(not on disk)" and drifted.
+#: Measured there. MICHAEL_TEMPLATES_DIR, MICHAEL_SOURCES_DIR and
+#: MICHAEL_DOMAINS_FILE already exist for exactly this reason.
+DEFAULT_MIGRATIONS_DIR = PROJECT_ROOT / "db" / "migrations"
+
+
+def migrations_dir() -> Path:
+    """The configured migrations directory, or the source-tree default."""
+    return settings().migrations_dir
+
 
 LEDGER_TABLE = "schema_migrations"
 
@@ -101,7 +118,7 @@ def load_migrations(directory: Path | None = None) -> list[Migration]:
     Raises if an id repeats or a ``.down.sql`` is missing: both are mistakes
     that would otherwise only be discovered against a live database.
     """
-    target = directory or MIGRATIONS_DIR
+    target = directory or migrations_dir()
     if not target.is_dir():
         return []
     migrations: list[Migration] = []
@@ -240,7 +257,7 @@ def rollback(migration_id: str, directory: Path | None = None) -> dict[str, obje
     by_id = {m.id: m for m in load_migrations(directory)}
     migration = by_id.get(migration_id)
     if migration is None:
-        raise MigrationError(f"no migration {migration_id!r} in {MIGRATIONS_DIR}")
+        raise MigrationError(f"no migration {migration_id!r} in {migrations_dir()}")
     if migration_id not in applied():
         return {"id": migration_id, "name": migration.name, "outcome": "not applied"}
     with writable() as conn, conn.cursor() as cur:

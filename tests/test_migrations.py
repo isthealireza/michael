@@ -394,3 +394,33 @@ def test_the_image_ships_the_migrations_it_would_have_to_apply() -> None:
     )
     # And the directory it promises to ship is the one the loader reads.
     assert (Path(__file__).resolve().parents[1] / "db" / "migrations").is_dir()
+
+
+def test_the_migrations_directory_is_configurable_not_derived_from_the_package(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    """PROJECT_ROOT is this module's own location, which is the repository root
+    from a checkout and `.venv/lib/python3.13` from an installed package.
+
+    On the deployed container the derived default resolved to
+    `/opt/michael/.venv/lib/python3.13/db/migrations` while the files shipped
+    at `/opt/michael/db/migrations`, so `michael migrate` loaded nothing,
+    could apply nothing, and reported an applied migration as "(not on disk)"
+    and drifted. Measured there, after the image was fixed to ship the files
+    at all - the second defect hiding behind the first.
+    """
+    from michael import config
+
+    target = tmp_path / "elsewhere"
+    target.mkdir()
+    (target / "0009_example.up.sql").write_text("SELECT 1;", encoding="utf-8")
+    (target / "0009_example.down.sql").write_text("SELECT 1;", encoding="utf-8")
+
+    monkeypatch.setenv("MICHAEL_MIGRATIONS_DIR", str(target))
+    config.settings.cache_clear()
+    try:
+        assert [m.id for m in migrations.load_migrations()] == ["0009"], (
+            "load_migrations ignored MICHAEL_MIGRATIONS_DIR and used the package-derived default"
+        )
+    finally:
+        config.settings.cache_clear()
