@@ -32,7 +32,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 from michael.config import PROJECT_ROOT
-from michael.db import writable
+from michael.db import readonly, writable
 
 MIGRATIONS_DIR = PROJECT_ROOT / "db" / "migrations"
 
@@ -45,6 +45,28 @@ CREATE TABLE IF NOT EXISTS {LEDGER_TABLE} (
     sha256     char(64)    NOT NULL,
     applied_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- The read-only role must be able to READ this table. "What has run here" is
+-- exactly the question you want to ask from a connection that cannot change
+-- the answer, and `status()` asks it over `readonly()`.
+--
+-- schema.py's GRANTS_SQL already sets ALTER DEFAULT PRIVILEGES, and both
+-- production and the local database did in fact inherit SELECT that way, so
+-- this grant is redundant today. It is stated anyway because the inheritance
+-- is an ORDERING dependency: this table is created by the migration tool,
+-- not by apply_schema(), so it only picks the default up when `michael
+-- schema` ran first. A database migrated before its grants were applied
+-- would read as "nothing has ever been applied" - the ledger invisible
+-- rather than empty - which is the one wrong answer this command can give.
+--
+-- Guarded on the role existing: a scratch database may have no michael_ro.
+DO $$
+BEGIN
+    IF EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'michael_ro') THEN
+        GRANT SELECT ON {LEDGER_TABLE} TO michael_ro;
+    END IF;
+END
+$$;
 """
 
 #: ``0001_provision_unit_type.up.sql`` -> id ``0001``, name
@@ -116,30 +138,58 @@ def _ensure_ledger() -> None:
 
 
 def applied() -> dict[str, str]:
-    """Applied migration id -> the sha256 recorded when it was applied."""
+    """Applied migration id -> the sha256 recorded when it was applied.
+
+    Writes: creates the ledger if it is absent. For the read-only question -
+    what has run, without changing anything - use :func:`recorded`.
+    """
     _ensure_ledger()
     with writable() as conn, conn.cursor() as cur:
         cur.execute(f"SELECT id, sha256 FROM {LEDGER_TABLE}")
         return {str(row["id"]): str(row["sha256"]) for row in cur.fetchall()}
 
 
+def recorded() -> dict[str, str]:
+    """The same mapping, read over a READ-ONLY connection.
+
+    `migrate --status` used to go through :func:`applied`, which creates the
+    ledger before reading it. Against the read-only role - the one the
+    answering path uses, and the one an operator's read-only harness is
+    restricted to - that fails outright:
+
+        psycopg.errors.ReadOnlySqlTransaction:
+        cannot execute CREATE TABLE in a read-only transaction
+
+    So the safest way to ask what has run was the one way you could not ask
+    it. A missing ledger means nothing has been applied; that is an answer,
+    not an error, and it does not need a table created to say so.
+    """
+    with readonly() as conn, conn.cursor() as cur:
+        cur.execute("SELECT to_regclass(%s) AS present", (LEDGER_TABLE,))
+        row = cur.fetchone()
+        if row is None or row["present"] is None:
+            return {}
+        cur.execute(f"SELECT id, sha256 FROM {LEDGER_TABLE}")
+        return {str(r["id"]): str(r["sha256"]) for r in cur.fetchall()}
+
+
 def status(directory: Path | None = None) -> list[dict[str, object]]:
     """What is on disk, what has run, and whether any file has drifted."""
     on_disk = load_migrations(directory)
-    recorded = applied()
+    ledger = recorded()
     rows: list[dict[str, object]] = [
         {
             "id": m.id,
             "name": m.name,
-            "applied": m.id in recorded,
-            "drifted": m.id in recorded and recorded[m.id] != m.sha256,
+            "applied": m.id in ledger,
+            "drifted": m.id in ledger and ledger[m.id] != m.sha256,
         }
         for m in on_disk
     ]
     known = {m.id for m in on_disk}
     rows += [
         {"id": identifier, "name": "(not on disk)", "applied": True, "drifted": True}
-        for identifier in sorted(set(recorded) - known)
+        for identifier in sorted(set(ledger) - known)
     ]
     return rows
 

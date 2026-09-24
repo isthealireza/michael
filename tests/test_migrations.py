@@ -18,11 +18,13 @@ developer's real local corpus and never against production.
 from __future__ import annotations
 
 from collections.abc import Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest
 
 from michael import migrations
+from michael.db import readonly
 from michael.migrations import MigrationError, load_migrations
 
 # --- loading (no database) -------------------------------------------------
@@ -259,3 +261,104 @@ def test_the_backfill_corrects_the_whole_document_sentinel(migrated: None) -> No
         assert [r["unit_type"] for r in cur.fetchall()] == ["document"]
         cur.execute("DELETE FROM documents WHERE id = %s", (document_id,))
         conn.commit()
+
+
+@pytest.mark.integration
+def test_status_answers_over_a_read_only_connection(migrated: None) -> None:
+    """`migrate --status` must not write, because the role it is most useful to
+    cannot.
+
+    It used to read the ledger through `applied()`, which creates the ledger
+    first. Against `michael_ro` - the role the answering path uses and the one
+    an operator's read-only harness is restricted to - that failed outright:
+
+        psycopg.errors.ReadOnlySqlTransaction:
+        cannot execute CREATE TABLE in a read-only transaction
+
+    So the safest way to ask what had run was the one way you could not ask it.
+    Found on the deployed container, not in a test, which is why there is one
+    now.
+    """
+    from michael import migrations
+
+    rows = migrations.status()
+    assert isinstance(rows, list)
+    assert any(r["id"] == "0001" for r in rows), rows
+
+    # And the read path itself, unmediated: no write, over the read-only role.
+    with readonly() as conn, conn.cursor() as cur:
+        cur.execute("SELECT current_user AS who")
+        row = cur.fetchone()
+        assert row is not None
+        assert str(row["who"]).endswith("_ro")
+    assert migrations.recorded(), "the ledger read back empty over readonly()"
+
+
+def test_a_missing_ledger_reads_as_nothing_applied_not_as_an_error(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An absent ledger is an answer, and giving it needs no table created.
+
+    This is what lets `status` stay read-only on a database that has never
+    been migrated. Asserted on the SQL actually issued, not just the return
+    value: returning {} while quietly writing would pass a weaker test.
+    """
+    statements: list[str] = []
+
+    class _Cursor:
+        def execute(self, sql: str, params: object = None) -> None:
+            statements.append(sql)
+
+        def fetchone(self) -> dict[str, object]:
+            return {"present": None}
+
+        def __enter__(self) -> _Cursor:
+            return self
+
+        def __exit__(self, *exc: object) -> None:
+            return None
+
+    class _Conn:
+        def cursor(self) -> _Cursor:
+            return _Cursor()
+
+        def __enter__(self) -> _Conn:
+            return self
+
+        def __exit__(self, *exc: object) -> None:
+            return None
+
+    @contextmanager
+    def _fake_readonly() -> Iterator[_Conn]:
+        yield _Conn()
+
+    monkeypatch.setattr(migrations, "readonly", _fake_readonly)
+
+    assert migrations.recorded() == {}
+    assert statements, "recorded() asked the database nothing at all"
+    assert not any("CREATE" in sql.upper() for sql in statements), statements
+
+
+def test_status_never_reaches_for_a_writable_connection(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The guarantee, pinned where it can fail.
+
+    `status` reading through `applied()` is not a visible bug on a developer's
+    machine: the writable role is right there and the ledger gets created
+    silently. It only surfaces where it matters - against `michael_ro`, on the
+    deployed container - as
+
+        psycopg.errors.ReadOnlySqlTransaction:
+        cannot execute CREATE TABLE in a read-only transaction
+
+    So this makes any use of the writable connection an outright failure,
+    which is the only way this test can fail if the read path is put back.
+    """
+
+    def _forbidden() -> object:
+        raise AssertionError("status() asked for a writable connection")
+
+    monkeypatch.setattr(migrations, "writable", _forbidden)
+    rows = migrations.status()
+    assert isinstance(rows, list)
