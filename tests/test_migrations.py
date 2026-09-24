@@ -362,3 +362,35 @@ def test_status_never_reaches_for_a_writable_connection(
     monkeypatch.setattr(migrations, "writable", _forbidden)
     rows = migrations.status()
     assert isinstance(rows, list)
+
+
+def test_the_image_ships_the_migrations_it_would_have_to_apply() -> None:
+    """A migration that cannot be applied where the database lives is not one.
+
+    The deployed image carried `michael migrate` but not `db/migrations`, so
+    the command could only ever report - and it reported the applied migration
+    as `(not on disk)` and drifted, because the ledger had a row and the
+    directory had no files. Measured on the container:
+
+        [{"id": "0001", "name": "(not on disk)", "applied": true,
+          "drifted": true}]
+
+    Asserted against the Dockerfile rather than a running image because the
+    build is not available in the test environment, and the line being absent
+    is the whole defect.
+    """
+    dockerfile = Path(__file__).resolve().parents[1] / "hermes" / "Dockerfile"
+    # Instruction lines only. A substring test passes on `# COPY db ./db`,
+    # which is how the first version of this test passed with the line
+    # commented out - the exact defect it exists to catch, in the test.
+    instructions = [
+        line.strip()
+        for line in dockerfile.read_text(encoding="utf-8").splitlines()
+        if line.strip() and not line.lstrip().startswith("#")
+    ]
+    assert any(line.startswith("COPY db") for line in instructions), (
+        "hermes/Dockerfile does not ship db/, so `michael migrate` has nothing "
+        "to apply on the container and reports every migration as drifted"
+    )
+    # And the directory it promises to ship is the one the loader reads.
+    assert (Path(__file__).resolve().parents[1] / "db" / "migrations").is_dir()
