@@ -13,14 +13,24 @@ from __future__ import annotations
 import json
 import os
 import pathlib
+import shutil
 import subprocess
+import tempfile
 import time
 import urllib.request
+
+import yaml
 
 OUT = pathlib.Path("/opt/data/bench")
 RUNS = 3
 TIMEOUT = 900
 SETTLE = 6  # seconds to let OpenRouter usage catch up before reading it back
+
+# The config Hermes actually runs with in this container (rendered from
+# hermes/config.template.yaml at boot; see hermes/render_runtime_config.py).
+# provider_pin_home() reads this as the base for a pinned overlay - it is
+# never written to.
+BASE_CONFIG = pathlib.Path("/opt/data/config.yaml")
 
 MODELS = [
     "anthropic/claude-opus-5",
@@ -31,6 +41,13 @@ MODELS = [
     "qwen/qwen3.7-flash",
     "openai/gpt-oss-120b",
 ]
+
+# Pin a shortlisted model to a specific OpenRouter provider slug here (see
+# `openrouter.ai/api/v1/providers` for slugs, e.g. "anthropic", "gmicloud")
+# to re-benchmark it with the exact routing a production decision would use -
+# see docs/decisions/model-for-client-data.md. Empty by default: every model
+# keeps today's unpinned, multi-provider OpenRouter routing.
+PROVIDER_PINS: dict[str, str] = {}
 
 PROMPTS = {
     "contract": (
@@ -78,6 +95,65 @@ def key_usage() -> float:
         return float(json.load(response)["data"]["usage"])
 
 
+def run_slug(model: str, provider: str | None, prompt_name: str, run: int) -> str:
+    """The filename stem for one run.
+
+    A pinned run gets the provider in its own slug, so it lands beside the
+    unpinned baseline for the same model rather than overwriting or being
+    silently deduplicated against it.
+    """
+    base = model.replace("/", "_")
+    if provider:
+        base = f"{base}__{provider}"
+    return f"{base}__{prompt_name}__{run}"
+
+
+def render_pinned_config(base_config_yaml: str, model: str, provider: str) -> str:
+    """Return `base_config_yaml` with an OpenRouter provider pin for `model`.
+
+    Pure text in, text out - no filesystem, no Hermes, no Docker - so this is
+    the part unit tests exercise directly. Everything else in the base config
+    (the model default, the MCP server block, disabled toolsets, ...) is
+    carried through unchanged, so a pinned run stays otherwise identical to
+    production. This mirrors Hermes' own `provider_routing.models.<id>.only`
+    key (see `hermes-agent.nousresearch.com/docs/user-guide/features/provider-routing`);
+    it does not touch `hermes/config.template.yaml`.
+    """
+    config = yaml.safe_load(base_config_yaml) or {}
+    if not isinstance(config, dict):
+        raise ValueError("base config did not parse to a mapping")
+    routing = config.setdefault("provider_routing", {})
+    models = routing.setdefault("models", {})
+    models[model] = {"only": [provider]}
+    return yaml.safe_dump(config, sort_keys=False)
+
+
+def provider_pin_home(
+    model: str, pins: dict[str, str] | None = None, base_config: pathlib.Path = BASE_CONFIG
+) -> pathlib.Path | None:
+    """Build a HERMES_HOME overlay that pins `model`, or ``None`` if unpinned.
+
+    Hermes resolves its config from ``${HERMES_HOME}/config.yaml``, so
+    pointing HERMES_HOME at a fresh directory for one subprocess call is
+    enough to pin that call's routing; the container's own config.yaml (and
+    every other model's routing) is read, never written. The process still
+    inherits OPENROUTER_API_KEY and everything else from its normal
+    environment - only the config file location changes.
+
+    The caller is responsible for removing the returned directory once the
+    subprocess has finished with it.
+    """
+    pins = PROVIDER_PINS if pins is None else pins
+    provider = pins.get(model)
+    if not provider:
+        return None
+    base_text = base_config.read_text(encoding="utf-8")
+    pinned = render_pinned_config(base_text, model, provider)
+    overlay = pathlib.Path(tempfile.mkdtemp(prefix="michael-bench-provider-"))
+    (overlay / "config.yaml").write_text(pinned, encoding="utf-8")
+    return overlay
+
+
 def main() -> int:
     check_uncovered_is_uncovered()
     OUT.mkdir(parents=True, exist_ok=True)
@@ -87,15 +163,18 @@ def main() -> int:
         for line in results.read_text(encoding="utf-8").splitlines():
             if line.strip():
                 r = json.loads(line)
-                done.add((r["model"], r["prompt"], r["run"]))
+                done.add((r["model"], r.get("provider"), r["prompt"], r["run"]))
 
     for model in MODELS:
+        provider = PROVIDER_PINS.get(model)
         for prompt_name, prompt in PROMPTS.items():
             for run in range(1, RUNS + 1):
-                if (model, prompt_name, run) in done:
+                if (model, provider, prompt_name, run) in done:
                     continue
-                slug = f"{model.replace('/', '_')}__{prompt_name}__{run}"
+                slug = run_slug(model, provider, prompt_name, run)
                 usage_file = OUT / f"{slug}.usage.json"
+                pin_dir = provider_pin_home(model)
+                run_env = {**os.environ, "HERMES_HOME": str(pin_dir)} if pin_dir else None
                 before = key_usage()
                 started = time.time()
                 try:
@@ -103,7 +182,9 @@ def main() -> int:
                         # --provider openrouter is mandatory: Hermes routes some
                         # model ids elsewhere (sonnet-5 resolves to 'gmi'), which
                         # fails with no credentials and would also put the spend
-                        # outside the key whose usage is being measured.
+                        # outside the key whose usage is being measured. Pinning
+                        # a specific upstream (PROVIDER_PINS) narrows routing
+                        # further, within OpenRouter, via HERMES_HOME above.
                         [
                             "hermes",
                             "-z",
@@ -118,10 +199,14 @@ def main() -> int:
                         capture_output=True,
                         text=True,
                         timeout=TIMEOUT,
+                        env=run_env,
                     )
                     stdout, rc, stderr = proc.stdout, proc.returncode, proc.stderr
                 except subprocess.TimeoutExpired:
                     stdout, rc, stderr = "", -1, "TIMEOUT"
+                finally:
+                    if pin_dir is not None:
+                        shutil.rmtree(pin_dir, ignore_errors=True)
                 elapsed = time.time() - started
                 time.sleep(SETTLE)
                 after = key_usage()
@@ -138,6 +223,7 @@ def main() -> int:
 
                 record = {
                     "model": model,
+                    "provider": provider,
                     "prompt": prompt_name,
                     "run": run,
                     "returncode": rc,

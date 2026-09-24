@@ -90,6 +90,13 @@ strict = true
 module = ["yaml", "datasets", "mcp.*", "argon2", "argon2.*"]
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+# bench/ is scripts, not a package under src/; tests/test_run_bench.py reaches
+# it the same way bench/analyse.py reaches michael - by adding its directory
+# to sys.path at import time, which mypy's static analysis does not see.
+module = ["run_bench"]
+ignore_missing_imports = true
+
 
 
 [tool.pytest.ini_options]
