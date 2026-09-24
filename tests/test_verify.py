@@ -762,6 +762,7 @@ def test_the_labelled_set_still_matches_the_splitter() -> None:
 
 
 @pytest.mark.integration
+@pytest.mark.network
 def test_the_real_judge_does_not_support_a_number_the_provision_contradicts() -> None:
     import pathlib
 

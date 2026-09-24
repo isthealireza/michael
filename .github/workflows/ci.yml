@@ -95,10 +95,20 @@ jobs:
       # make that reachable every time, but "should" is not a gate: fail
       # the build explicitly if anything under this marker skips, so a
       # regression here cannot go unnoticed behind a green checkmark again.
+      # "and not network": one integration test reaches the real judge over
+      # OpenRouter and fails loudly rather than skipping when OPENROUTER_API_KEY
+      # is absent, which is the right behaviour for a fail-closed check and the
+      # wrong thing to demand of CI. Putting a live API key in CI would make
+      # every push spend money and make the build depend on a third party's
+      # uptime. The `network` marker already means "reaches an external host;
+      # excluded from the default run", so it is excluded here too and run
+      # deliberately with `pytest -m network` where a key exists. Everything
+      # that needs only the Postgres service container still runs, and still
+      # may not skip.
       - name: pytest -m integration (A5 — result recorded above)
         run: |
           set -o pipefail
-          uv run pytest -m integration -v -rs | tee /tmp/integration.log
+          uv run pytest -m "integration and not network" -v -rs | tee /tmp/integration.log
           if grep -qi "skipped" /tmp/integration.log; then
             echo "::error::Integration tests were skipped — A5 requires them to actually run, not skip" >&2
             exit 1
