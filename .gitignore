@@ -38,3 +38,6 @@ backups/
 # Point-in-time dumps taken before a destructive corpus operation. Public
 # legislation, but large and regenerable from the source URLs they record.
 .backups/
+
+# Local git worktrees for parallel agent work.
+.worktrees/
