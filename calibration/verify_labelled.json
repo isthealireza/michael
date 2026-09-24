@@ -1,0 +1,1117 @@
+{
+ "note": "Drafts and labels are written by hand; every provision is re-extracted from the files ingestion downloaded, through michael.ingest.extract_text and split_sections, so the text here is the text retrieval returns. Rebuild with calibration/build_verify_labelled.py, which refuses to write a labelled claim that michael.verify.split_claims does not produce.",
+ "labels": {
+  "supported": "carried by the provisions as stated",
+  "wrong_number": "injected: a figure the provisions do not state",
+  "wrong_party": "injected: an obligation placed on the wrong party",
+  "invented_exception": "injected: an exception the provisions do not create",
+  "overstated_scope": "injected: wider than the provisions grant",
+  "no_source": "injected: nothing in the provisions goes to it at all"
+ },
+ "cases": [
+  {
+   "case_id": "fw-notice-periods",
+   "title": "Minimum notice of termination",
+   "request": "What notice must an employer give when ending an employee's employment?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Minimum notice of termination\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** What notice must an employer give when ending an employee's employment?\n\n## ADVICE\n\nAn employer must not terminate an employee's employment unless the employer has given the employee written notice of the day of the termination.\n\nAn employee whose period of continuous service is more than 3 years but not more than 5 years is entitled to a minimum notice period of 4 weeks.\n\nThe minimum period of notice is increased by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given.\n\nA reference to continuous service with the employer does not include periods of employment as a casual employee of the employer.\n",
+   "provisions": [
+    {
+     "provision_id": 684052,
+     "ref": "fw1:117",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "117",
+     "heading": "Requirement for notice of termination or payment in lieu",
+     "text": "117 Requirement for notice of termination or payment in lieu\nNotice specifying day of termination\n(1) An employer must not terminate an employee’s employment unless the employer has given the employee written notice of the day of the termination (which cannot be before the day the notice is given).\nNote 1: Section 123 describes situations in which this section does not apply.\nNote 2: Sections 28A and 29 of the Acts Interpretation Act 1901 provide how a notice may be given. In particular, the notice may be given to an employee by:\n(a) delivering it personally; or\n(b) leaving it at the employee’s last known address; or\n(c) sending it by prepaid post to the employee’s last known address.\nAmount of notice or payment in lieu of notice\n(2) The employer must not terminate the employee’s employment unless:\n(a) the time between giving the notice and the day of the termination is at least the period (the minimum period of notice) worked out under subsection (3); or\n(b) the employer has paid to the employee (or to another person on the employee’s behalf) payment in lieu of notice of at least the amount the employer would have been liable to pay to the employee (or to another person on the employee’s behalf) at the full rate of pay for the hours the employee would have worked had the employment continued until the end of the minimum period of notice.\n(3) Work out the minimum period of notice as follows:\n(a) first, work out the period using the following table:\n\nPeriod\n\nEmployee’s period of continuous service with the employer at the end of the day the notice is given\nPeriod\n1\nNot more than 1 year\n1 week\n2\nMore than 1 year but not more than 3 years\n2 weeks\n3\nMore than 3 years but not more than 5 years\n3 weeks\n4\nMore than 5 years\n4 weeks\n(b) then increase the period by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given.\n(4) A reference in this section to continuous service with the employer does not include periods of employment as a casual employee of the employer.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "An employer must not terminate an employee's employment unless the employer has given the employee written notice of the day of the termination.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "An employee whose period of continuous service is more than 3 years but not more than 5 years is entitled to a minimum notice period of 4 weeks.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "The minimum period of notice is increased by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c4",
+     "text": "A reference to continuous service with the employer does not include periods of employment as a casual employee of the employer.",
+     "label": "supported",
+     "injected": false
+    }
+   ]
+  },
+  {
+   "case_id": "fw-notice-wrong-party",
+   "title": "Who must give notice of termination",
+   "request": "Does the employee have to give written notice of termination?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Who must give notice of termination\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Does the employee have to give written notice of termination?\n\n## ADVICE\n\nAn employee must not end the employment relationship unless the employee has given the employer written notice of the day of the termination.\n\nThe employer may instead pay the employee payment in lieu of notice of at least the amount the employer would have been liable to pay at the full rate of pay for the hours the employee would have worked until the end of the minimum period of notice.\n\nAn employee who fails to give the required notice is liable to the employer for a penalty equal to the unworked notice.\n",
+   "provisions": [
+    {
+     "provision_id": 684052,
+     "ref": "fw1:117",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "117",
+     "heading": "Requirement for notice of termination or payment in lieu",
+     "text": "117 Requirement for notice of termination or payment in lieu\nNotice specifying day of termination\n(1) An employer must not terminate an employee’s employment unless the employer has given the employee written notice of the day of the termination (which cannot be before the day the notice is given).\nNote 1: Section 123 describes situations in which this section does not apply.\nNote 2: Sections 28A and 29 of the Acts Interpretation Act 1901 provide how a notice may be given. In particular, the notice may be given to an employee by:\n(a) delivering it personally; or\n(b) leaving it at the employee’s last known address; or\n(c) sending it by prepaid post to the employee’s last known address.\nAmount of notice or payment in lieu of notice\n(2) The employer must not terminate the employee’s employment unless:\n(a) the time between giving the notice and the day of the termination is at least the period (the minimum period of notice) worked out under subsection (3); or\n(b) the employer has paid to the employee (or to another person on the employee’s behalf) payment in lieu of notice of at least the amount the employer would have been liable to pay to the employee (or to another person on the employee’s behalf) at the full rate of pay for the hours the employee would have worked had the employment continued until the end of the minimum period of notice.\n(3) Work out the minimum period of notice as follows:\n(a) first, work out the period using the following table:\n\nPeriod\n\nEmployee’s period of continuous service with the employer at the end of the day the notice is given\nPeriod\n1\nNot more than 1 year\n1 week\n2\nMore than 1 year but not more than 3 years\n2 weeks\n3\nMore than 3 years but not more than 5 years\n3 weeks\n4\nMore than 5 years\n4 weeks\n(b) then increase the period by 1 week if the employee is over 45 years old and has completed at least 2 years of continuous service with the employer at the end of the day the notice is given.\n(4) A reference in this section to continuous service with the employer does not include periods of employment as a casual employee of the employer.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "An employee must not end the employment relationship unless the employee has given the employer written notice of the day of the termination.",
+     "label": "wrong_party",
+     "injected": true
+    },
+    {
+     "claim_id": "c2",
+     "text": "The employer may instead pay the employee payment in lieu of notice of at least the amount the employer would have been liable to pay at the full rate of pay for the hours the employee would have worked until the end of the minimum period of notice.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "An employee who fails to give the required notice is liable to the employer for a penalty equal to the unworked notice.",
+     "label": "no_source",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-redundancy-pay",
+   "title": "Redundancy pay periods",
+   "request": "How much redundancy pay is an employee entitled to?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Redundancy pay periods\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** How much redundancy pay is an employee entitled to?\n\n## ADVICE\n\nAn employee whose period of continuous service with the employer on termination is at least 5 years but less than 6 years has a redundancy pay period of 10 weeks.\n\nAn employee whose period of continuous service with the employer on termination is at least 10 years has a redundancy pay period of 16 weeks.\n\nAn employee is entitled to be paid redundancy pay by the employer if the employee's employment is terminated because of the insolvency or bankruptcy of the employer.\n\nRedundancy pay is not payable where the employer offers the employee a position with an associated entity on no less favourable terms.\n",
+   "provisions": [
+    {
+     "provision_id": 520440,
+     "ref": "fw1:119",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "119",
+     "heading": "Redundancy pay",
+     "text": "119 Redundancy pay\nEntitlement to redundancy pay\n(1) An employee is entitled to be paid redundancy pay by the employer if the employee’s employment is terminated:\n(a) at the employer’s initiative because the employer no longer requires the job done by the employee to be done by anyone, except where this is due to the ordinary and customary turnover of labour; or\n(b) because of the insolvency or bankruptcy of the employer.\nNote: Sections 121, 122 and 123 describe situations in which the employee does not have this entitlement.\nAmount of redundancy pay\n(2) The amount of the redundancy pay equals the total amount payable to the employee for the redundancy pay period worked out using the following table at the employee’s base rate of pay for his or her ordinary hours of work:\n\nRedundancy pay period\n\nEmployee’s period of continuous service with the employer on termination\nRedundancy pay period\n1\nAt least 1 year but less than 2 years\n4 weeks\n2\nAt least 2 years but less than 3 years\n6 weeks\n3\nAt least 3 years but less than 4 years\n7 weeks\n4\nAt least 4 years but less than 5 years\n8 weeks\n5\nAt least 5 years but less than 6 years\n10 weeks\n6\nAt least 6 years but less than 7 years\n11 weeks\n7\nAt least 7 years but less than 8 years\n13 weeks\n8\nAt least 8 years but less than 9 years\n14 weeks\n9\nAt least 9 years but less than 10 years\n16 weeks\n10\nAt least 10 years\n12 weeks\n(3) A reference in this section to continuous service with the employer does not include periods of employment as a casual employee of the employer.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "An employee whose period of continuous service with the employer on termination is at least 5 years but less than 6 years has a redundancy pay period of 10 weeks.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "An employee whose period of continuous service with the employer on termination is at least 10 years has a redundancy pay period of 16 weeks.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "An employee is entitled to be paid redundancy pay by the employer if the employee's employment is terminated because of the insolvency or bankruptcy of the employer.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c4",
+     "text": "Redundancy pay is not payable where the employer offers the employee a position with an associated entity on no less favourable terms.",
+     "label": "invented_exception",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-redundancy-scope",
+   "title": "When redundancy pay arises",
+   "request": "Is redundancy pay payable whenever an employer dismisses someone?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - When redundancy pay arises\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Is redundancy pay payable whenever an employer dismisses someone?\n\n## ADVICE\n\nAn employee is entitled to redundancy pay where the employment is terminated at the employer's initiative because the employer no longer requires the job done by the employee to be done by anyone.\n\nEvery employee dismissed by an employer is entitled to redundancy pay calculated on their period of continuous service.\n\nThe amount of the redundancy pay is worked out at the employee's base rate of pay for his or her ordinary hours of work.\n",
+   "provisions": [
+    {
+     "provision_id": 520440,
+     "ref": "fw1:119",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "119",
+     "heading": "Redundancy pay",
+     "text": "119 Redundancy pay\nEntitlement to redundancy pay\n(1) An employee is entitled to be paid redundancy pay by the employer if the employee’s employment is terminated:\n(a) at the employer’s initiative because the employer no longer requires the job done by the employee to be done by anyone, except where this is due to the ordinary and customary turnover of labour; or\n(b) because of the insolvency or bankruptcy of the employer.\nNote: Sections 121, 122 and 123 describe situations in which the employee does not have this entitlement.\nAmount of redundancy pay\n(2) The amount of the redundancy pay equals the total amount payable to the employee for the redundancy pay period worked out using the following table at the employee’s base rate of pay for his or her ordinary hours of work:\n\nRedundancy pay period\n\nEmployee’s period of continuous service with the employer on termination\nRedundancy pay period\n1\nAt least 1 year but less than 2 years\n4 weeks\n2\nAt least 2 years but less than 3 years\n6 weeks\n3\nAt least 3 years but less than 4 years\n7 weeks\n4\nAt least 4 years but less than 5 years\n8 weeks\n5\nAt least 5 years but less than 6 years\n10 weeks\n6\nAt least 6 years but less than 7 years\n11 weeks\n7\nAt least 7 years but less than 8 years\n13 weeks\n8\nAt least 8 years but less than 9 years\n14 weeks\n9\nAt least 9 years but less than 10 years\n16 weeks\n10\nAt least 10 years\n12 weeks\n(3) A reference in this section to continuous service with the employer does not include periods of employment as a casual employee of the employer.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "An employee is entitled to redundancy pay where the employment is terminated at the employer's initiative because the employer no longer requires the job done by the employee to be done by anyone.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Every employee dismissed by an employer is entitled to redundancy pay calculated on their period of continuous service.",
+     "label": "overstated_scope",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "The amount of the redundancy pay is worked out at the employee's base rate of pay for his or her ordinary hours of work.",
+     "label": "supported",
+     "injected": false
+    }
+   ]
+  },
+  {
+   "case_id": "fw-annual-leave",
+   "title": "Annual leave entitlement",
+   "request": "How much paid annual leave does an employee get each year?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Annual leave entitlement\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** How much paid annual leave does an employee get each year?\n\n## ADVICE\n\nFor each year of service with an employer an employee is entitled to 4 weeks of paid annual leave, other than for periods of employment as a casual employee of the employer.\n\nAn employee who is defined or described as a shiftworker for the purposes of the National Employment Standards by a modern award that applies to them is entitled to 6 weeks of paid annual leave.\n\nAn employee's entitlement to paid annual leave accrues progressively during a year of service according to the employee's ordinary hours of work, and accumulates from year to year.\n",
+   "provisions": [
+    {
+     "provision_id": 846588,
+     "ref": "fw1:87",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "87",
+     "heading": "Entitlement to annual leave",
+     "text": "87 Entitlement to annual leave\nAmount of leave\n(1) For each year of service with an employer (other than periods of employment as a casual employee of the employer), an employee is entitled to:\n(a) 4 weeks of paid annual leave; or\n(b) 5 weeks of paid annual leave, if:\n(i) a modern award applies to the employee and defines or describes the employee as a shiftworker for the purposes of the National Employment Standards; or\n(ii) an enterprise agreement applies to the employee and defines or describes the employee as a shiftworker for the purposes of the National Employment Standards; or\n(iii) the employee qualifies for the shiftworker annual leave entitlement under subsection (3) (this relates to award/agreement free employees).\nNote: Section 196 affects whether the FWC may approve an enterprise agreement covering an employee, if the employee is covered by a modern award that is in operation and defines or describes the employee as a shiftworker for the purposes of the National Employment Standards.\nAccrual of leave\n(2) An employee’s entitlement to paid annual leave accrues progressively during a year of service (other than periods of employment as a casual employee of the employer) according to the employee’s ordinary hours of work, and accumulates from year to year.\nNote: If an employee’s employment ends during what would otherwise have been a year of service, the employee accrues paid annual leave up to when the employment ends.\nAward/agreement free employees who qualify for the shiftworker entitlement\n(3) An award/agreement free employee qualifies for the shiftworker annual leave entitlement if:\n(a) the employee:\n(i) is employed in an enterprise in which shifts are continuously rostered 24 hours a day for 7 days a week; and\n(ii) is regularly rostered to work those shifts; and\n(iii) regularly works on Sundays and public holidays; or\n(b) the employee is in a class of employees prescribed by the regulations as shiftworkers for the purposes of the National Employment Standards.\n(4) However, an employee referred to in subsection (3) does not qualify for the shiftworker annual leave entitlement if the employee is in a class of employees prescribed by the regulations as not being qualified for that entitlement.\n(5) Without limiting the way in which a class may be described for the purposes of paragraph (3)(b) or subsection (4), the class may be described by reference to one or more of the following:\n(a) a particular industry or part of an industry;\n(b) a particular kind of work;\n(c) a particular type of employment.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "For each year of service with an employer an employee is entitled to 4 weeks of paid annual leave, other than for periods of employment as a casual employee of the employer.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "An employee who is defined or described as a shiftworker for the purposes of the National Employment Standards by a modern award that applies to them is entitled to 6 weeks of paid annual leave.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "An employee's entitlement to paid annual leave accrues progressively during a year of service according to the employee's ordinary hours of work, and accumulates from year to year.",
+     "label": "supported",
+     "injected": false
+    }
+   ]
+  },
+  {
+   "case_id": "fw-annual-leave-casuals",
+   "title": "Annual leave and casual service",
+   "request": "Do casual employees accrue paid annual leave?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Annual leave and casual service\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Do casual employees accrue paid annual leave?\n\n## ADVICE\n\nPaid annual leave accrues for every employee of the employer, including periods of employment as a casual employee.\n\nAn award/agreement free employee qualifies for the shiftworker annual leave entitlement if the employee is employed in an enterprise in which shifts are continuously rostered 24 hours a day for 7 days a week, is regularly rostered to work those shifts, and regularly works on Sundays and public holidays.\n\nAn employee may elect to be paid out their accrued annual leave at any time by giving the employer 14 days written notice.\n",
+   "provisions": [
+    {
+     "provision_id": 846588,
+     "ref": "fw1:87",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "87",
+     "heading": "Entitlement to annual leave",
+     "text": "87 Entitlement to annual leave\nAmount of leave\n(1) For each year of service with an employer (other than periods of employment as a casual employee of the employer), an employee is entitled to:\n(a) 4 weeks of paid annual leave; or\n(b) 5 weeks of paid annual leave, if:\n(i) a modern award applies to the employee and defines or describes the employee as a shiftworker for the purposes of the National Employment Standards; or\n(ii) an enterprise agreement applies to the employee and defines or describes the employee as a shiftworker for the purposes of the National Employment Standards; or\n(iii) the employee qualifies for the shiftworker annual leave entitlement under subsection (3) (this relates to award/agreement free employees).\nNote: Section 196 affects whether the FWC may approve an enterprise agreement covering an employee, if the employee is covered by a modern award that is in operation and defines or describes the employee as a shiftworker for the purposes of the National Employment Standards.\nAccrual of leave\n(2) An employee’s entitlement to paid annual leave accrues progressively during a year of service (other than periods of employment as a casual employee of the employer) according to the employee’s ordinary hours of work, and accumulates from year to year.\nNote: If an employee’s employment ends during what would otherwise have been a year of service, the employee accrues paid annual leave up to when the employment ends.\nAward/agreement free employees who qualify for the shiftworker entitlement\n(3) An award/agreement free employee qualifies for the shiftworker annual leave entitlement if:\n(a) the employee:\n(i) is employed in an enterprise in which shifts are continuously rostered 24 hours a day for 7 days a week; and\n(ii) is regularly rostered to work those shifts; and\n(iii) regularly works on Sundays and public holidays; or\n(b) the employee is in a class of employees prescribed by the regulations as shiftworkers for the purposes of the National Employment Standards.\n(4) However, an employee referred to in subsection (3) does not qualify for the shiftworker annual leave entitlement if the employee is in a class of employees prescribed by the regulations as not being qualified for that entitlement.\n(5) Without limiting the way in which a class may be described for the purposes of paragraph (3)(b) or subsection (4), the class may be described by reference to one or more of the following:\n(a) a particular industry or part of an industry;\n(b) a particular kind of work;\n(c) a particular type of employment.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "Paid annual leave accrues for every employee of the employer, including periods of employment as a casual employee.",
+     "label": "overstated_scope",
+     "injected": true
+    },
+    {
+     "claim_id": "c2",
+     "text": "An award/agreement free employee qualifies for the shiftworker annual leave entitlement if the employee is employed in an enterprise in which shifts are continuously rostered 24 hours a day for 7 days a week, is regularly rostered to work those shifts, and regularly works on Sundays and public holidays.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "An employee may elect to be paid out their accrued annual leave at any time by giving the employer 14 days written notice.",
+     "label": "no_source",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-personal-leave",
+   "title": "Paid personal/carer's leave",
+   "request": "How much paid personal leave does a full-time employee get?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Paid personal/carer's leave\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** How much paid personal leave does a full-time employee get?\n\n## ADVICE\n\nFor each year of service with an employer an employee is entitled to 10 days of paid personal/carer's leave, other than for periods of employment as a casual employee of the employer.\n\nFor each year of service with an employer an employee is entitled to 12 days of paid personal/carer's leave.\n\nAn employee may take paid personal/carer's leave in single day periods without providing the employer with a medical certificate.\n",
+   "provisions": [
+    {
+     "provision_id": 661923,
+     "ref": "fw1:96",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "96",
+     "heading": "Entitlement to paid personal/carer’s leave",
+     "text": "96 Entitlement to paid personal/carer’s leave\nAmount of leave\n(1) For each year of service with an employer (other than periods of employment as a casual employee of the employer), an employee is entitled to 10 days of paid personal/carer’s leave.\nAccrual of leave\n(2) An employee’s entitlement to paid personal/carer’s leave accrues progressively during a year of service (other than periods of employment as a casual employee of the employer) according to the employee’s ordinary hours of work, and accumulates from year to year.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "For each year of service with an employer an employee is entitled to 10 days of paid personal/carer's leave, other than for periods of employment as a casual employee of the employer.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "For each year of service with an employer an employee is entitled to 12 days of paid personal/carer's leave.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "An employee may take paid personal/carer's leave in single day periods without providing the employer with a medical certificate.",
+     "label": "no_source",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-max-hours",
+   "title": "Maximum weekly hours",
+   "request": "How many hours a week can an employer require an employee to work?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Maximum weekly hours\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** How many hours a week can an employer require an employee to work?\n\n## ADVICE\n\nAn employer must not request or require a full-time employee to work more than 38 hours in a week unless the additional hours are reasonable.\n\nAn employer must not request or require a full-time employee to work more than 40 hours in a week unless the additional hours are reasonable.\n\nThe employee may refuse to work additional hours beyond those referred to in paragraph (1)(a) or (b) if they are unreasonable.\n\nAny hours worked beyond 38 in a week are unlawful and must be refused by the employee.\n",
+   "provisions": [
+    {
+     "provision_id": 402338,
+     "ref": "fw1:62",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "62",
+     "heading": "Maximum weekly hours",
+     "text": "62 Maximum weekly hours\nMaximum weekly hours of work\n(1) An employer must not request or require an employee to work more than the following number of hours in a week unless the additional hours are reasonable:\n(a) for a fulltime employee—38 hours; or\n(b) for an employee who is not a fulltime employee—the lesser of:\n(i) 38 hours; and\n(ii) the employee’s ordinary hours of work in a week.\nEmployee may refuse to work unreasonable additional hours\n(2) The employee may refuse to work additional hours (beyond those referred to in paragraph (1)(a) or (b)) if they are unreasonable.\nDetermining whether additional hours are reasonable\n(3) In determining whether additional hours are reasonable or unreasonable for the purposes of subsections (1) and (2), the following must be taken into account:\n(a) any risk to employee health and safety from working the additional hours;\n(b) the employee’s personal circumstances, including family responsibilities;\n(c) the needs of the workplace or enterprise in which the employee is employed;\n(d) whether the employee is entitled to receive overtime payments, penalty rates or other compensation for, or a level of remuneration that reflects an expectation of, working additional hours;\n(e) any notice given by the employer of any request or requirement to work the additional hours;\n(f) any notice given by the employee of his or her intention to refuse to work the additional hours;\n(g) the usual patterns of work in the industry, or the part of an industry, in which the employee works;\n(h) the nature of the employee’s role, and the employee’s level of responsibility;\n(i) whether the additional hours are in accordance with averaging terms included under section 63 in a modern award or enterprise agreement that applies to the employee, or with an averaging arrangement agreed to by the employer and employee under section 64;\n(j) any other relevant matter.\nAuthorised leave or absence treated as hours worked\n(4) For the purposes of subsection (1), the hours an employee works in a week are taken to include any hours of leave, or absence, whether paid or unpaid, that the employee takes in the week and that are authorised:\n(a) by the employee’s employer; or\n(b) by or under a term or condition of the employee’s employment; or\n(c) by or under a law of the Commonwealth, a State or a Territory, or an instrument in force under such a law.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "An employer must not request or require a full-time employee to work more than 38 hours in a week unless the additional hours are reasonable.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "An employer must not request or require a full-time employee to work more than 40 hours in a week unless the additional hours are reasonable.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "The employee may refuse to work additional hours beyond those referred to in paragraph (1)(a) or (b) if they are unreasonable.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c4",
+     "text": "Any hours worked beyond 38 in a week are unlawful and must be refused by the employee.",
+     "label": "overstated_scope",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-max-hours-reasonableness",
+   "title": "Reasonableness of additional hours",
+   "request": "What makes additional hours reasonable or unreasonable?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Reasonableness of additional hours\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** What makes additional hours reasonable or unreasonable?\n\n## ADVICE\n\nAny risk to employee health and safety from working the additional hours must be taken into account in determining whether additional hours are reasonable.\n\nWhether the employee is entitled to receive overtime payments, penalty rates or other compensation for working additional hours must be taken into account.\n\nAdditional hours are taken to be reasonable if the employer gives the employee at least 7 days notice of the requirement to work them.\n\nThe hours an employee works in a week are taken to include any hours of authorised leave or absence, whether paid or unpaid, that the employee takes in the week.\n",
+   "provisions": [
+    {
+     "provision_id": 402338,
+     "ref": "fw1:62",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "62",
+     "heading": "Maximum weekly hours",
+     "text": "62 Maximum weekly hours\nMaximum weekly hours of work\n(1) An employer must not request or require an employee to work more than the following number of hours in a week unless the additional hours are reasonable:\n(a) for a fulltime employee—38 hours; or\n(b) for an employee who is not a fulltime employee—the lesser of:\n(i) 38 hours; and\n(ii) the employee’s ordinary hours of work in a week.\nEmployee may refuse to work unreasonable additional hours\n(2) The employee may refuse to work additional hours (beyond those referred to in paragraph (1)(a) or (b)) if they are unreasonable.\nDetermining whether additional hours are reasonable\n(3) In determining whether additional hours are reasonable or unreasonable for the purposes of subsections (1) and (2), the following must be taken into account:\n(a) any risk to employee health and safety from working the additional hours;\n(b) the employee’s personal circumstances, including family responsibilities;\n(c) the needs of the workplace or enterprise in which the employee is employed;\n(d) whether the employee is entitled to receive overtime payments, penalty rates or other compensation for, or a level of remuneration that reflects an expectation of, working additional hours;\n(e) any notice given by the employer of any request or requirement to work the additional hours;\n(f) any notice given by the employee of his or her intention to refuse to work the additional hours;\n(g) the usual patterns of work in the industry, or the part of an industry, in which the employee works;\n(h) the nature of the employee’s role, and the employee’s level of responsibility;\n(i) whether the additional hours are in accordance with averaging terms included under section 63 in a modern award or enterprise agreement that applies to the employee, or with an averaging arrangement agreed to by the employer and employee under section 64;\n(j) any other relevant matter.\nAuthorised leave or absence treated as hours worked\n(4) For the purposes of subsection (1), the hours an employee works in a week are taken to include any hours of leave, or absence, whether paid or unpaid, that the employee takes in the week and that are authorised:\n(a) by the employee’s employer; or\n(b) by or under a term or condition of the employee’s employment; or\n(c) by or under a law of the Commonwealth, a State or a Territory, or an instrument in force under such a law.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "Any risk to employee health and safety from working the additional hours must be taken into account in determining whether additional hours are reasonable.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Whether the employee is entitled to receive overtime payments, penalty rates or other compensation for working additional hours must be taken into account.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "Additional hours are taken to be reasonable if the employer gives the employee at least 7 days notice of the requirement to work them.",
+     "label": "invented_exception",
+     "injected": true
+    },
+    {
+     "claim_id": "c4",
+     "text": "The hours an employee works in a week are taken to include any hours of authorised leave or absence, whether paid or unpaid, that the employee takes in the week.",
+     "label": "supported",
+     "injected": false
+    }
+   ]
+  },
+  {
+   "case_id": "fw-nes-standards",
+   "title": "What the National Employment Standards cover",
+   "request": "What matters do the National Employment Standards cover?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - What the National Employment Standards cover\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** What matters do the National Employment Standards cover?\n\n## ADVICE\n\nThe minimum standards relate to matters including maximum weekly hours, annual leave, public holidays, and notice of termination and redundancy pay.\n\nDivisions 3 to 12 constitute the National Employment Standards.\n\nThe National Employment Standards may be displaced by an individual flexibility arrangement agreed in writing between the employer and the employee.\n",
+   "provisions": [
+    {
+     "provision_id": 166741,
+     "ref": "fw1:61",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "61",
+     "heading": "The National Employment Standards are minimum standards applying to employment of employees",
+     "text": "61 The National Employment Standards are minimum standards applying to employment of employees\n(1) This Part sets minimum standards that apply to the employment of employees which cannot be displaced, even if an enterprise agreement includes terms of the kind referred to in subsection 55(5).\nNote: Subsection 55(5) allows enterprise agreements to include terms that have the same (or substantially the same) effect as provisions of the National Employment Standards.\n(2) The minimum standards relate to the following matters:\n(a) maximum weekly hours (Division 3);\n(b) requests for flexible working arrangements (Division 4);\n(ba) casual employment (Division 4A);\n(c) parental leave and related entitlements (Division 5);\n(d) annual leave (Division 6);\n(e) personal/carer’s leave, compassionate leave and paid family and domestic violence leave (Division 7);\n(f) community service leave (Division 8);\n(g) long service leave (Division 9);\n(h) public holidays (Division 10);\n(ha) superannuation contributions (Division 10A);\n(i) notice of termination and redundancy pay (Division 11);\n(j) Fair Work Information Statement (Division 12).\n(3) Divisions 3 to 12 constitute the National Employment Standards.\nDivision 3—Maximum weekly hours",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "The minimum standards relate to matters including maximum weekly hours, annual leave, public holidays, and notice of termination and redundancy pay.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Divisions 3 to 12 constitute the National Employment Standards.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "The National Employment Standards may be displaced by an individual flexibility arrangement agreed in writing between the employer and the employee.",
+     "label": "overstated_scope",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-public-holidays",
+   "title": "Public holidays",
+   "request": "Which days are public holidays under the National Employment Standards?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Public holidays\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Which days are public holidays under the National Employment Standards?\n\n## ADVICE\n\n25 April, being Anzac Day, is a public holiday for the purposes of the National Employment Standards.\n\n1 March is a public holiday for the purposes of the National Employment Standards in every State and Territory.\n\nAn employer and an award/agreement free employee may agree on the substitution of a day or part-day for a day or part-day that would otherwise be a public holiday.\n\nA modern award may remove a day from the list of public holidays altogether for the employees it covers.\n",
+   "provisions": [
+    {
+     "provision_id": 591112,
+     "ref": "fw1:115",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "115",
+     "heading": "Meaning of public holiday",
+     "text": "115 Meaning of public holiday\nThe public holidays\n(1) The following are public holidays:\n(a) each of these days:\n(i) 1 January (New Year’s Day);\n(ii) 26 January (Australia Day);\n(iii) Good Friday;\n(iv) Easter Monday;\n(v) 25 April (Anzac Day);\n(vi) the holiday for the birthday of the Sovereign (on the day on which it is celebrated in a State or Territory or a region of a State or Territory);\n(vii) 25 December (Christmas Day);\n(viii) 26 December (Boxing Day);\n(b) any other day, or partday, declared or prescribed by or under a law of a State or Territory to be observed generally within the State or Territory, or a region of the State or Territory, as a public holiday, other than a day or partday, or a kind of day or partday, that is excluded by the regulations from counting as a public holiday.\nSubstituted public holidays under State or Territory laws\n(2) If, under (or in accordance with a procedure under) a law of a State or Territory, a day or partday is substituted for a day or partday that would otherwise be a public holiday because of subsection (1), then the substituted day or partday is the public holiday.\nSubstituted public holidays under modern awards and enterprise agreements\n(3) A modern award or enterprise agreement may include terms providing for an employer and employee to agree on the substitution of a day or partday for a day or partday that would otherwise be a public holiday because of subsection (1) or (2).\nSubstituted public holidays for award/agreement free employees\n(4) An employer and an award/agreement free employee may agree on the substitution of a day or partday for a day or partday that would otherwise be a public holiday because of subsection (1) or (2).\nNote: This Act does not exclude State and Territory laws that deal with the declaration, prescription or substitution of public holidays, but it does exclude State and Territory laws that relate to the rights and obligations of an employee or employer in relation to public holidays (see paragraph 27(2)(j)).",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "25 April, being Anzac Day, is a public holiday for the purposes of the National Employment Standards.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "1 March is a public holiday for the purposes of the National Employment Standards in every State and Territory.",
+     "label": "no_source",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "An employer and an award/agreement free employee may agree on the substitution of a day or part-day for a day or part-day that would otherwise be a public holiday.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c4",
+     "text": "A modern award may remove a day from the list of public holidays altogether for the employees it covers.",
+     "label": "overstated_scope",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-casual-meaning",
+   "title": "Meaning of casual employee",
+   "request": "When is an employee a casual employee?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Meaning of casual employee\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** When is an employee a casual employee?\n\n## ADVICE\n\nAn employee is a casual employee of an employer only if the employment relationship is characterised by an absence of a firm advance commitment to continuing and indefinite work.\n\nWhether the relationship is characterised by an absence of a firm advance commitment is to be assessed on the basis of the real substance, practical reality and true nature of the employment relationship.\n\nAn employee who has a regular pattern of work cannot be a casual employee.\n\nAn employee engaged for fewer than 20 hours a week is a casual employee.\n",
+   "provisions": [
+    {
+     "provision_id": 822754,
+     "ref": "fw1:15A",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "15A",
+     "heading": "Meaning of casual employee",
+     "text": "15A Meaning of casual employee\nGeneral rule\n(1) An employee is a casual employee of an employer only if:\n(a) the employment relationship is characterised by an absence of a firm advance commitment to continuing and indefinite work; and\n(b) the employee would be entitled to a casual loading or a specific rate of pay for casual employees under the terms of a fair work instrument if the employee were a casual employee, or the employee is entitled to such a loading or rate of pay under the contract of employment.\nNote: An employee who commences employment as a casual employee remains a casual employee until the occurrence of a specified event (see subsection (5)).\nIndicia that apply for purposes of general rule\n(2) For the purposes of paragraph (1)(a), whether the employment relationship is characterised by an absence of a firm advance commitment to continuing and indefinite work is to be assessed:\n(a) on the basis of the real substance, practical reality and true nature of the employment relationship; and\n(b) on the basis that a firm advance commitment can be in the form of the contract of employment or, in addition to the terms of that contract, in the form of a mutual understanding or expectation between the employer and employee not rising to the level of a term of that contract (or to a variation of any such term); and\n(c) having regard to, but not limited to, the following considerations (which may indicate the presence, rather than an absence, of such a commitment):\n(i) whether there is an inability of the employer to elect to offer, or not offer, work or an inability of the employee to elect to accept or reject work (and whether this occurs in practice);\n(ii) whether, having regard to the nature of the employer’s enterprise, it is reasonably likely that there will be future availability of continuing work in that enterprise of the kind usually performed by the employee;\n(iii) whether there are fulltime employees or parttime employees performing the same kind of work in the employer’s enterprise that is usually performed by the employee;\n(iv) whether there is a regular pattern of work for the employee.\nNote: A regular pattern of work does not of itself indicate a firm advance commitment to continuing and indefinite work. An employee who has a regular pattern of work may still be a casual employee if there is no firm advance commitment to continuing and indefinite work.\n(3) To avoid doubt:\n(a) for the purposes of paragraph (2)(b), a mutual understanding or expectation may be inferred from conduct of the employer and employee after entering into the contract of employment or from how the contract is performed; and\n(b) the considerations referred to in paragraph (2)(c) must all be considered but no single consideration is determinative and not all considerations necessarily need to be satisfied for an employee to be considered as other than a casual employee; and\n(c) a pattern of work is regular for the purposes of subparagraph (2)(c)(iv) even if it is not absolutely uniform and includes some fluctuation or variation over time (including for reasonable absences such as for illness, injury or recreation).\nExceptions to general rule\n(4) Despite subsection (1), an employee is not a casual employee of an employer if:\n(a) the contract of employment includes a term that provides the contract will terminate at the end of an identifiable period (whether or not the contract also includes other terms that provide for circumstances in which it may be terminated before the end of that period); and\n(b) the employee is a member of the academic staff or teaching staff of a higher education institution; and\n(c) the employee is covered by one of the following modern awards:\n(i) the Higher Education IndustryAcademic StaffAward 2020 as in force from time to time;\n(ii) the Higher Education IndustryGeneral StaffAward 2020 as in force from time to time; and\n(d) the employee is not a State public sector employee of a State within the meaning of subsection 30A(1).\nNote 1: A modern award covers an employee if the award is expressed to cover the employee, even if the modern award does not apply to the employee because an enterprise agreement applies to the employee in relation to that particular employment (see subsection 57(1) which deals with interaction between modern awards and enterprise agreements).\nNote 2: This means an employee on a fixed term contract who is not covered by paragraphs (4)(b) and (c) may be a casual employee or may be other than a casual employee, depending on whether the employee satisfies the requirements of subsections (1) to (3).\nEmployees engaged as casual employees remain so until the occurrence of a specified event\n(5) A person who commences employment as a casual employee within the meaning of subsections (1) to (4) remains a casual employee of the employer until:\n(a) the employee’s employment status is changed to fulltime employment or parttime employment under Division 4A of Part 22; or\n(b) the employee’s employment status is changed by order of the FWC under section 66MA or 739; or\n(c) the employee’s employment status is changed to fulltime employment or parttime employment under the terms of a fair work instrument that applies to the employee; or\n(d) the employee accepts an alternative offer of employment (other than as a casual employee) by the employer and commences work on that basis.\nDivision 3A—Definitions relating to regulated workers and persons in a road transport contractual chain\nSubdivision A—General",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "An employee is a casual employee of an employer only if the employment relationship is characterised by an absence of a firm advance commitment to continuing and indefinite work.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Whether the relationship is characterised by an absence of a firm advance commitment is to be assessed on the basis of the real substance, practical reality and true nature of the employment relationship.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "An employee who has a regular pattern of work cannot be a casual employee.",
+     "label": "overstated_scope",
+     "injected": true
+    },
+    {
+     "claim_id": "c4",
+     "text": "An employee engaged for fewer than 20 hours a week is a casual employee.",
+     "label": "no_source",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-flexible-working",
+   "title": "Requests for flexible working arrangements",
+   "request": "Who can ask for a change in working arrangements?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Requests for flexible working arrangements\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Who can ask for a change in working arrangements?\n\n## ADVICE\n\nAn employee other than a casual employee is not entitled to make a request unless the employee has completed at least 12 months of continuous service with the employer immediately before making the request.\n\nAn employee who is 55 or older is in the circumstances in which a request for a change in working arrangements may be made.\n\nAn employee other than a casual employee is not entitled to make a request unless the employee has completed at least 6 months of continuous service with the employer.\n\nThe employer must make the request to the employee in writing setting out details of the change sought and the reasons for the change.\n",
+   "provisions": [
+    {
+     "provision_id": 346050,
+     "ref": "fw1:65",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "65",
+     "heading": "Requests for flexible working arrangements",
+     "text": "65 Requests for flexible working arrangements\nEmployee may request change in working arrangements\n(1) If:\n(a) any of the circumstances referred to in subsection (1A) apply to an employee; and\n(b) the employee would like to change his or her working arrangements because of those circumstances;\nthen the employee may request the employer for a change in working arrangements relating to those circumstances.\nNote: Examples of changes in working arrangements include changes in hours of work, changes in patterns of work and changes in location of work.\n(1A) The following are the circumstances:\n(aa) the employee is pregnant;\n(a) the employee is the parent, or has responsibility for the care, of a child who is of school age or younger;\n(b) the employee is a carer (within the meaning of the Carer Recognition Act 2010);\n(c) the employee has a disability;\n(d) the employee is 55 or older;\n(e) the employee is experiencing family and domestic violence;\n(f) the employee provides care or support to a member of the employee’s immediate family, or a member of the employee’s household, who requires care or support because the member is experiencing family and domestic violence.\n(1B) To avoid doubt, and without limiting subsection (1), an employee who:\n(a) is a parent, or has responsibility for the care, of a child; and\n(b) is returning to work after taking leave in relation to the birth or adoption of the child;\nmay request to work parttime to assist the employee to care for the child.\n(2) The employee is not entitled to make the request unless:\n(a) for an employee other than a casual employee—the employee has completed at least 12 months of continuous service with the employer immediately before making the request; or\n(b) for a casual employee—the employee:\n(i) is, immediately before making the request, a regular casual employee of the employer who has been employed on that basis for a sequence of periods of employment during a period of at least 12 months; and\n(ii) has a reasonable expectation of continuing employment by the employer on a regular and systematic basis.\n(2A) For the purposes of applying paragraph (2)(a) in relation to an employee who has had their employment changed under Division 4A of Part 22, any period for which the employee was a regular casual employee of the employer is taken to be continuous service for the purposes of that paragraph.\nFormal requirements\n(3) The request must:\n(a) be in writing; and\n(b) set out details of the change sought and of the reasons for the change.\nAgreeing to the request",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "An employee other than a casual employee is not entitled to make a request unless the employee has completed at least 12 months of continuous service with the employer immediately before making the request.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "An employee who is 55 or older is in the circumstances in which a request for a change in working arrangements may be made.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "An employee other than a casual employee is not entitled to make a request unless the employee has completed at least 6 months of continuous service with the employer.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c4",
+     "text": "The employer must make the request to the employee in writing setting out details of the change sought and the reasons for the change.",
+     "label": "wrong_party",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-award-application",
+   "title": "When a modern award applies",
+   "request": "When does a modern award apply to an employer and employee?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - When a modern award applies\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** When does a modern award apply to an employer and employee?\n\n## ADVICE\n\nA modern award applies to an employee or employer if the award covers them, the award is in operation, and no other provision of the Act provides that the award does not apply to them.\n\nA modern award does not apply to an employee at a time when the employee is a high income employee.\n\nA modern award does not apply to an employee who has agreed in writing with the employer that it will not apply.\n",
+   "provisions": [
+    {
+     "provision_id": 473290,
+     "ref": "fw1:47",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "47",
+     "heading": "When a modern award applies to an employer, employee, organisation or outworker entity",
+     "text": "47 When a modern award applies to an employer, employee, organisation or outworker entity\nWhen a modern award applies to an employee, employer, organisation or outworker entity\n(1) A modern award applies to an employee, employer, organisation or outworker entity if:\n(a) the modern award covers the employee, employer, organisation or outworker entity; and\n(b) the modern award is in operation; and\n(c) no other provision of this Act provides, or has the effect, that the modern award does not apply to the employee, employer, organisation or outworker entity.\nNote 1: Section 57 provides that a modern award does not apply to an employee (or to an employer, or an employee organisation, in relation to the employee) in relation to particular employment at a time when an enterprise agreement applies to the employee in relation to that employment.\nNote 2: In a modern award, coverage of an outworker entity must be expressed to relate only to outworker terms: see subsection 143(4).\nModern awards do not apply to high income employees\n(2) However, a modern award does not apply to an employee (or to an employer, or an employee organisation, in relation to the employee) at a time when the employee is a high income employee.\nModern awards apply to employees in relation to particular employment\n(3) A reference in this Act to a modern award applying to an employee is a reference to the award applying to the employee in relation to particular employment.",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "A modern award applies to an employee or employer if the award covers them, the award is in operation, and no other provision of the Act provides that the award does not apply to them.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "A modern award does not apply to an employee at a time when the employee is a high income employee.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "A modern award does not apply to an employee who has agreed in writing with the employer that it will not apply.",
+     "label": "invented_exception",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "fw-casual-conversion",
+   "title": "Employee notification about casual employment",
+   "request": "When can a casual employee notify the employer about changing their status?",
+   "domain": "employment",
+   "draft": "# ADVICE NOTE - Employee notification about casual employment\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** When can a casual employee notify the employer about changing their status?\n\n## ADVICE\n\nWhere the employer is a small business employer at the time the notification is given, the employee must have been employed by the employer for a period of at least 12 months beginning the day the employment started.\n\nWhere the employer is not a small business employer at the time the notification is given, the employee must have been employed by the employer for a period of at least 3 months beginning the day the employment started.\n\nA casual employee may give an employer a written notification under this section if the employee believes that the employee no longer meets the requirements of subsections 15A(1) to (4).\n\nThe employer may give the employee a written notification requiring the employee to change to full-time employment.\n",
+   "provisions": [
+    {
+     "provision_id": 621519,
+     "ref": "fw1:66AAB",
+     "jurisdiction": "commonwealth",
+     "citation": "Fair Work Act 2009 (Cth)",
+     "section_number": "66AAB",
+     "heading": "Employee notification",
+     "text": "66AAB Employee notification\nA casual employee may give an employer a written notification under this section if:\n(a) having regard to subsections 15A(1) to (4) and the employee’s current employment relationship with the employer, the employee believes that the employee no longer meets the requirements of those subsections; and\n(b) the employee does not have a dispute with the employer relating to the operation of Division 4A of Part 22 being dealt with under section 66M (including by way of arbitration under section 66MA) or under section 739; and\n(c) if the employer:\n(i) is a small business employer at the time the notification is given—the employee has been employed by the employer for a period of at least 12 months beginning the day the employment started; or\n(ii) is not a small business employer at the time the notification is given—the employee has been employed by the employer for a period of at least 6 months beginning the day the employment started; and\n(d) in the period of 6 months before the day the notification is given, the employee has not:\n(i) received a response from the employer under section 66AAC not accepting a previous notification made under this section; or\n(v) had a dispute with the employer relating to the operation of Division 4A of Part 22 resolved under section 66M (including by way of arbitration under section 66MA) or under section 739.\nNote: This section does not prevent an employee changing to fulltime employment or parttime employment other than under this Division (see paragraphs 15A(5)(c) and (d)).",
+     "source_url": "https://www.legislation.gov.au/C2009A00028/latest/downloads"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "Where the employer is a small business employer at the time the notification is given, the employee must have been employed by the employer for a period of at least 12 months beginning the day the employment started.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Where the employer is not a small business employer at the time the notification is given, the employee must have been employed by the employer for a period of at least 3 months beginning the day the employment started.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "A casual employee may give an employer a written notification under this section if the employee believes that the employee no longer meets the requirements of subsections 15A(1) to (4).",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c4",
+     "text": "The employer may give the employee a written notification requiring the employee to change to full-time employment.",
+     "label": "wrong_party",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "wa-parks-charges",
+   "title": "What a park operator may charge",
+   "request": "What payments may a park operator require from a long-stay tenant?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - What a park operator may charge\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** What payments may a park operator require from a long-stay tenant?\n\n## ADVICE\n\nA park operator must not require or receive from a long-stay tenant any payment in relation to the long-stay agreement other than rent, a security bond, an option amount that is refunded or applied towards rent, an amount the operator is authorised to require under the Act, or a prescribed fee.\n\nThe penalty for a park operator who contravenes the restriction on payments is a fine of $10 000.\n\nA payment accepted in contravention of the section is recoverable by the person who paid it as a debt due in a court of competent jurisdiction.\n\nA park operator may charge an entry fee if the tenant agrees to it in writing before the agreement is signed.\n",
+   "provisions": [
+    {
+     "provision_id": 251017,
+     "ref": "parks:12",
+     "jurisdiction": "wa",
+     "citation": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+     "section_number": "12",
+     "heading": "Restrictions on amounts park operators may charge",
+     "text": "12. Restrictions on amounts park operators may charge\n(1) A park operator must not require or receive from a longstay tenant, or prospective longstay tenant, any payment in relation to the longstay agreement (including an entry fee or a payment for renewing or extending the agreement) other than a payment for —\n(a) rent; or\n(b) a security bond; or\n(c) an amount paid or payable as consideration for an option to enter into a longstay agreement if, when the option is exercised, the amount is refunded or applied towards the rent payable under the agreement; or\n(d) an amount that the park operator is authorised to require or receive under this Act; or\n(e) an amount for a fee if —\n(i) the type of fee is prescribed as a fee that a park operator may charge a longstay tenant under the longstay agreement; and\n(ii) the park operator may charge the tenant the fee under the longstay agreement; and\n(iii) the fee is for a service or facility — the amount is necessary to recover the reasonable costs of providing the tenant a service or facility for which the fee is charged or is a reasonable amount.\nPenalty for this subsection: a fine of $5 000.\n(2) A payment accepted in contravention of this section is recoverable by the person who paid it —\n(a) as a debt due in a court of competent jurisdiction; or\n(b) by order of the State Administrative Tribunal under Part 5.\n[Section 12 inserted: No. 28 of 2020 s. 16.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "A park operator must not require or receive from a long-stay tenant any payment in relation to the long-stay agreement other than rent, a security bond, an option amount that is refunded or applied towards rent, an amount the operator is authorised to require under the Act, or a prescribed fee.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "The penalty for a park operator who contravenes the restriction on payments is a fine of $10 000.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "A payment accepted in contravention of the section is recoverable by the person who paid it as a debt due in a court of competent jurisdiction.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c4",
+     "text": "A park operator may charge an entry fee if the tenant agrees to it in writing before the agreement is signed.",
+     "label": "invented_exception",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "wa-parks-copy",
+   "title": "Tenant's copy of a long-stay agreement",
+   "request": "When must a park operator give the tenant a copy of the agreement?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - Tenant's copy of a long-stay agreement\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** When must a park operator give the tenant a copy of the agreement?\n\n## ADVICE\n\nWhen a long-stay tenant signs a long-stay agreement, the park operator must give the tenant a copy of the agreement.\n\nThe park operator must ensure that a fully executed copy of the agreement is given to the tenant within 21 days after it was first signed by the tenant, or if that is not practicable, as soon as practicable after that.\n\nThe tenant must ensure that a fully executed copy of the agreement is given to the park operator within 21 days after it was first signed.\n",
+   "provisions": [
+    {
+     "provision_id": 715683,
+     "ref": "parks:17",
+     "jurisdiction": "wa",
+     "citation": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+     "section_number": "17",
+     "heading": "Tenant’s copy of longstay agreement",
+     "text": "17. Tenant’s copy of longstay agreement\n(1) When a longstay tenant signs a longstay agreement, the park operator must —\n(a) give the tenant a copy of the agreement; and\n(b) ensure that a fully executed copy of the agreement is given to the tenant within 21 days after it was first signed by the tenant or, if that is not practicable in the circumstances, as soon as practicable after that.\nPenalty for this subsection: a fine of $5 000.\n(2) If the park operator does not execute the longstay agreement but gives the longstay tenant a copy of it in accordance with subsection (1)(b), acceptance of rent from the tenant by the park operator gives the agreement the same effect as if it had been fully executed.\n[Section 17 amended: No. 3 of 2019 s. 39.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "When a long-stay tenant signs a long-stay agreement, the park operator must give the tenant a copy of the agreement.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "The park operator must ensure that a fully executed copy of the agreement is given to the tenant within 21 days after it was first signed by the tenant, or if that is not practicable, as soon as practicable after that.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "The tenant must ensure that a fully executed copy of the agreement is given to the park operator within 21 days after it was first signed.",
+     "label": "wrong_party",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "wa-parks-cooling-off",
+   "title": "Cooling off period for site-only agreements",
+   "request": "Can a long-stay tenant rescind a site-only agreement after signing it?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - Cooling off period for site-only agreements\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Can a long-stay tenant rescind a site-only agreement after signing it?\n\n## ADVICE\n\nA long-stay tenant under a site-only agreement is entitled to rescind the agreement at any time within 5 working days after the date of the agreement if the park operator has complied with section 11(2).\n\nWhere the park operator has not complied with section 11(2) within the time specified but has given the tenant the documents required under that section, the tenant may rescind at any time within 14 working days after the day on which those documents are given.\n\nA long-stay tenant is not entitled to rescind a long-stay agreement under this section after taking up occupation of the agreed premises.\n",
+   "provisions": [
+    {
+     "provision_id": 831959,
+     "ref": "parks:18",
+     "jurisdiction": "wa",
+     "citation": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+     "section_number": "18",
+     "heading": "Cooling off period",
+     "text": "18. Cooling off period\n(1) A longstay tenant under a siteonly agreement is entitled to rescind the agreement —\n(a) if the park operator has complied with section 11(2) — at any time within 5 working days after the date of the agreement; or\n(b) if the park operator has not complied with section 11(2) within the time specified in that subsection but has given the tenant the documents required under that section — at any time within 10 working days after the day on which the documents required under that section are given to the tenant; or\n(c) if the park operator has not complied with section 11(2) — at any time.\n(2) However, a longstay tenant is not entitled to rescind a longstay agreement under this section after taking up occupation of the agreed premises.\n[Section 18 amended: No. 28 of 2020 s. 19.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "A long-stay tenant under a site-only agreement is entitled to rescind the agreement at any time within 5 working days after the date of the agreement if the park operator has complied with section 11(2).",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Where the park operator has not complied with section 11(2) within the time specified but has given the tenant the documents required under that section, the tenant may rescind at any time within 14 working days after the day on which those documents are given.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "A long-stay tenant is not entitled to rescind a long-stay agreement under this section after taking up occupation of the agreed premises.",
+     "label": "supported",
+     "injected": false
+    }
+   ]
+  },
+  {
+   "case_id": "wa-parks-contracting-out",
+   "title": "Contracting out of the Act",
+   "request": "Can the parties agree that the Act will not apply to their agreement?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - Contracting out of the Act\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Can the parties agree that the Act will not apply to their agreement?\n\n## ADVICE\n\nAny contract, agreement, scheme or arrangement has no effect to the extent that it purports to exclude, modify or restrict the operation of the Act, except as specifically provided by the Act.\n\nAny purported waiver of a right conferred by or under the Act has no effect.\n\nA person who enters into an arrangement with the intention of defeating the operation of the Act is liable to a fine of $10 000.\n\nA term excluding the Act is effective where both parties obtained independent legal advice before signing.\n",
+   "provisions": [
+    {
+     "provision_id": 332745,
+     "ref": "parks:9",
+     "jurisdiction": "wa",
+     "citation": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+     "section_number": "9",
+     "heading": "Contracting out",
+     "text": "9. Contracting out\n(1) Except as specifically provided by this Act —\n(a) any contract, agreement, scheme or arrangement, whether it was made before or after the commencement of this Act, has no effect to the extent that it purports to exclude, modify or restrict the operation of this Act; and\n(b) any purported waiver of a right conferred by or under this Act has no effect.\n(2) A person must not enter into any contract, agreement or arrangement with the intention, either directly or indirectly, of defeating, evading or preventing the operation of this Act.\nPenalty for this subsection: a fine of $10 000.\n[Section 9 amended: No. 3 of 2019 s. 39; No. 28 of 2020 s. 10.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "Any contract, agreement, scheme or arrangement has no effect to the extent that it purports to exclude, modify or restrict the operation of the Act, except as specifically provided by the Act.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Any purported waiver of a right conferred by or under the Act has no effect.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "A person who enters into an arrangement with the intention of defeating the operation of the Act is liable to a fine of $10 000.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c4",
+     "text": "A term excluding the Act is effective where both parties obtained independent legal advice before signing.",
+     "label": "invented_exception",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "wa-parks-disclosure",
+   "title": "Documents for prospective long-stay tenants",
+   "request": "What must a park operator give a prospective tenant before the agreement?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - Documents for prospective long-stay tenants\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** What must a park operator give a prospective tenant before the agreement?\n\n## ADVICE\n\nA park operator must give the required documents to a person at least 5 working days before a site-only agreement is signed.\n\nThe required documents include a copy of the proposed agreement, a disclosure statement in the approved form, a copy of the information booklet in the approved form, and a copy of any park rules that apply to the residential park.\n\nA park operator must give the required documents to a person at least 10 working days before a site-only agreement is signed.\n\nThe obligation to give the required documents applies to every long-stay agreement without exception.\n",
+   "provisions": [
+    {
+     "provision_id": 133579,
+     "ref": "parks:11",
+     "jurisdiction": "wa",
+     "citation": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+     "section_number": "11",
+     "heading": "Information for prospective longstay tenants",
+     "text": "11. Information for prospective longstay tenants\n(1) In this section —\nrequired documents means all of the following documents —\n(a) a copy of the proposed agreement;\n(b) a disclosure statement in the approved form (if any);\n(c) a copy of the information booklet in the approved form (if any);\n(d) a copy of any park rules that apply to the residential park where the site the subject of the longstay agreement is located;\n(e) any other prescribed document.\n(2) A park operator must give the required documents to a person before entering into a longstay agreement with the person —\n(a) for a siteonly agreement — at least 5 working days before the agreement is signed; or\n(b) otherwise — before the agreement is entered into.\nPenalty for this subsection: a fine of $5 000.\n(3) However, subsection (2)(a) does not apply if the person who intends to enter into the siteonly agreement —\n(a) owns a relocatable home that is a vehicle for which a vehicle licence has been granted under the Road Traffic (Vehicles) Act 2012; and\n(b) states in writing to the park operator that the person does not require the required documents to be given to the person at least 5 working days before the agreement is signed; and\n(c) is given the required documents by the park operator before the person occupies the site or other park premises in the residential park.\n[Section 11 inserted: No. 28 of 2020 s. 16.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "A park operator must give the required documents to a person at least 5 working days before a site-only agreement is signed.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "The required documents include a copy of the proposed agreement, a disclosure statement in the approved form, a copy of the information booklet in the approved form, and a copy of any park rules that apply to the residential park.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "A park operator must give the required documents to a person at least 10 working days before a site-only agreement is signed.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c4",
+     "text": "The obligation to give the required documents applies to every long-stay agreement without exception.",
+     "label": "overstated_scope",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "wa-parks-agents",
+   "title": "Real estate agent fees",
+   "request": "Can a real estate agent charge a long-stay tenant a letting fee?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - Real estate agent fees\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Can a real estate agent charge a long-stay tenant a letting fee?\n\n## ADVICE\n\nA real estate agent who provides services on behalf of a park operator in connection with letting agreed premises must not require or receive from a long-stay tenant any fee, charge or reward for those services.\n\nA fee, charge or reward received in contravention of the section is recoverable by the person who paid it as a debt due in a court of competent jurisdiction.\n\nThe park operator commits an offence if the agent charges the tenant such a fee.\n",
+   "provisions": [
+    {
+     "provision_id": 406745,
+     "ref": "parks:13",
+     "jurisdiction": "wa",
+     "citation": "Residential Parks (Long-stay Tenants) Act 2006 (WA)",
+     "section_number": "13",
+     "heading": "Real estate agents prohibited from charging fees, charges or rewards for particular services",
+     "text": "13. Real estate agents prohibited from charging fees, charges or rewards for particular services\n(1) A real estate agent who provides services on behalf of a park operator in connection with letting agreed premises or entering into a longstay agreement must not require or receive from a longstay tenant, or prospective longstay tenant, any fee, charge or reward for those services.\nPenalty for this subsection: a fine of $5 000.\n(2) A real estate agent who provides services on behalf of a longstay tenant in connection with subletting the agreed premises must not require or receive from a subtenant, or prospective subtenant, any fee, charge or reward for those services.\nPenalty for this subsection: a fine of $5 000.\n(3) A fee, charge or reward received in contravention of this section is recoverable by the person who paid it as a debt due in a court of competent jurisdiction.\n[Section 13 inserted: No. 28 of 2020 s. 16.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "A real estate agent who provides services on behalf of a park operator in connection with letting agreed premises must not require or receive from a long-stay tenant any fee, charge or reward for those services.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "A fee, charge or reward received in contravention of the section is recoverable by the person who paid it as a debt due in a court of competent jurisdiction.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "The park operator commits an offence if the agent charges the tenant such a fee.",
+     "label": "wrong_party",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "wa-landtax-liability",
+   "title": "Who is liable for land tax",
+   "request": "Who has to pay land tax on a lot in Western Australia?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - Who is liable for land tax\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Who has to pay land tax on a lot in Western Australia?\n\n## ADVICE\n\nLand tax payable on land for an assessment year is payable by the person who is or was the owner of the land at midnight on 30 June in the previous financial year.\n\nJoint owners of land are jointly and severally liable for land tax payable on the land regardless of each joint owner's respective interests in, or use of, the land.\n\nLand tax is payable by the person who is the owner of the land at midnight on 31 December in the previous financial year.\n\nA purchaser who buys the land during the assessment year becomes liable for the land tax for that year.\n",
+   "provisions": [
+    {
+     "provision_id": 512675,
+     "ref": "landtax:7",
+     "jurisdiction": "wa",
+     "citation": "Land Tax Assessment Act 2002 (WA)",
+     "section_number": "7",
+     "heading": "Liability to pay land tax",
+     "text": "7. Liability to pay land tax\n(1) Land tax payable on land for an assessment year is payable by the person who is or was the owner of the land at midnight on 30 June in the previous financial year.\n(2) However, if a person or a taxable authority is taken under section 8 to be the owner of the land at that time, the land tax is payable by the person or the taxable authority respectively.\n[(3) deleted]\n(4) Joint owners of land are jointly and severally liable for land tax payable on the land regardless of each of the joint owner’s respective interests in, or use of, the land.\n(5) A person or taxable authority who is liable to pay land tax is also liable to pay any additional taxes, interest, penalties or charges payable under a land tax Act in relation to the land tax.\n[Section 7 amended: No. 5 of 2018 s. 4.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "Land tax payable on land for an assessment year is payable by the person who is or was the owner of the land at midnight on 30 June in the previous financial year.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Joint owners of land are jointly and severally liable for land tax payable on the land regardless of each joint owner's respective interests in, or use of, the land.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "Land tax is payable by the person who is the owner of the land at midnight on 31 December in the previous financial year.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c4",
+     "text": "A purchaser who buys the land during the assessment year becomes liable for the land tax for that year.",
+     "label": "no_source",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "wa-landtax-residence",
+   "title": "Exemption for a private residence",
+   "request": "Is my home exempt from land tax?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - Exemption for a private residence\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Is my home exempt from land tax?\n\n## ADVICE\n\nPrivate residential property, except property held in trust, is exempt for an assessment year if at midnight on 30 June in the financial year before the assessment year it is owned by an individual who uses it as the individual's primary residence.\n\nProperty owned by persons who have lived in a de facto relationship with each other for at least 2 years, at least one of whom uses it as that person's primary residence, is exempt.\n\nProperty owned by persons who have lived in a de facto relationship with each other for at least 5 years is exempt.\n\nAll private residential property owned by an individual is exempt from land tax.\n",
+   "provisions": [
+    {
+     "provision_id": 235865,
+     "ref": "landtax:21",
+     "jurisdiction": "wa",
+     "citation": "Land Tax Assessment Act 2002 (WA)",
+     "section_number": "21",
+     "heading": "Residences owned by individuals, exemptions for",
+     "text": "21. Residences owned by individuals, exemptions for\n(1) Private residential property (except property held in trust) is exempt for an assessment year if, at midnight on 30 June in the financial year before the assessment year, it is owned —\n(a) by an individual who uses it as the individual’s primary residence; or\n(b) by spouses, at least one of whom uses it as that spouse’s primary residence; or\n(c) by persons who have lived in a de facto relationship with each other for at least 2 years, whether or not they still live on that basis, at least one of whom uses it as that person’s primary residence.\n(2) However, if the property is also owned by another person or persons, it is exempt if each owner who does not use it for that purpose is an owner only because of a requirement by a financial institution for a guarantee of money advanced on the security of the property.\n[Section 21 amended: No. 28 of 2003 s. 101; No. 42 of 2022 s. 19.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "Private residential property, except property held in trust, is exempt for an assessment year if at midnight on 30 June in the financial year before the assessment year it is owned by an individual who uses it as the individual's primary residence.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Property owned by persons who have lived in a de facto relationship with each other for at least 2 years, at least one of whom uses it as that person's primary residence, is exempt.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "Property owned by persons who have lived in a de facto relationship with each other for at least 5 years is exempt.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c4",
+     "text": "All private residential property owned by an individual is exempt from land tax.",
+     "label": "overstated_scope",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "wa-landtax-construction",
+   "title": "One year exemption while building a home",
+   "request": "Is land exempt while a private residence is being built on it?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - One year exemption while building a home\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** Is land exempt while a private residence is being built on it?\n\n## ADVICE\n\nPrivate residential property owned by an individual is exempt for an assessment year if the construction of the private residence is completed during the assessment year and the individual is the first occupant of it.\n\nThe property is not exempt if the individual or any other person derived any income from the property in the period between the beginning of the assessment year and the time when the property was first occupied.\n\nThe exemption is available whether or not the individual uses the private residence as their primary residence during the assessment year.\n\nThe exemption may be extended by a further year on application to the Commissioner.\n",
+   "provisions": [
+    {
+     "provision_id": 896463,
+     "ref": "landtax:24",
+     "jurisdiction": "wa",
+     "citation": "Land Tax Assessment Act 2002 (WA)",
+     "section_number": "24",
+     "heading": "Construction of private residence, one year exemption for",
+     "text": "24. Construction of private residence, one year exemption for\n(1) Private residential property (except property held in trust) that is owned by an individual is exempt for an assessment year if —\n(a) the construction of the private residence that forms part of the property is completed during the assessment year; and\n(b) at midnight on 30 June in the previous financial year the individual owned the land on which the private residence is constructed; and\n(c) the individual is the first occupant of the private residence; and\n(d) the individual uses the private residence as their primary residence during the assessment year.\n(2) However, the property is not exempt if —\n(a) the individual or any other person derived any income from the property in the period between the beginning of the assessment year and the time when the property was first occupied; or\n(b) any other private residential property owned by the individual is exempt for the assessment year under another provision of this Division as a result of its use by the individual as their primary residence.\n(3) The Commissioner is to make any reassessment necessary to give effect to this section.\n[Section 24 amended: No. 31 of 2006 s. 20; No. 42 of 2022 s. 19.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "Private residential property owned by an individual is exempt for an assessment year if the construction of the private residence is completed during the assessment year and the individual is the first occupant of it.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "The property is not exempt if the individual or any other person derived any income from the property in the period between the beginning of the assessment year and the time when the property was first occupied.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "The exemption is available whether or not the individual uses the private residence as their primary residence during the assessment year.",
+     "label": "overstated_scope",
+     "injected": true
+    },
+    {
+     "claim_id": "c4",
+     "text": "The exemption may be extended by a further year on application to the Commissioner.",
+     "label": "no_source",
+     "injected": true
+    }
+   ]
+  },
+  {
+   "case_id": "wa-lsl-taking-leave",
+   "title": "Taking construction industry long service leave",
+   "request": "How must long service leave be taken in the construction industry?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - Taking construction industry long service leave\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** How must long service leave be taken in the construction industry?\n\n## ADVICE\n\nAn employee shall take long service leave in one continuous period unless the employer consents to the leave being taken in more than one period.\n\nWhere the employer consents, the leave shall not be taken in more than 3 periods and a period of leave shall be not less than one week.\n\nWhere the employer consents, the leave shall not be taken in more than 5 periods.\n\nWhere an employer and employee do not agree as to the time at which an employee may proceed on leave, the employer or employee may apply to the Board and the Board may determine the application.\n",
+   "provisions": [
+    {
+     "provision_id": 578055,
+     "ref": "lsl:24",
+     "jurisdiction": "wa",
+     "citation": "Construction Industry Portable Paid Long Service Leave Act 1985 (WA)",
+     "section_number": "24",
+     "heading": "Taking of leave",
+     "text": "24. Taking of leave\n(1) Subject to this Act, an employee in respect of whom an entitlement to long service leave has accrued under this Act is entitled to be granted and to take that long service leave as soon as is reasonably practicable having regard to the circumstances of the establishment of the employer by whom he is employed at that time.\n[(2) deleted]\n(3) An employee shall take long service leave in one continuous period unless the employer consents to the leave being taken in more than one period but in any event —\n(a) the leave shall not be taken in more than 3 periods;\n(b) a period of leave shall be not less than one week.\n(4) Where an employer and employee do not agree as to the time or times at which an employee may proceed on leave the employer or employee may apply to the Board and the Board may determine the application.\n[Section 24 amended: No. 30 of 1989 s. 8; No. 53 of 2011 s. 12.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "An employee shall take long service leave in one continuous period unless the employer consents to the leave being taken in more than one period.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Where the employer consents, the leave shall not be taken in more than 3 periods and a period of leave shall be not less than one week.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c3",
+     "text": "Where the employer consents, the leave shall not be taken in more than 5 periods.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c4",
+     "text": "Where an employer and employee do not agree as to the time at which an employee may proceed on leave, the employer or employee may apply to the Board and the Board may determine the application.",
+     "label": "supported",
+     "injected": false
+    }
+   ]
+  },
+  {
+   "case_id": "wa-lsl-cessation",
+   "title": "Cessation of a long service leave entitlement",
+   "request": "When does a construction industry long service leave entitlement lapse?",
+   "domain": "general",
+   "draft": "# ADVICE NOTE - Cessation of a long service leave entitlement\n\n**Status: DRAFT. Not reviewed. Not executed.**\n\n**Request:** When does a construction industry long service leave entitlement lapse?\n\n## ADVICE\n\nWhere a person has been engaged as an employee for any number of days that does not exceed 1 100 days of service and has not been so engaged within the period of 2 years commencing from the last of such days, the Board shall cause the name of that person to be removed from the register of employees.\n\nWhere a person has been engaged for a number of days exceeding 1 100 days of service and has not been so engaged within the period of 6 years commencing from the last of such days, the name is removed from the register.\n\nNothing in the section prevents an employee from becoming entitled to long service leave under the Act by virtue of any subsequent service as an employee.\n",
+   "provisions": [
+    {
+     "provision_id": 112774,
+     "ref": "lsl:23",
+     "jurisdiction": "wa",
+     "citation": "Construction Industry Portable Paid Long Service Leave Act 1985 (WA)",
+     "section_number": "23",
+     "heading": "Cessation of continuous service entitlement",
+     "text": "23. Cessation of continuous service entitlement\n(1) Where a person has been engaged as an employee —\n(a) for any number of days that does not exceed 1 100 days of service and has not been so engaged within the period of 2 years commencing from the last of such days; or\n(b) for any number of days exceeding 1 100 days of service and has not been so engaged within the period of 4 years commencing from the last of such days,\nthe Board shall cause the name of that person to be removed from the register of employees and where the name of an employee is so removed the entitlement of that person to long service leave in respect of those days is extinguished.\n(2) Nothing in this section prevents an employee from becoming entitled to long service leave under this Act by virtue of any subsequent service as an employee.\n[Section 23 amended: No. 53 of 2011 s. 11.]",
+     "source_url": "https://www.legislation.wa.gov.au/"
+    }
+   ],
+   "claims": [
+    {
+     "claim_id": "c1",
+     "text": "Where a person has been engaged as an employee for any number of days that does not exceed 1 100 days of service and has not been so engaged within the period of 2 years commencing from the last of such days, the Board shall cause the name of that person to be removed from the register of employees.",
+     "label": "supported",
+     "injected": false
+    },
+    {
+     "claim_id": "c2",
+     "text": "Where a person has been engaged for a number of days exceeding 1 100 days of service and has not been so engaged within the period of 6 years commencing from the last of such days, the name is removed from the register.",
+     "label": "wrong_number",
+     "injected": true
+    },
+    {
+     "claim_id": "c3",
+     "text": "Nothing in the section prevents an employee from becoming entitled to long service leave under the Act by virtue of any subsequent service as an employee.",
+     "label": "supported",
+     "injected": false
+    }
+   ]
+  }
+ ]
+}

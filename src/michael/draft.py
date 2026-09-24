@@ -58,19 +58,30 @@ class Draft:
     citations: tuple[str, ...]
     no_template: bool = False
     written_to: Path | None = None
+    #: Filled in by michael.verify.annotate_draft(). Carried as rendered text
+    #: rather than as a Verification object so that this module stays ignorant
+    #: of the verifier: verify.py imports draft.py, and that dependency runs
+    #: one way only.
+    verification_section: str = ""
+    #: One line per claim the verifier flagged, appended under OPEN ITEMS.
+    #: Deliberately *not* merged into ``open_items``: that tuple is the
+    #: [MISSING] list, and the acceptance suite and the CLI both read it as
+    #: exactly that.
+    verification_items: tuple[str, ...] = ()
 
     def render(self) -> str:
         """The full output, including the three mandatory closing blocks."""
-        return "\n".join(
-            [
-                self.body.rstrip(),
-                "",
-                closing_blocks(
-                    open_items=self.open_items,
-                    verify_before_use=self.verify_before_use,
-                ),
-            ]
+        parts = [self.body.rstrip(), ""]
+        if self.verification_section:
+            parts += [self.verification_section.rstrip(), ""]
+        parts.append(
+            closing_blocks(
+                open_items=self.open_items,
+                verify_before_use=self.verify_before_use,
+                verification_items=self.verification_items,
+            )
         )
+        return "\n".join(parts)
 
 
 def humanise(placeholder: str) -> str:
@@ -111,13 +122,25 @@ def unresolved(text: str) -> tuple[str, ...]:
     return tuple(seen)
 
 
-def closing_blocks(*, open_items: tuple[str, ...], verify_before_use: tuple[str, ...]) -> str:
+def closing_blocks(
+    *,
+    open_items: tuple[str, ...],
+    verify_before_use: tuple[str, ...],
+    verification_items: tuple[str, ...] = (),
+) -> str:
     """The three blocks every output ends with. Never optional."""
     lines = ["## OPEN ITEMS"]
     if open_items:
         lines += [f"{n}. [MISSING: {item}]" for n, item in enumerate(open_items, start=1)]
-    else:
+    elif not verification_items:
         lines.append("None.")
+    # Verification's own items continue the same numbering: to a reader they
+    # are the same kind of thing - something this draft does not stand behind -
+    # and splitting them into a second list invites reading one and not the
+    # other.
+    lines += [
+        f"{n}. {item}" for n, item in enumerate(verification_items, start=len(open_items) + 1)
+    ]
 
     lines += ["", "## VERIFY BEFORE USE"]
     if verify_before_use:

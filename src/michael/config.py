@@ -71,6 +71,14 @@ class Settings:
     embedding_dim: int
     embedding_max_chars: int
 
+    # Verification. The judge that checks a draft's prose against the
+    # provisions actually retrieved for it. Deliberately a separate model from
+    # ``model`` above: a model does not reliably catch its own invention, so
+    # the judge is required to be a different family (see michael.verify).
+    verify_judge_model: str
+    verify_judge_timeout: float
+    verify_provision_max_chars: int
+
     # Retrieval.
     retrieval_min_score: float
     retrieval_candidates: int
@@ -109,6 +117,10 @@ def settings() -> Settings:
         embedding_model=os.environ.get("EMBEDDING_MODEL", "").strip() or "text-embedding-3-small",
         embedding_dim=_int("EMBEDDING_DIM", 1536),
         embedding_max_chars=_int("EMBEDDING_MAX_CHARS", 16_000),
+        verify_judge_model=os.environ.get("VERIFY_JUDGE_MODEL", "").strip()
+        or "openai/gpt-oss-120b",
+        verify_judge_timeout=_float("VERIFY_JUDGE_TIMEOUT_SECONDS", 90.0),
+        verify_provision_max_chars=_int("VERIFY_PROVISION_MAX_CHARS", 8_000),
         retrieval_min_score=_float("RETRIEVAL_MIN_SCORE", 0.02),
         retrieval_candidates=_int("RETRIEVAL_CANDIDATES", 200),
         retrieval_top_k=_int("RETRIEVAL_TOP_K", 12),

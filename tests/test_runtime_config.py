@@ -24,6 +24,11 @@ TEMPLATE = pathlib.Path(__file__).resolve().parents[1] / "hermes" / "config.temp
 
 FULL_ENV = {
     "EMBEDDING_API_KEY": "sk-test-embedding",
+    # The judge michael.verify calls on every draft runs on OpenRouter, and
+    # Hermes filters a stdio server's environment, so the key must be rendered
+    # into the michael server's env explicitly or every deployed draft fails
+    # verification closed.
+    "OPENROUTER_API_KEY": "sk-test-openrouter",
     "MICHAEL_DATABASE_URL": "postgresql://michael:pw@postgres.railway.internal:5432/railway",
     "MICHAEL_RO_DATABASE_URL": "postgresql://michael_ro:pw@postgres.railway.internal:5432/railway",
     "DASHBOARD_USERNAME": "michael",
@@ -100,6 +105,34 @@ def test_the_rendered_config_keeps_every_guarantee() -> None:
     assert auxiliary["free_only"] is True
     model = auxiliary["openrouter_model"]
     assert model.endswith(":free") or model.startswith("stealth/"), model
+
+
+def test_the_deployed_judge_can_run_and_is_not_the_drafting_models_family() -> None:
+    """Verification has to work in the container, and be worth something there.
+
+    Two ways it silently stops being worth something. The OpenRouter key does
+    not reach the stdio subprocess, so every draft fails closed and the whole
+    output reads as unsupported. Or the judge drifts into the drafting model's
+    own family, where it audits itself. Both are configuration, so both are
+    asserted against the rendered config rather than trusted to a comment.
+
+    MICHAEL_MODEL is compared to model.default because it exists only to tell
+    michael.verify what the drafting model is. If someone repins the model
+    above and not here, the family check starts comparing the judge against a
+    model nothing uses, and this fails.
+    """
+    import yaml
+
+    from michael.verify import judge_family
+
+    out = yaml.safe_load(mod.render(body(), FULL_ENV))
+    env = out["mcp_servers"]["michael"]["env"]
+
+    assert env["OPENROUTER_API_KEY"] == FULL_ENV["OPENROUTER_API_KEY"]
+    assert env["MICHAEL_MODEL"] == out["model"]["default"], (
+        "MICHAEL_MODEL must name the model that actually drafts"
+    )
+    assert judge_family(env["VERIFY_JUDGE_MODEL"]) != judge_family(env["MICHAEL_MODEL"])
 
 
 def test_the_agent_profile_grants_no_write_tool() -> None:

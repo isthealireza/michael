@@ -27,6 +27,7 @@ from typing import Any
 from michael import draft as drafting
 from michael import ingest as ingestion
 from michael import retrieve
+from michael import verify as verification
 from michael.config import settings
 from michael.domains import Routing, load_domains, route
 from michael.output_check import citation_fidelity
@@ -256,11 +257,22 @@ def draft_document(
     facts: dict[str, str] | None = None,
     domain: str | None = None,
     top_k: int | None = None,
+    judge: verification.JudgeFn | None = None,
 ) -> dict[str, Any]:
     """Draft from a template, or produce a grounded outline if none matches.
 
     Reads the database through the read-only role. The only thing it writes is a
     new draft template under templates/drafts/, and only on the no-template path.
+
+    Verification is not optional and is not a tool. Every draft produced here is
+    passed through :func:`michael.verify.verify_draft` before it is returned, on
+    this code path, against the provisions this very call retrieved. The agent
+    has no way to ask for an unverified draft because there is no argument that
+    produces one: ``judge`` is an injection seam for tests (the same shape as
+    ``client`` in michael.embeddings), it is absent from the tool schema below,
+    and :func:`dispatch` can only pass what the schema declares. A judge that
+    cannot be reached does not skip verification - it fails it, and every claim
+    comes back UNSUPPORTED.
     """
     routing = _routing_for(request, domain)
     template_path = drafting.find_template(request, domain=routing.name)
@@ -289,6 +301,11 @@ def draft_document(
             domain=routing.name,
         )
 
+    # Step 2 of the guarantee: the prose is checked against the same provisions
+    # the citations came from, not against anything the judge happens to know.
+    checked = verification.verify_draft(result.body, provisions=retrieved.provisions, judge=judge)
+    result = verification.annotate_draft(result, checked)
+
     return {
         "domain": routing.name,
         "domain_recognised": routing.recognised,
@@ -299,6 +316,22 @@ def draft_document(
         "open_items": list(result.open_items),
         "verify_before_use": list(result.verify_before_use),
         "written_template": str(result.written_to) if result.written_to else None,
+        "verification": {
+            "judge_model": checked.judge_model,
+            "claims_checked": len(checked.claims),
+            "counts": checked.counts,
+            "not_checked_unsupplied": checked.skipped_unsupplied,
+            "flagged": [
+                {
+                    "claim_id": ruling.claim_id,
+                    "verdict": ruling.verdict,
+                    "claim": (c.text if (c := checked.claim(ruling.claim_id)) else ""),
+                    "reason": ruling.reason,
+                }
+                for ruling in checked.flagged
+            ],
+            "notes": list(checked.notes),
+        },
         "document": result.render(),
     }
 

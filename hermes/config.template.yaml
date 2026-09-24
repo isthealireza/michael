@@ -103,6 +103,24 @@ mcp_servers:
       RETRIEVAL_CANDIDATES: "200"
       RETRIEVAL_MIN_SCORE: "0.60"
       RETRIEVAL_TOP_K: "12"
+      # Verification. draft_document calls michael.verify in code on every
+      # draft, and the judge is an OpenRouter call, so the key has to reach
+      # this subprocess: Hermes filters a stdio server's environment down to
+      # PATH, HOME, USER and LANG, so nothing here is inherited. Without the
+      # key verification still runs - and fails every claim closed, which
+      # makes every deployed draft read as wholly unsupported. That is the
+      # correct failure and a useless service, so the key is declared.
+      OPENROUTER_API_KEY: "${OPENROUTER_API_KEY}"
+      OPENROUTER_BASE_URL: "https://openrouter.ai/api/v1"
+      # The drafting model, repeated here only so the judge can be checked
+      # against it. michael.verify refuses a judge from the drafting model's
+      # own family; it can only do that if it knows what the drafting model
+      # is, and this subprocess cannot see model.default above. Kept in step
+      # with it by test_runtime_config.py, not by anyone remembering to.
+      MICHAEL_MODEL: "deepseek/deepseek-v4-pro"
+      VERIFY_JUDGE_MODEL: "openai/gpt-oss-120b"
+      VERIFY_JUDGE_TIMEOUT_SECONDS: "90"
+      VERIFY_PROVISION_MAX_CHARS: "8000"
     tools:
       # An allowlist, not a blocklist: a tool added to Michael later is off
       # for the agent until someone names it here.

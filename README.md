@@ -18,7 +18,20 @@ Hermes calls. There is no second agent framework here.
 Hermes ──▶ classify_request ──▶ search_provisions ──▶ draft_document
              (domains.yaml)      (BM25 + vector,       (templates/,
                                   read-only)            [MISSING] rule)
+                                                             │
+                                                     in code, every draft
+                                                             ▼
+                                                        verify_draft
+                                                   (judge in another model
+                                                    family, fails closed)
 ```
+
+`verify_draft` is not a tool. It is called by `draft_document` in code, on every
+draft, against the provisions that same call retrieved. The agent's MCP profile
+still grants exactly `classify_request`, `search_provisions`, `draft_document`
+and `validate_output`, so there is no way for the agent to ask for an unverified
+draft: the argument that injects a judge exists for tests and is absent from the
+tool schema.
 
 Ingestion is a separate tool group with its own database role. The answering
 path connects as `michael_ro`, which holds SELECT only and is created with
@@ -139,6 +152,55 @@ has to be re-checked whenever the corpus grows: two Fair Work queries were
 retired from it once that Act was ingested, because they stopped being absent.
 On the 2026-09-24 re-check **no query was retired** — all ten pre-existing
 known-absent queries remain genuinely uncovered.
+
+## Verification
+
+`draft.citations_of()` guarantees the citation list: every pinpoint under
+BASED ON came from a row retrieval returned. Nothing guaranteed the prose. A
+clause could state a four-week notice period, cite s 117 correctly, and say
+something s 117 does not say. `src/michael/verify.py` closes that in three
+steps, two of which are code.
+
+1. **Split** (code). The draft is cut into atomic claims. Headings, rules,
+   label lines, the execution block, the generated outline scaffolding, the
+   BASED ON list and the closing blocks are not claims. Neither is a sentence
+   whose operative value is `[MISSING: ...]` — it is already in front of the
+   practitioner under OPEN ITEMS, and the VERIFICATION section reports how
+   many were set aside for that reason.
+2. **Judge** (one model call). The claims and the verbatim text of the
+   retrieved provisions go to a judge, and nothing else does — no web, no
+   second retrieval, no model memory. The judge must be from a different
+   model family from the drafting model; `check_judge_model` refuses one that
+   is not, because a model does not reliably audit its own output.
+3. **Validate** (code). A claim the judge did not answer, answered with a word
+   that is not one of the three verdicts, or supported by a provision id
+   retrieval never returned, is UNSUPPORTED. So is every claim in a draft
+   whose judge timed out, was unreachable, or returned something that is not
+   JSON. There is no path that turns a failure into a SUPPORTED claim.
+
+Flagged claims are marked inline — `[UNSUPPORTED: c7]`, `[PARTIAL: c12]` —
+and listed under OPEN ITEMS with the judge's reason. Nothing is deleted and
+nothing is rewritten: annotation is insertion at character offsets recorded
+during the split. A VERIFICATION section reports the counts, the judge model,
+and that verification is automated and does not replace practitioner review.
+
+Configure with `VERIFY_JUDGE_MODEL`, `VERIFY_JUDGE_TIMEOUT_SECONDS` and
+`VERIFY_PROVISION_MAX_CHARS`; see `.env.example`.
+
+`calibration/verify_labelled.json` holds 26 drafts built from real corpus
+provisions, 93 labelled claims, 40 of them injected errors across five kinds
+(wrong number, wrong party obligation, invented exception, overstated scope,
+claim with no source). The provisions are re-extracted from the files
+ingestion downloaded, through the same `extract_text` and `split_sections`
+the corpus was built with, so the text a judge sees is the text retrieval
+returns.
+
+    uv run python calibration/build_verify_labelled.py   # rebuild the set
+    uv run python calibration/score_verify.py            # measure a judge
+
+The builder refuses to write a labelled claim that `split_claims` does not
+produce, and `tests/test_verify.py` asserts the same thing, so the set cannot
+drift away from the splitter unnoticed.
 
 ## Drafting
 
