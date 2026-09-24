@@ -47,6 +47,27 @@ auxiliary:
   # step that only runs when the main provider is already failing.
   openrouter_model: nvidia/nemotron-3-ultra-550b-a55b:free
 
+  # NOUS PORTAL IS LEFT UNCONFIGURED ON PURPOSE. Do not "fix" the two WARNING
+  # lines it writes on every boot by running `hermes auth` and adding credits.
+  #
+  #   Auxiliary Nous client unavailable: no Nous authentication found
+  #   resolve_provider_client: nous requested but Nous Portal not configured
+  #
+  # Nous Portal is step 3 of the auxiliary chain and it is a PAID, metered
+  # service - Hermes carries a whole payment/credit-exhaustion path for it and
+  # checks _nous_portal_account_has_fresh_paid_access() before using it. The
+  # free_only guard above does NOT cover it: read the auxiliary client and
+  # every free_only test sits inside the OpenRouter path
+  # (_aux_openrouter_settings -> _try_openrouter), nowhere else. Authenticating
+  # Nous would therefore put a metered provider in the background lane with no
+  # cost guard on it at all, which is exactly the unmeasured spend the comment
+  # above exists to prevent, and would put the benchmarked $0.01171/run back in
+  # question.
+  #
+  # With step 2 working there is nothing to gain either: Nous would be a third
+  # option behind a main provider and a free fallback. The warnings are the
+  # chain honestly reporting its own shape, not a defect.
+
 mcp_servers:
   michael:
     # Container path: Hermes runs stdio MCP servers as subprocesses inside its
