@@ -395,12 +395,16 @@ and writes the outline to `templates/drafts/` for review.
 
 ## Known limitations
 
-**Employment queries can never return case law.** `domains.yaml` filters the
-`employment` domain to `doc_types: [act, regulation, award]`, so no employment
-question reaches a judgment however well it matches. `contracts`, `consumer`,
-`property` and `corporate` include `case`; `work_health_safety` and `privacy`
-do not. This is configuration, not code, and predates the case-law phase — but
-it is now load-bearing in a way it was not when the corpus held no judgments.
+**Work health and safety and privacy questions cannot return case law.**
+`domains.yaml` filters both domains to `doc_types: [act, regulation]`, so no
+WHS or privacy question reaches a judgment however well it matches, while
+`employment`, `contracts`, `consumer`, `property` and `corporate` do. Both
+exclusions are arguably wrong for the reason `employment`'s was — WHS
+prosecutions and privacy determinations are reasoned in decided cases — but
+widening a domain changes what retrieval searches and therefore moves the
+calibrated numbers, so they are left as they are deliberately rather than by
+inheritance. `tests/test_domains.py` pins both directions, so the state is a
+decision rather than an accident.
 
 **Material after the associate's certificate is dropped.** A judgment
 sometimes annexes a document after the certificate — ACCC v George Weston

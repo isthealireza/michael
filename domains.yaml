@@ -45,7 +45,14 @@ domains:
     # applies only to non-national-system employees; MICHAEL.md governs that
     # distinction. This filter only narrows the search.
     jurisdictions: [commonwealth]
-    doc_types: [act, regulation, award]
+    # `case` was absent until the case-law splitter landed, and while the corpus
+    # held no judgments its absence cost nothing. It is not harmless now: unfair
+    # dismissal, casual characterisation and redundancy are argued from decided
+    # cases, and an employment question that could not reach one would answer
+    # from the Act alone and look complete while doing it. contracts, consumer,
+    # property and corporate already carried `case`; this is employment
+    # catching up, not a new idea.
+    doc_types: [act, regulation, award, case]
     templates: employment
 
   - name: contracts

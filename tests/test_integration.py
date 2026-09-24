@@ -379,9 +379,11 @@ def test_a_stored_judgment_paragraph_renders_an_aglc_pinpoint(
     """End to end, through real retrieval: the pinpoint a draft would carry."""
     from michael import retrieve
 
-    # "contracts", not "employment": domains.yaml filters employment retrieval
-    # to [act, regulation, award], so no employment query can ever return case
-    # law at all. See the handoff note.
+    # "contracts" here simply because it is the domain this fixture's lighthouse
+    # scenario routes to. It used to be a workaround: employment filtered to
+    # [act, regulation, award] and could not return case law at all. That is
+    # fixed, and test_an_employment_question_can_reach_a_judgment below is the
+    # one that guards it.
     from michael.domains import Routing, load_domains
 
     contracts = next(d for d in load_domains() if d.name == "contracts")
@@ -440,3 +442,31 @@ def test_a_judgment_and_an_act_can_share_a_number_without_sharing_a_pinpoint(
         )
         row = cur.fetchone()
         assert row is not None and row["n"] == 0
+
+
+@pytest.mark.integration
+def test_an_employment_question_can_reach_a_judgment(
+    michael_db_with_case_law: None,
+) -> None:
+    """The domain filter, end to end, against real retrieval.
+
+    domains.yaml filtered `employment` to [act, regulation, award], so an
+    employment question could not retrieve a judgment however well it matched.
+    While the corpus held no case law that cost nothing; once judgments were
+    ingested it was a silent ceiling over the domain Michael is most used for.
+
+    Asserted through retrieval rather than by reading the YAML, because the
+    YAML says what is configured and this says what a reader actually gets.
+    """
+    from michael import retrieve
+    from michael.domains import Routing, load_domains
+
+    employment = next(d for d in load_domains() if d.name == "employment")
+    result = retrieve.search(
+        "employee dismissed by the police force discrimination",
+        routing=Routing(domain=employment, matched_keywords=("employee",), recognised=True),
+        min_score=0.0,
+    )
+    judgments = [p for p in result.provisions if p.doc_type == "case"]
+    assert judgments, f"employment retrieval returned no case law: {result.reason}"
+    assert any(p.unit_type in ("paragraph", "order", "document") for p in judgments)
