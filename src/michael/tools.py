@@ -303,7 +303,12 @@ def draft_document(
 
     # Step 2 of the guarantee: the prose is checked against the same provisions
     # the citations came from, not against anything the judge happens to know.
-    checked = verification.verify_draft(result.body, provisions=retrieved.provisions, judge=judge)
+    checked = verification.verify_draft(
+        result.body,
+        provisions=retrieved.provisions,
+        judge=judge,
+        instructed_values=result.instructed_values,
+    )
     result = verification.annotate_draft(result, checked)
 
     return {
@@ -321,6 +326,10 @@ def draft_document(
             "claims_checked": len(checked.claims),
             "counts": checked.counts,
             "not_checked_unsupplied": checked.skipped_unsupplied,
+            # Claims resting only on what the requester supplied. Reported
+            # separately because "the corpus cannot speak to this" is a
+            # different statement from "the provisions do not support it".
+            "not_checkable_instructed": len(checked.instructed),
             "flagged": [
                 {
                     "claim_id": ruling.claim_id,

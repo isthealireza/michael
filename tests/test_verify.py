@@ -987,3 +987,122 @@ def test_a_legislation_outlines_own_lines_are_still_taken_out() -> None:
     )
     assert "Nearest retrieved provision" in outline.body
     assert "Nearest retrieved provision" not in verify._verifiable_body(outline.body)
+
+
+# --- claim scope: what the corpus could never support -----------------------
+
+
+def _claim_at(text: str, start: int) -> verify.Claim:
+    return verify.Claim(claim_id="c1", text=text, start=start, end=start + len(text))
+
+
+def test_a_claim_resting_only_on_a_supplied_value_is_set_aside_not_unsupported() -> None:
+    """ "Payment is made fortnightly" is not a proposition the corpus can
+    support or contradict: fortnightly is what the requester said. Judging it
+    can only ever return UNSUPPORTED, and on the casual-contract template that
+    kind of claim filled OPEN ITEMS until the ones that mattered were buried.
+    """
+    text = "Payment is made fortnightly into the account nominated by the Employee."
+    claims = (_claim_at(text, 0),)
+    judged, aside = verify._set_aside_instructed(claims, ("fortnightly",))
+    assert [c.text for c in aside] == [text]
+    assert judged == ()
+
+
+def test_a_supplied_value_inside_a_legal_claim_does_not_set_it_aside() -> None:
+    """The fail-open direction, and the reason the set-aside needs BOTH tests.
+
+    A supplied value sitting inside a sentence that also asserts something
+    about the law must not take that sentence out of verification. "The
+    employment is covered by the General Retail Industry Award 2020" rests on
+    an instructed award name AND asserts award coverage, which is a legal
+    question the corpus can speak to - so it is judged.
+    """
+    text = "3.1 The employment is covered by General Retail Industry Award 2020."
+    claims = (_claim_at(text, 0),)
+    judged, aside = verify._set_aside_instructed(claims, ("General Retail Industry Award 2020",))
+    assert aside == (), "a legal assertion was set aside because it carried a supplied value"
+    assert [c.text for c in judged] == [text]
+
+
+def test_a_claim_with_no_supplied_value_is_always_judged() -> None:
+    """Party data is the only thing this narrows. A sentence the requester did
+    not supply a word of is judged whatever it says.
+    """
+    text = "The Employee is not entitled to paid annual leave."
+    claims = (_claim_at(text, 0),)
+    judged, aside = verify._set_aside_instructed(claims, ("Perth CBD store",))
+    assert aside == ()
+    assert [c.text for c in judged] == [text]
+
+
+def test_no_supplied_values_at_all_changes_nothing() -> None:
+    """An outline, or a template drafted with no facts: every claim is judged,
+    exactly as before this existed."""
+    claims = (_claim_at("An employer must give written notice.", 0),)
+    judged, aside = verify._set_aside_instructed(claims, ())
+    assert aside == ()
+    assert judged == claims
+
+
+def test_the_verification_section_reports_what_it_set_aside() -> None:
+    """Set aside is not the same as checked and passed, so it is counted in
+    its own line rather than folded into the totals."""
+    claim = _claim_at("Payment is made fortnightly.", 0)
+    report = verify.Verification(
+        claims=(),
+        rulings=(),
+        judge_model="test/judge",
+        instructed=(claim,),
+    )
+    body = verify.section(report)
+    assert "Not checkable against the corpus (your instructions, not law): 1" in body
+
+
+def test_the_law_predicate_is_a_word_boundary_match_not_a_backspace() -> None:
+    """A regression on my own mistake, because it failed silently in the worst
+    direction.
+
+    The first version of this pattern was written through a shell heredoc that
+    collapsed the backslash in \\b, so it compiled to a literal backspace
+    (0x08) and matched NOTHING. Every claim read as "asserts no law", and the
+    set-aside swallowed legal propositions - "not entitled to paid leave",
+    "notice requirements in the Fair Work Act" - which is precisely the
+    fail-open this design exists to avoid. It passed every test that only
+    checked the narrowing narrowed.
+    """
+    assert verify._ASSERTS_LAW.pattern.startswith("\\b"), verify._ASSERTS_LAW.pattern[:12]
+    assert verify._asserts_law("The Employee is not entitled to paid leave")
+    assert verify._asserts_law("in accordance with the notice requirements in the Fair Work Act")
+    assert not verify._asserts_law("Ordinary place of work: Perth CBD store.")
+
+
+def test_a_supplied_value_is_matched_by_its_words_not_by_its_offsets() -> None:
+    """Why this matches on the value and not on where it landed.
+
+    split_claims re-anchors claims against a body with generated scaffolding
+    blanked out. Measured on the real casual-contract template, only 4 of 14
+    claims came back with offsets matching the text they were split from, so a
+    character-span overlap test agreed with reality by luck - it reported 3 set
+    aside standalone and 0 through draft_document, for the same draft. A
+    supplied value is inside the claim's own text whatever the offsets do.
+    """
+    claim = verify.Claim(
+        claim_id="c1",
+        text="Ordinary place of work: Perth CBD store.",
+        start=99999,
+        end=100039,
+    )
+    judged, aside = verify._set_aside_instructed((claim,), ("Perth CBD store",))
+    assert [c.claim_id for c in aside] == ["c1"], "offsets that point nowhere broke the match"
+    assert judged == ()
+
+
+def test_a_very_short_supplied_value_cannot_remove_a_claim_by_coincidence() -> None:
+    """A one- or two-character fact would appear all over a contract, and a
+    coincidence here removes a claim from verification - the direction that
+    must never happen by accident."""
+    claim = verify.Claim(claim_id="c1", text="The Employee works at a site.", start=0, end=29)
+    judged, aside = verify._set_aside_instructed((claim,), ("a",))
+    assert aside == ()
+    assert judged == (claim,)

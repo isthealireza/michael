@@ -333,6 +333,7 @@ class Verification:
     rulings: tuple[Ruling, ...]
     judge_model: str
     skipped_unsupplied: int = 0
+    instructed: tuple[Claim, ...] = field(default_factory=tuple)
     call: JudgeCall | None = None
     notes: tuple[str, ...] = field(default_factory=tuple)
 
@@ -791,12 +792,76 @@ def validate_verdicts(
 # --- the whole thing -------------------------------------------------------
 
 
+#: Words that mark a sentence as saying something about the LAW rather than
+#: about these parties. Deliberately generous: a claim matching any of them is
+#: judged even if it also carries a supplied value, so the set-aside below can
+#: only ever narrow what is skipped, never what is checked.
+_ASSERTS_LAW = re.compile(
+    r"\b(?:"
+    r"entitled|entitlement|entitlements|obliged|obligation|"
+    r"must|required|requires|prohibited|unlawful|lawful|"
+    r"complies|compliance|governed\s+by|in\s+accordance\s+with|"
+    r"under\s+(?:the\s+|that\s+)?(?:Act|Regulations?|Award)|"
+    r"section\s+\d|s\s+\d|Sch\s+\d|cl\s+\d|"
+    r"Fair\s+Work|National\s+Employment|Modern\s+Award|award|"
+    r"legislation|statute|statutory|casual\s+conversion|serious\s+misconduct"
+    r")\b",
+    re.IGNORECASE,
+)
+
+
+#: A supplied value shorter than this is ignored when deciding whether a
+#: claim rests on the requester's own words: too short to be distinctive,
+#: and a coincidental match would silently remove a claim from checking.
+_MIN_INSTRUCTED_VALUE = 4
+
+
+def _asserts_law(text: str) -> bool:
+    """Does this claim say something about the law, not just about the parties?"""
+    return bool(_ASSERTS_LAW.search(text))
+
+
+def _set_aside_instructed(
+    claims: tuple[Claim, ...], values: Sequence[str]
+) -> tuple[tuple[Claim, ...], tuple[Claim, ...]]:
+    """Split claims into those to judge and those resting on a supplied value.
+
+    A claim is set aside only when it BOTH overlaps a supplied value AND says
+    nothing about the law. Both conditions, so the narrowing cannot swallow a
+    legal proposition that happens to sit beside a filled placeholder - which
+    is how a scope heuristic fails open, and why the runner-up design (judge
+    only sentences carrying a statutory marker) was rejected outright.
+    """
+    # Matched on the value, not on where it landed. split_claims re-anchors
+    # offsets against a body with scaffolding blanked, and on the real template
+    # only 4 of 14 claims came back with offsets matching the text they were
+    # split from - so an overlap test on character spans agreed by luck. A
+    # supplied value is in the claim's own text whatever the offsets do.
+    #
+    # Short values are ignored: a one- or two-character fact would match half
+    # the draft by coincidence, and a coincidence here removes a claim from
+    # verification, which is the direction that must never happen by accident.
+    supplied = [v.strip() for v in values if len(v.strip()) >= _MIN_INSTRUCTED_VALUE]
+    if not supplied:
+        return claims, ()
+    judged: list[Claim] = []
+    aside: list[Claim] = []
+    for claim in claims:
+        rests_on_supplied = any(value in claim.text for value in supplied)
+        if rests_on_supplied and not _asserts_law(claim.text):
+            aside.append(claim)
+        else:
+            judged.append(claim)
+    return tuple(judged), tuple(aside)
+
+
 def verify_draft(
     draft_text: str,
     *,
     provisions: Sequence[Evidence],
     judge: JudgeFn | None = None,
     unit: ClaimUnit | UnitSelector = SENTENCE,
+    instructed_values: Sequence[str] = (),
 ) -> Verification:
     """Check every claim in ``draft_text`` against ``provisions`` and nothing else.
 
@@ -804,8 +869,25 @@ def verify_draft(
     same-family judge, unparseable JSON - comes back as UNSUPPORTED rulings
     carrying the reason, because a draft that could not be verified must not
     read as a draft that passed.
+
+    ``instructed_values`` are the values the requester supplied (see
+    :attr:`michael.draft.Draft.instructed_values`). A claim resting on one is
+    set aside rather than judged: "Payment is made fortnightly" is not a
+    proposition the corpus can support or contradict, because fortnightly is
+    what the requester said, so judging it can only ever return UNSUPPORTED.
+    On the casual-contract template that was 11 of 24 claims, and a reader who
+    finds two thirds of OPEN ITEMS full of unsupported party data stops reading
+    the third that matters.
+
+    This cannot fail open. The test is the presence of a supplied value inside
+    the claim, not a guess about what the claim means: a sentence asserting
+    something about the law carries no supplied value and is still judged, and
+    a claim that both rests on a supplied value AND asserts law is still
+    judged, because the span test is not what decides it - see
+    ``_asserts_law``.
     """
     claims, skipped = split_claims(draft_text, unit=unit)
+    claims, instructed = _set_aside_instructed(claims, instructed_values)
     try:
         judge_model = settings().verify_judge_model
     except ConfigError as exc:  # pragma: no cover - settings() is resolved by now
@@ -815,6 +897,7 @@ def verify_draft(
             rulings=tuple(unsupported(c.claim_id, str(exc)) for c in claims),
             judge_model=judge_model,
             skipped_unsupplied=skipped,
+            instructed=instructed,
         )
 
     if not claims:
@@ -827,6 +910,7 @@ def verify_draft(
             rulings=(),
             judge_model=judge_model,
             skipped_unsupplied=skipped,
+            instructed=instructed,
             notes=(
                 "This draft contains no verifiable claim: every line of it is a "
                 "heading, a label, generated scaffolding, or a value not supplied.",
@@ -845,6 +929,7 @@ def verify_draft(
             ),
             judge_model=judge_model,
             skipped_unsupplied=skipped,
+            instructed=instructed,
             notes=("Retrieval returned no provisions; every claim is unsupported by definition.",),
         )
 
@@ -859,6 +944,7 @@ def verify_draft(
             ),
             judge_model=judge_model,
             skipped_unsupplied=skipped,
+            instructed=instructed,
             call=JudgeCall(model=judge_model, seconds=0.0, error=str(exc)),
             notes=(f"The judge could not be used: {exc}",),
         )
@@ -871,6 +957,7 @@ def verify_draft(
         rulings=rulings,
         judge_model=call.model or judge_model,
         skipped_unsupplied=skipped,
+        instructed=instructed,
         call=call,
     )
 
@@ -931,6 +1018,8 @@ def section(verification: Verification) -> str:
         f"- PARTIAL: {counts['PARTIAL']}",
         f"- UNSUPPORTED: {counts['UNSUPPORTED']}",
         f"- Not checked (value not supplied, see OPEN ITEMS): {verification.skipped_unsupplied}",
+        f"- Not checkable against the corpus (your instructions, not law): "
+        f"{len(verification.instructed)}",
         f"- Judge model: {verification.judge_model}",
     ]
     lines += [f"- {note}" for note in verification.notes]

@@ -63,6 +63,11 @@ class Draft:
     #: of the verifier: verify.py imports draft.py, and that dependency runs
     #: one way only.
     verification_section: str = ""
+    #: The values the requester supplied, as they appear in ``body``. The
+    #: verifier uses them to tell a claim about the LAW from a claim about
+    #: THESE PARTIES; it is a list of the caller's own words, not a judgement,
+    #: so this module still knows nothing about verification.
+    instructed_values: tuple[str, ...] = ()
     #: One line per claim the verifier flagged, appended under OPEN ITEMS.
     #: Deliberately *not* merged into ``open_items``: that tuple is the
     #: [MISSING] list, and the acceptance suite and the CLI both read it as
@@ -96,20 +101,49 @@ def fill(template_text: str, facts: dict[str, str] | None = None) -> tuple[str, 
     items. A fact whose value is blank counts as missing: an empty string in a
     contract reads as an answer, and it is not one.
     """
+    body, missing, _ = fill_tracked(template_text, facts)
+    return body, missing
+
+
+def fill_tracked(
+    template_text: str, facts: dict[str, str] | None = None
+) -> tuple[str, tuple[str, ...], tuple[tuple[int, int], ...]]:
+    """:func:`fill`, and where in the filled text each supplied value landed.
+
+    The spans are what let verification tell a claim about the LAW from a claim
+    about THESE PARTIES. "Payment is made fortnightly" is not a proposition the
+    corpus can support or contradict - fortnightly is what the requester said -
+    and judging it against a provision can only ever return UNSUPPORTED. On the
+    casual-contract template that was 11 of 24 claims, which buries the ones
+    that mean something.
+    """
     supplied = {k.upper(): v for k, v in (facts or {}).items() if str(v).strip()}
     missing: list[str] = []
+    spans: list[tuple[int, int]] = []
+    out: list[str] = []
+    cursor = 0
+    position = 0
 
-    def substitute(match: re.Match[str]) -> str:
+    for match in PLACEHOLDER_RE.finditer(template_text):
+        literal = template_text[cursor : match.start()]
+        out.append(literal)
+        position += len(literal)
         name = match.group("name")
         value = supplied.get(name)
         if value is not None:
-            return str(value)
-        item = humanise(name)
-        if item not in missing:
-            missing.append(item)
-        return f"[MISSING: {item}]"
+            rendered = str(value)
+            spans.append((position, position + len(rendered)))
+        else:
+            item = humanise(name)
+            if item not in missing:
+                missing.append(item)
+            rendered = f"[MISSING: {item}]"
+        out.append(rendered)
+        position += len(rendered)
+        cursor = match.end()
 
-    return PLACEHOLDER_RE.sub(substitute, template_text), tuple(missing)
+    out.append(template_text[cursor:])
+    return "".join(out), tuple(missing), tuple(spans)
 
 
 def unresolved(text: str) -> tuple[str, ...]:
@@ -269,7 +303,8 @@ def draft_from_template(
     except OSError as exc:
         raise DraftingError(f"cannot read template {template_path}: {exc}") from exc
 
-    body, missing = fill(template_text, facts)
+    body, missing, spans = fill_tracked(template_text, facts)
+    instructed_values = tuple(dict.fromkeys(body[a:b] for a, b in spans))
     citations = citations_of(provisions)
 
     verify = list(extra_verify)
@@ -293,6 +328,7 @@ def draft_from_template(
         open_items=missing,
         verify_before_use=tuple(dict.fromkeys(verify)),
         citations=citations,
+        instructed_values=instructed_values,
     )
 
 
