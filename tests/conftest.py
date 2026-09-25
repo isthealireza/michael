@@ -1,8 +1,10 @@
 """Test environment.
 
 No test reaches the network or a database unless it is marked ``integration``
-or ``network``. The settings below are placeholders so importing the package
-does not require a configured .env.
+or ``network``. That is enforced, in tests/netguard.py, rather than left as a
+sentence here: it was a sentence here for months while a test in the default
+suite opened a real connection to Postgres. The settings below are
+placeholders so importing the package does not require a configured .env.
 """
 
 from __future__ import annotations
@@ -12,6 +14,8 @@ from collections.abc import Iterator
 from pathlib import Path
 
 import pytest
+
+from tests import netguard
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
@@ -89,3 +93,16 @@ def real_templates(monkeypatch: pytest.MonkeyPatch) -> None:
 
     monkeypatch.setenv("MICHAEL_TEMPLATES_DIR", str(PROJECT_ROOT / "templates"))
     config.settings.cache_clear()
+
+
+@pytest.fixture(autouse=True)
+def _stay_inside_the_boundary(
+    request: pytest.FixtureRequest, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Hold every test to the boundary its own markers describe."""
+    markers = {marker.name for marker in request.node.iter_markers()}
+    netguard.install(
+        monkeypatch,
+        database=netguard.may_use_database(markers),
+        network=netguard.may_use_network(markers),
+    )
