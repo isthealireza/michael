@@ -306,6 +306,104 @@ Sch 8 cl 8528), and neither crosses 0.70.
 
 No threshold change is proposed. `RETRIEVAL_MIN_SCORE` stays at 0.60.
 
+#### Score separation: rerankers and per-domain thresholds, measured LOCALLY
+
+Measured 2026-09-25 on the same local corpus and the same 61 known-good / 42
+known-absent set, to answer whether anything orders covered above not-covered
+where the fused score does not. `calibration/separation.py` retrieves every
+labelled query once and caches its top-20 fused shortlist
+(`calibration/separation_probes.json`), so every option is scored on exactly
+the same candidates. Reranker scores are in `calibration/separation_scores/`.
+
+Each option is summarised at its **exact** lowest zero-false-positive
+threshold, not the 0.05 grid `calibrate.py` sweeps. That is why the baseline
+reads 0.7635 with recall 10/61 here and 0.80 with 1/61 there: the same
+measurement, read at finer resolution. **Leave-one-out** (LOO) refits the
+rule without each query and scores that query. It is the honest number,
+because production only ever sees questions the threshold was not fitted to.
+Routed retrieval (domain filter from `classify_request`) and unfiltered
+retrieval gave identical results for every option.
+
+| option | zero-FP threshold | recall there | margin | LOO FP / 42 | LOO recall | top-10 ceiling | latency / query (median, CPU) |
+|---|---|---|---|---|---|---|---|
+| fused score (today) | 0.7635 | 0.164 (10/61) | 0.0029 | 1 | 0.164 | 50/61 | - |
+| per-domain thresholds | fitted per domain | 0.443 (27/61) in-sample | 0.0009 (worst domain) | **8** | 0.443 | 50/61 | - |
+| **MiniLM-L-6-v2 cross-encoder** | 0.9972 (logit 5.874) | **0.361 (22/61)** | 0.0000 (0.005 logits) | 1 | 0.361 | **56/61** | **1.6 s** |
+| bge-reranker-base | 0.9894 (logit 4.534) | 0.311 (19/61) | 0.0009 (0.086 logits) | 1 | 0.311 | 55/61 | 10.4 s |
+| Laya (English), refit T | migration subset only; see below | | | | | | ~54 s |
+| Jev | not measured: not served on OpenRouter | | | | | | |
+
+Rerankers score the top-20 fused shortlist. Load times, paid once: MiniLM
+32 s, bge 133 s, Laya 42 s. No option has an API cost; all three run on local
+CPU (6 threads). A single global threshold, whatever the score, always shows
+exactly 1 LOO false positive: the held-out worst known-absent query.
+
+**Per-domain thresholds do not generalise.** In-sample they look best: zero
+false positives at recall 0.443. Under leave-one-out, 8 of the 42 known-absent
+queries become false positives, one in each of 8 of the 9 routing outcomes
+(every one but `contracts`). Each
+domain's threshold is set by exactly one query, and with 1 to 4 known-absent
+queries per domain the next unseen question lands above it. Adding a 0.01
+safety offset in-sample already drops recall to 0.361. Routing also misfiles
+questions: "does an employer who sponsored a worker have to pay for their
+flight home" goes to `employment`, and the citizenship question matches no
+domain.
+
+**MiniLM beats bge.** It has higher recall, a higher ceiling and one sixth of
+the latency. Reranking lifts the top-10 ceiling from 50 to 56 of 61. That is
+a real ranking improvement, independent of any threshold.
+
+**Laya was measured on the 8 migration queries only.** The full 103-query
+run was stopped at 50: the queries run in labelled-set order, so the first
+half held no known-absent queries and could not inform a zero-FP threshold.
+At about 54 s per query it is ruled out on latency alone. On the subset:
+
+| migration subset (5 good / 3 absent) | zero-FP recall | margin (prob / logit) | top-10 ceiling |
+|---|---|---|---|
+| fused score | 0.40 | 0.0087 / - | 4/5 |
+| Laya, T refit 0.9225 | 0.40 | 0.0485 / 0.718 | 4/5 |
+| Laya, shipped T 1.9834 | 0.40 | 0.0597 / 0.334 | 4/5 |
+| MiniLM | 0.60 | 0.0001 / 0.048 | 5/5 |
+| bge | 0.20 | 0.0102 / 3.194 | 5/5 |
+
+The temperature was refit by maximum likelihood on 5 positive and 60 negative
+labelled pairs, to 0.92 against the shipped 1.98. A single temperature is
+monotonic: it moved the margin and the numeric threshold, and could not move
+recall. Laya's worst known-absent is the processing-times question (0.90),
+which both cross-encoders reject (0.38, 0.43).
+
+**None of them fixes the migration false positives by separation.** The
+citizenship-by-conferral and New Zealand visa questions score 0.997 and 0.985
+under MiniLM and 0.989 and 0.982 under bge, as high as real answers.
+MiniLM's zero-FP threshold is set by the citizenship question itself, with a
+margin of 0.005 logits. A reranker reads "about visas" as relevant. It cannot
+see that the answer lives in an Act the corpus does not hold (the Australian
+Citizenship Act 2007) or in another country's law.
+
+**Recommendation, not adopted.** MiniLM over the top-20 fused shortlist is
+the better of the two remedies measured. It more than doubles zero-FP recall,
+from 0.164 to 0.361, holds up under leave-one-out, and costs 1.6 s a query.
+The runner-up, bge, is worse on every measure. It should not yet set
+`RETRIEVAL_MIN_SCORE` or any reranker threshold:
+
+- the zero-FP point rests on one query, with no margin;
+- 42 known-absent queries are too few to fix a threshold at 0.997;
+- AGENTS.md makes TypeSafe the default for AI features, and MiniLM is not
+  TypeSafe. Building it in is a decision against that default, or it waits
+  for a Jev measurement with a TypeSafe key.
+
+`RETRIEVAL_MIN_SCORE` is unchanged at 0.60.
+
+Reproduce:
+
+```bash
+uv run python calibration/separation.py probe
+uv run python calibration/separation.py domain
+uv run python calibration/separation.py pairs pairs.json
+<python-with-torch> calibration/rerank_local.py pairs.json calibration/separation_scores/minilm.json --model minilm
+uv run python calibration/separation.py rerank calibration/separation_scores/minilm.json calibration/separation_scores/bge.json
+```
+
 ### Migration law: what was ingested
 
 Latest compilations as at 2026-09-25, from the Federal Register's Word
