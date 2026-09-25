@@ -339,6 +339,7 @@ def test_a_missing_ledger_reads_as_nothing_applied_not_as_an_error(
     assert not any("CREATE" in sql.upper() for sql in statements), statements
 
 
+@pytest.mark.integration
 def test_status_never_reaches_for_a_writable_connection(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
