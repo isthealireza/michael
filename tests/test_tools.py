@@ -184,6 +184,7 @@ def test_the_allowlist_is_reported_exactly_as_configured() -> None:
     assert tools.allowed_hosts()["allowed_hosts"] == [
         "austlii.edu.au",
         "fairwork.gov.au",
+        "immigration.homeaffairs.gov.au",
         "legislation.gov.au",
         "legislation.wa.gov.au",
     ]

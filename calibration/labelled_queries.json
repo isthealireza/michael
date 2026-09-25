@@ -1,6 +1,6 @@
 {
   "corpus": "Production as at 2026-09-24: 205 documents / 8,915 provisions, with corpus_stats refreshed 2026-09-24 04:14:44Z (provisions 8,915, avg_tokens 103.7493, drift 0). 107 WA acts, 93 WA regulations, and 5 Commonwealth acts - the Fair Work Act 2009 (Cth) in 4 volumes and the Privacy Act 1988 (Cth) (352 provisions, compilation snapshot 2026-06-04). Measured after the 2026-09-23 Schedule-relabel and note-merge repairs, which is the state retrieval actually runs on. doc_type holds only 'act' and 'regulation': there is no award and no case law in the corpus.",
-  "note": "Queries are paraphrases, not verbatim provision text, so the test is not trivially lexical. Targets are identified by citation and section, not by database id, so the set survives a reseed. The absent set must be re-checked whenever the corpus grows: two Fair Work queries were retired from it once the Act was ingested, because they stopped being absent. Section identifiers here are pinpoints, not row ids, so a labelling fix changes them: 'Casual employees of small business employers' was recorded as s 47A while Schedule 1's clauses carried plain numbers, and is 'Sch 1 cl 47A' now that they are labelled. Re-run this set after ANY splitter change, not only after a corpus change - a relabelled provision fails here silently and looks like a retrieval regression. Every known-absent entry carries the reason the corpus cannot answer it, and each reason is a checkable claim about what is NOT in the corpus, not an impression of difficulty. HISTORY on corpus_stats: this set was first scored on 2026-09-24 while corpus_stats.provisions read 8982 against an actual 8915 - a note-merge had deleted 67 provisions without refreshing the row, and BM25 reads N and avgdl from it. The row was then refreshed (8982 -> 8915 provisions, avg_tokens 103.0361 -> 103.7493) and the whole set re-scored. The effect was negligible and is recorded here so nobody re-opens it: max |delta| on a fused score was 0.00025, mean 0.00011, 74 of 81 queries fell slightly. Every headline figure was unchanged - highest known-absent 0.6669, recall ceiling 38/48, lowest zero-FP threshold 0.70 at recall 0.271. The only sweep cell that moved was FP at 0.60, 12 -> 11, because one known-absent query sat on the boundary at 0.600093 and landed at 0.599957. That is a tie-break, not an improvement. Per-query scores for both runs are in .orca/reports/2026-09-24-phase1-threshold-scores.json.  Case-law entries carry kind=case and, on the known-good side, the unit type the target is stored under; every case-law target is a numbered paragraph of a judgment, cited at [n]. They were added in the case-law phase and measured against the LOCAL corpus only.",
+  "note": "Queries are paraphrases, not verbatim provision text, so the test is not trivially lexical. Targets are identified by citation and section, not by database id, so the set survives a reseed. The absent set must be re-checked whenever the corpus grows: two Fair Work queries were retired from it once the Act was ingested, because they stopped being absent. Section identifiers here are pinpoints, not row ids, so a labelling fix changes them: 'Casual employees of small business employers' was recorded as s 47A while Schedule 1's clauses carried plain numbers, and is 'Sch 1 cl 47A' now that they are labelled. Re-run this set after ANY splitter change, not only after a corpus change - a relabelled provision fails here silently and looks like a retrieval regression. Every known-absent entry carries the reason the corpus cannot answer it, and each reason is a checkable claim about what is NOT in the corpus, not an impression of difficulty. HISTORY on corpus_stats: this set was first scored on 2026-09-24 while corpus_stats.provisions read 8982 against an actual 8915 - a note-merge had deleted 67 provisions without refreshing the row, and BM25 reads N and avgdl from it. The row was then refreshed (8982 -> 8915 provisions, avg_tokens 103.0361 -> 103.7493) and the whole set re-scored. The effect was negligible and is recorded here so nobody re-opens it: max |delta| on a fused score was 0.00025, mean 0.00011, 74 of 81 queries fell slightly. Every headline figure was unchanged - highest known-absent 0.6669, recall ceiling 38/48, lowest zero-FP threshold 0.70 at recall 0.271. The only sweep cell that moved was FP at 0.60, 12 -> 11, because one known-absent query sat on the boundary at 0.600093 and landed at 0.599957. That is a tie-break, not an improvement. Per-query scores for both runs are in .orca/reports/2026-09-24-phase1-threshold-scores.json.  Case-law entries carry kind=case and, on the known-good side, the unit type the target is stored under; every case-law target is a numbered paragraph of a judgment, cited at [n]. They were added in the case-law phase and measured against the LOCAL corpus only. Migration entries (domain=migration: 5 known-good, 3 known-absent) were added on 2026-09-25 after the Migration Regulations 1994 (Cth) compilation 288 (volumes 1-3) and the Migration Act 1958 (Cth) compilation 171 (volumes 1-2) were ingested, and were measured against the LOCAL corpus only. Regulation targets are cited by their Part-numbered id ('2.59'), which only exists since the splitter learned Part numbering; before that, Part 2A was not in the corpus at all.",
   "known_good": [
     {
       "query": "must a cat be sterilised before it can be registered",
@@ -345,6 +345,41 @@
       "section": "4",
       "unit": "paragraph",
       "kind": "case"
+    },
+    {
+      "query": "what does a business have to show to be approved as a standard business sponsor",
+      "citation": "Migration Regulations 1994 (Cth)",
+      "section": "2.59",
+      "kind": "legislation",
+      "domain": "migration"
+    },
+    {
+      "query": "does an employer who sponsored a worker have to pay for their flight home if asked",
+      "citation": "Migration Regulations 1994 (Cth)",
+      "section": "2.80",
+      "kind": "legislation",
+      "domain": "migration"
+    },
+    {
+      "query": "can the minister refuse or cancel someone's visa because they do not pass the character test",
+      "citation": "Migration Act 1958 (Cth)",
+      "section": "501",
+      "kind": "legislation",
+      "domain": "migration"
+    },
+    {
+      "query": "must a person found in Australia without a valid visa be taken into immigration detention",
+      "citation": "Migration Act 1958 (Cth)",
+      "section": "189",
+      "kind": "legislation",
+      "domain": "migration"
+    },
+    {
+      "query": "after being refused a visa while in Australia which visas can the person still apply for before leaving",
+      "citation": "Migration Act 1958 (Cth)",
+      "section": "48",
+      "kind": "legislation",
+      "domain": "migration"
     }
   ],
   "known_absent": [
@@ -542,6 +577,24 @@
       "query": "what did the court hold about the Briginshaw standard of proof in civil penalty proceedings",
       "why": "Briginshaw v Briginshaw is not in the local corpus.",
       "kind": "case"
+    },
+    {
+      "query": "how many years must a permanent resident live in Australia before applying for citizenship by conferral",
+      "why": "Australian Citizenship Act 2007 (Cth). Verified 2026-09-25: no document whose citation matches 'Citizenship Act' is in the corpus; the Migration Act and Regulations govern visas, not citizenship.",
+      "kind": "legislation",
+      "domain": "migration"
+    },
+    {
+      "query": "how long does the Department currently take to process a partner visa application",
+      "why": "Processing times are service standards the Department publishes, not law. Verified 2026-09-25: no Act, Regulation or guidance document in the corpus states them; the corpus holds no guidance at all.",
+      "kind": "legislation",
+      "domain": "migration"
+    },
+    {
+      "query": "what are the requirements for a New Zealand resident visa under the Immigration Act 2009",
+      "why": "New Zealand legislation. The corpus holds only WA and Commonwealth law (schema.JURISDICTIONS).",
+      "kind": "legislation",
+      "domain": "migration"
     }
   ]
 }

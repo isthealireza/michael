@@ -2415,3 +2415,206 @@ def test_a_headings_only_page_of_legislation_is_still_refused() -> None:
             text=stub,
             conn=SimpleNamespace(),  # type: ignore[arg-type]
         )
+
+
+# --- Part-numbered regulations (Migration Regulations 1994 shape) ----------
+#
+# The structure is real - regulation, Schedule, Division and clause numbering
+# as the Migration Regulations lay them out, and the multi-volume cover
+# listing. The operative words are placeholders, for the reason given in
+# tests/fixtures.py: no statutory text is invented to make a test pass.
+
+PART_NUMBERED_REGULATIONS = """FIXTURE MIGRATION REGULATIONS 1994
+Compilation No. 1
+This compilation is in 2 volumes
+Volume 1:
+Parts 1 to 2A
+regulations 1.01 to 2.60
+Schedule 1
+Volume 2:
+Schedule 2, Subclasses 010 to 020
+Schedule 13
+Each volume has its own contents
+About this compilation
+This compilation is a fixture and carries no law of its own.
+Contents
+Part 1—Preliminary 1
+1.01 Name of Regulations 1
+1.03 Definitions 1
+Part 2A—Sponsorship 2
+2.57 Interpretation 2
+2.59 Criteria for approval 2
+Part 1—Preliminary
+1.01 Name of Regulations
+These Regulations are the fixture regulations, placeholder text only.
+1.03 Definitions
+(1) Placeholder definition text, in which a term is defined for testing.
+(2) Placeholder definition text, continued for testing purposes only.
+Part 2A—Sponsorship
+2.57 Interpretation
+(1) Placeholder interpretation text for Part 2A of the fixture.
+(2) Further placeholder interpretation text for Part 2A of the fixture.
+2.59 Criteria for approval
+(1) Placeholder criteria text for the approval of a sponsor.
+(2) Further placeholder criteria text for the approval of a sponsor.
+Schedule 2—Provisions with respect to visas
+Subclass 010—Bridging A
+010.2—Primary criteria
+010.21—Criteria to be satisfied at the time of application
+010.211
+(1) Placeholder criterion text that an applicant must satisfy.
+(2) Further placeholder criterion text that an applicant must satisfy.
+010.6—Conditions
+010.611
+Conditions 8101 and 8102.
+Schedule 13—Transitional arrangements
+9903 Operation of Schedule 3
+(1) Placeholder transitional text directing that a Division be read as if
+replaced with the following:
+010.311
+The quoted replacement clause, which belongs to 9903 and to nothing else.
+(2) Placeholder transitional text, continued after the quotation.
+"""
+
+
+def _regulation_split() -> dict[str, ingest.Provision]:
+    provisions = split_sections(
+        PART_NUMBERED_REGULATIONS, pattern=ingest.section_pattern("regulation")
+    )
+    return {p.section_number: p for p in provisions}
+
+
+def test_part_numbered_regulations_are_split_by_their_own_numbers() -> None:
+    provisions = _regulation_split()
+    assert {"1.01", "1.03", "2.57", "2.59"} <= set(provisions)
+    assert provisions["2.57"].heading == "Interpretation"
+    assert "Part 2A of the fixture" in provisions["2.57"].text
+
+
+def test_the_cover_pages_volume_listing_is_not_a_schedule_heading() -> None:
+    # "Schedule 1" in the cover's volume listing once made every regulation of
+    # Parts 1-5 a "Sch 1 cl" - and every section of the Migration Act too.
+    provisions = _regulation_split()
+    assert not any(n.startswith("Sch 1 cl") for n in provisions)
+
+
+def test_an_act_whose_cover_lists_an_unnumbered_schedule_keeps_plain_section_ids() -> None:
+    act = (
+        "FIXTURE MIGRATION ACT 1958\n"
+        "This compilation is in 2 volumes\n"
+        "Volume 1:\n"
+        "sections 1-261K\n"
+        "Volume 2:\n"
+        "sections 262-507\n"
+        "Schedule\n"
+        "Endnotes\n"
+        "Each volume has its own contents\n"
+        "About this compilation\n"
+        "This compilation is a fixture and carries no law of its own.\n"
+        "1 Short title\n"
+        "This Act may be cited as the Fixture Act, placeholder text only.\n"
+        "2 Commencement\n"
+        "Placeholder commencement text that is long enough to be a provision.\n"
+    )
+    assert [p.section_number for p in split_sections(act)] == ["1", "2"]
+
+
+def test_a_bare_schedule_2_clause_number_is_a_clause_with_no_heading() -> None:
+    provisions = _regulation_split()
+    clause = provisions["Sch 2 cl 010.211"]
+    assert clause.heading == ""
+    assert "an applicant must satisfy" in clause.text
+
+
+def test_a_schedule_2_division_heading_is_not_cited_as_a_clause() -> None:
+    provisions = _regulation_split()
+    assert "Sch 2 cl 010.21" not in provisions
+    assert "Sch 2 cl 010.2" not in provisions
+    assert "Sch 2 cl 010.6" not in provisions
+
+
+def test_a_schedule_2_clause_shorter_than_the_floor_is_kept() -> None:
+    provisions = _regulation_split()
+    assert "Conditions 8101 and 8102." in provisions["Sch 2 cl 010.611"].text
+
+
+def test_a_schedule_2_clause_quoted_in_another_schedule_stays_where_it_is_quoted() -> None:
+    provisions = _regulation_split()
+    assert "Sch 13 cl 010.311" not in provisions
+    assert "Sch 2 cl 010.311" not in provisions
+    assert "belongs to 9903" in provisions["Sch 13 cl 9903"].text
+
+
+def test_part_numbering_is_for_regulations_only() -> None:
+    # An award numbers its subclauses "10.1"; under the regulation pattern
+    # every subclause would become a provision of its own.
+    assert ingest.section_pattern("regulation") is ingest.DOTTED_SECTION_RE
+    for doc_type in ("act", "award", "case", "guidance"):
+        assert ingest.section_pattern(doc_type) is ingest.SECTION_RE
+    award = (
+        "10. Types of employment\n"
+        "10.1 A full-time employee is engaged for placeholder hours of work.\n"
+        "10.2 A part-time employee is engaged for fewer placeholder hours.\n"
+    )
+    assert [p.section_number for p in split_sections(award)] == ["10"]
+
+
+# --- departmental guidance --------------------------------------------------
+
+HOME_AFFAIRS_URL = "https://immigration.homeaffairs.gov.au/visas/getting-a-visa/fixture"
+
+
+def test_guidance_is_stored_whole_and_its_steps_are_never_sections() -> None:
+    page = (
+        "Fixture visa guidance\n"
+        "1. Check you are eligible\n"
+        "Placeholder guidance text about eligibility for this fixture.\n"
+        "2. Gather your documents\n"
+        "Placeholder guidance text about documents for this fixture.\n"
+    )
+    (only,) = ingest.split_guidance(page)
+    assert only.section_number == "(whole document)"
+    assert only.unit_type == "document"
+    assert "Gather your documents" in only.text
+
+
+@pytest.mark.parametrize(
+    ("url", "doc_type"),
+    [
+        (HOME_AFFAIRS_URL, "act"),
+        (HOME_AFFAIRS_URL, "regulation"),
+        ("https://www.legislation.gov.au/F1996B03551/latest/text", "guidance"),
+    ],
+)
+def test_ingest_document_refuses_a_doc_type_the_source_host_contradicts(
+    url: str, doc_type: str
+) -> None:
+    with pytest.raises(IngestionError, match="refused"):
+        ingest.ingest_document(
+            jurisdiction="commonwealth",
+            title="Fixture",
+            citation="Fixture",
+            source_url=url,
+            snapshot_date=date(2026, 9, 25),
+            sha256="a" * 64,
+            doc_type=doc_type,
+            text="1 Placeholder\nPlaceholder text that is long enough to be a provision.",
+        )
+
+
+def test_ingest_url_refuses_the_mismatch_before_fetching(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    def no_fetch(url: str) -> None:
+        raise AssertionError("fetched a source whose doc_type was already refused")
+
+    monkeypatch.setattr(ingest, "fetch", no_fetch)
+    monkeypatch.setattr(ingest, "_log_refusal", lambda **_: None)
+    with pytest.raises(SourceRefused, match="departmental guidance"):
+        ingest.ingest_url(
+            url=HOME_AFFAIRS_URL,
+            jurisdiction="commonwealth",
+            title="Fixture",
+            citation="Fixture",
+            doc_type="act",
+        )

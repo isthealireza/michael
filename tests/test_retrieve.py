@@ -282,3 +282,45 @@ def test_an_unmigrated_row_still_renders_as_a_section() -> None:
         score=0.0,
     )
     assert row.locator() == "s 4"
+
+
+# --- departmental guidance is never cited as legislation -------------------
+
+GUIDANCE_CITATION = "Department of Home Affairs, 'Fixture visa' (web page)"
+GUIDANCE_URL = "https://immigration.homeaffairs.gov.au/visas/fixture"
+
+
+def guidance_page() -> RetrievedProvision:
+    return fixtures.provision(
+        section_number="(whole document)",
+        heading="",
+        citation=GUIDANCE_CITATION,
+        unit_type="document",
+        doc_type="guidance",
+        source_url=GUIDANCE_URL,
+    )
+
+
+def test_a_guidance_page_is_cited_as_guidance() -> None:
+    pinpoint = guidance_page().pinpoint()
+    assert "(departmental guidance, not legislation)" in pinpoint
+    assert "(whole document)" not in pinpoint
+
+
+def test_guidance_is_labelled_whatever_unit_it_was_stored_as() -> None:
+    # A guidance row stored as a "section" by some future path must still not
+    # render a statutory pinpoint.
+    row = fixtures.provision(
+        section_number="3", heading="", citation=GUIDANCE_CITATION, doc_type="guidance"
+    )
+    assert row.locator() == "(departmental guidance, not legislation)"
+    assert " s 3" not in row.pinpoint()
+
+
+def test_a_part_numbered_pinpoint_is_looked_up_whole() -> None:
+    # Pasting back the pinpoint Michael renders must find that regulation,
+    # not every section 2 in the corpus.
+    assert extract_section_number("Migration Regulations 1994 (Cth) s 2.59") == "2.59"
+    assert extract_section_number("section 2.57A") == "2.57A"
+    assert extract_section_number("Sch 2 cl 010.211") == "Sch 2 cl 010.211"
+    assert extract_section_number("what does section 47. say") == "47"

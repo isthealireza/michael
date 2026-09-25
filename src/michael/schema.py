@@ -10,7 +10,10 @@ from __future__ import annotations
 from michael.config import settings
 from michael.db import writable
 
-DOC_TYPES = ("act", "regulation", "award", "case")
+#: ``guidance`` is departmental guidance - how an agency says it applies the
+#: law - and is never cited or judged as legislation. Added by
+#: db/migrations/0002_guidance_doc_type; see sources.GUIDANCE_HOSTS.
+DOC_TYPES = ("act", "regulation", "award", "case", "guidance")
 JURISDICTIONS = ("wa", "commonwealth")
 
 #: What KIND of unit one provision row is, so a pinpoint can be rendered in
@@ -43,7 +46,7 @@ CREATE TABLE IF NOT EXISTS documents (
     snapshot_date date        NOT NULL,
     sha256        char(64)    NOT NULL,
     doc_type      text        NOT NULL
-                  CHECK (doc_type IN ('act', 'regulation', 'award', 'case')),
+                  CHECK (doc_type IN ('act', 'regulation', 'award', 'case', 'guidance')),
     fetched_at    timestamptz NOT NULL DEFAULT now(),
     -- The same bytes under the same citation are the same snapshot. Re-running
     -- ingestion is therefore idempotent rather than duplicating the corpus.

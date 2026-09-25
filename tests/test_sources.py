@@ -8,10 +8,12 @@ import pytest
 from michael.sources import (
     ALLOWED_HOSTS,
     SourceRefused,
+    check_doc_type,
     check_url,
     fetch,
     host_of,
     is_allowed_host,
+    is_guidance_host,
 )
 
 
@@ -121,3 +123,48 @@ def test_a_local_file_cannot_launder_an_off_allowlist_source(tmp_path) -> None: 
             citation="Example Act 2000 (Cth)",
             doc_type="act",
         )
+
+
+# --- departmental guidance --------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "host", ["immigration.homeaffairs.gov.au", "www.immigration.homeaffairs.gov.au"]
+)
+def test_the_home_affairs_immigration_site_and_its_subdomains_are_allowed(host: str) -> None:
+    assert is_allowed_host(host)
+    assert is_guidance_host(host)
+
+
+@pytest.mark.parametrize(
+    "host",
+    [
+        "homeaffairs.gov.au",  # the parent was not asked for
+        "www.homeaffairs.gov.au",
+        "immigration.homeaffairs.gov.au.evil.com",
+        "notimmigration.homeaffairs.gov.au",
+    ],
+)
+def test_only_the_immigration_site_was_added(host: str) -> None:
+    assert not is_allowed_host(host)
+    assert not is_guidance_host(host)
+
+
+GUIDANCE_URL = "https://immigration.homeaffairs.gov.au/visas/fixture"
+LEGISLATION_URL = "https://www.legislation.gov.au/C1958A00062/latest/text"
+
+
+@pytest.mark.parametrize("doc_type", ["act", "regulation", "award", "case"])
+def test_a_guidance_page_cannot_be_stored_as_law(doc_type: str) -> None:
+    with pytest.raises(SourceRefused, match="departmental guidance"):
+        check_doc_type(GUIDANCE_URL, doc_type)
+
+
+def test_law_cannot_be_stored_as_guidance() -> None:
+    with pytest.raises(SourceRefused, match="only for"):
+        check_doc_type(LEGISLATION_URL, "guidance")
+
+
+def test_the_matching_pairs_pass() -> None:
+    check_doc_type(GUIDANCE_URL, "guidance")
+    check_doc_type(LEGISLATION_URL, "act")

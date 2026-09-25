@@ -163,3 +163,48 @@ domains:
     jurisdictions: [commonwealth]
     doc_types: [act, regulation]
     templates: privacy
+
+  - name: migration
+    keywords:
+      - migration
+      - immigration
+      - visa
+      - visas
+      - subclass
+      - bridging visa
+      - partner visa
+      - protection visa
+      - student visa
+      - visitor visa
+      - working holiday
+      - skilled visa
+      - temporary skill shortage
+      - skills in demand
+      - employer sponsored
+      - employer nomination
+      - nominated occupation
+      - sponsorship
+      - approved sponsor
+      - standard business sponsor
+      - sponsor obligations
+      - non-citizen
+      - noncitizen
+      - unlawful non-citizen
+      - visa cancellation
+      - character test
+      - public interest criterion
+      - migration act
+      - migration regulations
+      - home affairs
+      - permanent residence
+      - immigration detention
+    # Migration law is Commonwealth law; there is no WA migration law.
+    jurisdictions: [commonwealth]
+    # `case`: visa refusals and cancellations are reviewed and argued from
+    # decided cases, and the corpus already holds some (AGV20 v Minister for
+    # Immigration [2023] FCA 1430). `guidance`: Home Affairs pages, which
+    # retrieval may return but which are rendered "(departmental guidance,
+    # not legislation)" and can never alone carry a claim - see
+    # sources.GUIDANCE_HOSTS and verify.GUIDANCE_INSTRUCTIONS.
+    doc_types: [act, regulation, case, guidance]
+    templates: migration

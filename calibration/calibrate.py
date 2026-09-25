@@ -187,6 +187,20 @@ def main(argv: list[str] | None = None) -> int:
         )
         worst_absent = max(p.best_score for p in absent)
         print(f"  highest known-absent score was {worst_absent:.3f}")
+        # Margin as the 2026-09-24 threshold report defined it: how far the
+        # weakest known-good target that survives the chosen threshold sits
+        # above the strongest known-absent query. It is the headroom the
+        # threshold actually has, not the gap to the threshold itself.
+        retained = [
+            p.target_score
+            for p in good
+            if p.target_score is not None and p.target_score >= chosen[0]
+        ]
+        if retained:
+            print(
+                f"  lowest retained known-good target score {min(retained):.4f}, "
+                f"margin {min(retained) - worst_absent:.4f}"
+            )
     else:
         print("NO THRESHOLD IN THE SWEEP ELIMINATES FALSE POSITIVES.")
         print(f"  highest known-absent score: {max(p.best_score for p in absent):.3f}")

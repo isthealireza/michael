@@ -20,6 +20,7 @@ from michael.draft import DraftingError
 from michael.embeddings import EmbeddingError
 from michael.ingest import IngestionError
 from michael.migrations import MigrationError
+from michael.schema import DOC_TYPES
 from michael.sources import SourceFetchFailed, SourceRefused
 
 
@@ -111,7 +112,7 @@ def build_parser() -> argparse.ArgumentParser:
         "--doc-type",
         action="append",
         default=[],
-        choices=["act", "regulation", "award", "case"],
+        choices=list(DOC_TYPES),
         help="only store these document types. Repeatable. Omit to take all.",
     )
 
@@ -120,7 +121,7 @@ def build_parser() -> argparse.ArgumentParser:
     ingest.add_argument("--jurisdiction", required=True, choices=["wa", "commonwealth"])
     ingest.add_argument("--title", required=True)
     ingest.add_argument("--citation", required=True)
-    ingest.add_argument("--doc-type", required=True, choices=["act", "regulation", "award", "case"])
+    ingest.add_argument("--doc-type", required=True, choices=list(DOC_TYPES))
     ingest.add_argument("--snapshot-date")
 
     ingest_file = sub.add_parser("ingest-file", help="ingest a DOCX/HTML/text file already on disk")
@@ -131,9 +132,7 @@ def build_parser() -> argparse.ArgumentParser:
     ingest_file.add_argument("--jurisdiction", required=True, choices=["wa", "commonwealth"])
     ingest_file.add_argument("--title", required=True)
     ingest_file.add_argument("--citation", required=True)
-    ingest_file.add_argument(
-        "--doc-type", required=True, choices=["act", "regulation", "award", "case"]
-    )
+    ingest_file.add_argument("--doc-type", required=True, choices=list(DOC_TYPES))
     ingest_file.add_argument("--snapshot-date")
 
     user = sub.add_parser("user", help="manage michael-gate accounts")

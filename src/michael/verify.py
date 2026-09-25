@@ -527,13 +527,25 @@ EVIDENCE_KINDS: dict[str, str] = {
 
 
 def evidence_kind(provision: Evidence) -> str:
-    """ "legislation" or "judgment" - which rule the judge applies to this unit.
+    """ "legislation", "judgment" or "guidance" - which rule the judge applies.
 
     Unknown unit types fall back to "legislation", which is the stricter of
     the two: it requires the text to *state* the claim. An unrecognised unit
     is therefore harder to support, not easier.
+
+    Guidance is decided by the document, not the unit: a guidance page is
+    stored as one "document" row, which by unit alone would be judged as a
+    judgment. ``doc_type`` is read with a default because :class:`Evidence`
+    does not require it - evidence that does not say is not guidance.
     """
+    if is_guidance(provision):
+        return "guidance"
     return EVIDENCE_KINDS.get(provision.unit_type, "legislation")
+
+
+def is_guidance(provision: Evidence) -> bool:
+    """True for departmental guidance; see :data:`GUIDANCE_INSTRUCTIONS`."""
+    return getattr(provision, "doc_type", "") == "guidance"
 
 
 def provision_id_of(provision: Evidence) -> str:
@@ -627,6 +639,21 @@ Answer with a single JSON object and no other text:
 {"verdicts": [ ... ]}"""
 
 
+#: Appended to :data:`JUDGE_INSTRUCTIONS` only when a guidance provision is in
+#: the evidence. Every prompt without one is byte-for-byte what it was, so the
+#: judge measurements in calibration/verify_labelled.json still describe it.
+GUIDANCE_INSTRUCTIONS = """\
+One further kind may appear:
+
+  kind="guidance" - departmental guidance: how a government department says
+    it applies the law. It is NOT the law. It may SUPPORT a claim only about
+    what the department says, does or requires in its own processes. A claim
+    about what the law requires, permits or entitles - an Act, a regulation,
+    a visa criterion, a right or an obligation - is never SUPPORTED by
+    guidance alone, however exactly the guidance states it: answer PARTIAL if
+    guidance is all that carries it, and say so in the reason."""
+
+
 def build_prompt(claims: Sequence[Claim], provisions: Sequence[Evidence]) -> str:
     """Assemble the judge prompt from the claims and the retrieved text only.
 
@@ -654,8 +681,11 @@ def build_prompt(claims: Sequence[Claim], provisions: Sequence[Evidence]) -> str
             f"</provision>"
         )
     claim_lines = "\n".join(f"{c.claim_id} ({c.unit}): {c.text}" for c in claims)
+    instructions = JUDGE_INSTRUCTIONS
+    if any(is_guidance(p) for p in provisions):
+        instructions = f"{JUDGE_INSTRUCTIONS}\n\n{GUIDANCE_INSTRUCTIONS}"
     return (
-        f"{JUDGE_INSTRUCTIONS}\n\n"
+        f"{instructions}\n\n"
         f"PROVISIONS ({len(provisions)}):\n" + "\n\n".join(blocks) + "\n\n"
         f"CLAIMS ({len(claims)}):\n{claim_lines}\n"
     )
@@ -770,6 +800,7 @@ def validate_verdicts(
     *,
     claims: Sequence[Claim],
     retrieved_ids: Iterable[str],
+    guidance_ids: Iterable[str] = (),
 ) -> tuple[Ruling, ...]:
     """Turn the judge's raw output into one validated ruling per claim.
 
@@ -783,6 +814,7 @@ def validate_verdicts(
     nothing it said about that claim can be trusted.
     """
     known = {str(i) for i in retrieved_ids}
+    guidance = {str(i) for i in guidance_ids}
     try:
         items = _parse(raw)
     except JudgeError as exc:
@@ -858,8 +890,22 @@ def validate_verdicts(
             )
             continue
 
+        # The floor under GUIDANCE_INSTRUCTIONS, in code: guidance is not
+        # the law, so a claim nothing but guidance carries is never fully
+        # SUPPORTED in a legal document, whatever the judge answered. PARTIAL,
+        # not UNSUPPORTED - the page may well say it - so it is flagged
+        # inline and listed under OPEN ITEMS for a practitioner to check
+        # against the Act or Regulations.
+        final: Verdict = verdict
+        if verdict == "SUPPORTED" and ids and all(i in guidance for i in ids):
+            final = "PARTIAL"
+            reason = (
+                "supported only by departmental guidance, which is not legislation "
+                f"- confirm against the Act or Regulations ({reason})"
+            )
+
         rulings.append(
-            Ruling(claim_id=claim.claim_id, verdict=verdict, provision_ids=ids, reason=reason)
+            Ruling(claim_id=claim.claim_id, verdict=final, provision_ids=ids, reason=reason)
         )
     return tuple(rulings)
 
@@ -1025,7 +1071,10 @@ def verify_draft(
         )
 
     rulings = validate_verdicts(
-        raw, claims=claims, retrieved_ids=[provision_id_of(p) for p in provisions]
+        raw,
+        claims=claims,
+        retrieved_ids=[provision_id_of(p) for p in provisions],
+        guidance_ids=[provision_id_of(p) for p in provisions if is_guidance(p)],
     )
     return Verification(
         claims=claims,

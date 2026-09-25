@@ -62,9 +62,16 @@ uv run michael ingest https://www.legislation.gov.au/... \
   --title "Fair Work Act 2009" --citation "Fair Work Act 2009 (Cth)"
 ```
 
-Only `legislation.wa.gov.au`, `legislation.gov.au`, `fairwork.gov.au` and
-`austlii.edu.au` (and their subdomains) are fetchable. Every other host is
-refused and logged. There is no configuration key that widens this.
+Only `legislation.wa.gov.au`, `legislation.gov.au`, `fairwork.gov.au`,
+`austlii.edu.au` and `immigration.homeaffairs.gov.au` (and their subdomains)
+are fetchable. Every other host is refused and logged. There is no
+configuration key that widens this.
+
+`immigration.homeaffairs.gov.au` publishes departmental guidance, not law, and
+is bound to `--doc-type guidance` in both directions: a Home Affairs page
+ingested as `act` or `regulation` is refused, and so is `guidance` claimed for
+any other host. The parent `homeaffairs.gov.au` is not on the list. See
+"Departmental guidance is never cited as legislation" below.
 
 ## Migrations
 
@@ -98,8 +105,14 @@ first. `0001`'s rollback drops the column, which discards which rows were
 paragraphs, orders or whole documents; that is re-derivable only by
 re-ingesting, and the `.down.sql` says so rather than pretending otherwise.
 
-An existing database needs the migration; `uv run michael schema` alone is no
-longer enough. The integration suite applies it in its own fixtures.
+`0002_guidance_doc_type` widens the `documents.doc_type` CHECK to admit
+`guidance`. Its rollback does **not** delete guidance documents to make the
+narrower constraint fit: with any guidance row present the rollback fails and
+its transaction leaves the database as it was. Removing guidance is a decision
+about the corpus, taken by deleting those documents first.
+
+An existing database needs the migrations; `uv run michael schema` alone is no
+longer enough. The integration suite applies them in its own fixtures.
 
 ## Using it
 
@@ -235,6 +248,164 @@ reading anything into it.
 
 No threshold change is proposed. `RETRIEVAL_MIN_SCORE` stays at 0.60 and the
 production table above remains the reference measurement.
+
+#### Adding migration law: the delta, measured LOCALLY
+
+Measured 2026-09-25 against the **local** corpus after the Migration
+Regulations 1994 and the Migration Act 1958 were ingested (216 documents,
+12,789 provisions, `corpus_stats` refreshed by the ingest). **Not deployed to
+Railway; production does not have any of this.** The labelled set gained 5
+known-good and 3 known-absent migration queries (`"domain": "migration"`) and
+now holds 61 known-good and 42 known-absent.
+
+| threshold | TP | FN | FP | TN | precision | recall |
+|---|---|---|---|---|---|---|
+| 0.55 | 45 | 16 | 29 | 13 | 0.608 | 0.738 |
+| 0.60 | 40 | 21 | 19 | 23 | 0.678 | 0.656 |
+| 0.65 | 35 | 26 | 6 | 36 | 0.854 | 0.574 |
+| 0.70 | 19 | 42 | 1 | 41 | 0.950 | 0.311 |
+| 0.75 | 12 | 49 | 1 | 41 | 0.923 | 0.197 |
+| 0.80 | 1 | 60 | 0 | 42 | 1.000 | 0.016 |
+
+**The lowest zero-false-positive threshold stays at 0.80**, where recall is
+0.016 (1 of 61). The highest known-absent score is 0.764 and is not a
+migration query: it is the pre-existing Lange question returning Fair Work Act
+s 536H, 0.761 in run C above. The lowest known-good target retained at 0.80
+scores 0.8262, so the **margin** - that score minus the highest known-absent,
+as the 2026-09-24 threshold report defines it - is **0.0627**.
+`calibrate.py` now prints that figure. The top-10 ceiling rose from 45/56 to
+50/61: all five new targets rank, and no existing target was crowded out.
+
+Recall at 0.80 fell from run C's 2/56 to 1/61 because `AGV20 ... at [5]` moved
+from just above 0.80 to 0.799. Adding 3,309 provisions changes BM25's N and
+avgdl. That is a boundary tie, not a regression, and it is the same kind of
+movement the 2026-09-24 statistics refresh produced.
+
+The migration queries alone do not separate either:
+
+| query | kind | score | top result |
+|---|---|---|---|
+| standard business sponsor approval | good | 0.733 (rank 1) | Regs 2.59 |
+| sponsor pays a worker's travel home | good | 0.538 (rank 2) | Regs 2.80 |
+| visa refused or cancelled on character | good | 0.688 (rank 5) | Act s 501 |
+| detention without a valid visa | good | 0.651 (rank 7) | Act s 189 |
+| visas still open after an onshore refusal | good | 0.661 (rank 1) | Act s 48 |
+| NZ resident visa under the Immigration Act 2009 | absent | 0.679 | Act s 294 |
+| residence before citizenship by conferral | absent | 0.668 | Regs Sch 2 cl 155.211 |
+| partner visa processing times | absent | 0.600 | Regs Sch 1 cl 1214C |
+
+At the configured 0.60 the migration set keeps 4 of 5 targets and answers 2
+of the 3 questions it cannot answer. The third, processing times, escapes by
+0.00002 (0.59998): a tie-break, not a pass. The NZ question is now the second-worst false
+positive in the whole set. It is the same defect the production table
+records, on a new domain: a large body of visa law makes any visa-shaped
+question look covered. The known-absent re-check retired nothing. Two
+pre-existing known-absent queries now have a Migration provision as their top
+hit (Briginshaw 0.645, Act s 486X; Northern Territory sentencing 0.581, Regs
+Sch 8 cl 8528), and neither crosses 0.70.
+
+No threshold change is proposed. `RETRIEVAL_MIN_SCORE` stays at 0.60.
+
+### Migration law: what was ingested
+
+Latest compilations as at 2026-09-25, from the Federal Register's Word
+originals, fetched per volume from the dated API document URL. The
+`/text/original/word` page URL the Privacy Act used returns 404 for a
+multi-volume compilation, and `asatspecification='Latest'` resolves to
+different bytes over time. The dated key pins the snapshot:
+
+```bash
+uv run michael ingest "https://api.prod.legislation.gov.au/v1/documents(titleid='F1996B03551',start=2026-07-01T00:00:00,retrospectivestart=2026-07-01T00:00:00,rectificationversionnumber=0,type='Primary',uniqueTypeNumber=0,volumeNumber=1,format='Word')" \
+  --jurisdiction commonwealth --doc-type regulation --snapshot-date 2026-07-01 \
+  --title "Migration Regulations 1994" --citation "Migration Regulations 1994 (Cth)"
+```
+
+| instrument | compilation | volumes ingested | provisions |
+|---|---|---|---|
+| Migration Regulations 1994 (Cth) | No. 288, 1 July 2026 (F2026C00667) | 1, 2, 3 | **2,353** (479 + 1,321 + 553) |
+| Migration Act 1958 (Cth) | No. 171, 4 June 2026 (C2026C00232) | 1, 2 | **956** (588 + 368) |
+
+Regulations volume 4 is the endnotes alone, which hold no law, so it was not
+ingested. Split, it produces one 2,476-character cover-page row. No
+duplicate pinpoints in either instrument, and every row is embedded.
+
+**Part 2A of the Regulations has operative text:** 82 regulations, 2.57 to
+2.99, 237,223 characters. 64 of them carry numbered subregulations, and none
+is heading-only. For example, 2.59 opens with the criterion itself ("For
+subsection 140E(1) of the Act, the criterion that must be satisfied...").
+
+**Neither instrument could be ingested by the splitter as it was.** Measured
+on these exact files before the changes below:
+
+* **Regulations.** `SECTION_RE` has no form for a Part-numbered regulation
+  ("2.57 Interpretation"). Its number stops at the dot and then demands
+  whitespace. Volume 1 split into 74 rows, none of them from Parts 1 to 5, so
+  **Part 2A was absent from the corpus altogether**. Volumes 2 and 4 each came
+  out as a single `(whole document)` row of about 780,000 characters.
+  `detect_headings_only` passed all of it. `DOTTED_SECTION_RE` now accepts
+  the Part number for doc_type `regulation` only. An award numbers its
+  subclauses "10.1", so awards, Acts, cases and guidance keep `SECTION_RE`.
+* **Schedule 2's shape.** A clause number stands alone on its line
+  ("010.211"), and the Division and Subdivision headings above it
+  ("010.21—Criteria to be satisfied...") carry the heading text. Taken naively,
+  the headings became clauses: "Sch 2 cl 010.21" does not exist, and it held
+  the real clause 010.211 inside it. A bare `NNN.NNN` line is now a clause
+  with an empty heading. An `NNN.N` or `NNN.NN` heading is not a provision and
+  stays in the text of the clause before it, as a Part heading of an Act does.
+* **Short clauses were discarded.** "417.611 / Conditions 8547 and 8548." is
+  33 characters, under `MIN_PROVISION_CHARS`, and its text was stored in no
+  provision at all (8 clauses in volume 2). The floor no longer applies to a
+  heading-less clause that has text.
+* **Quoted clauses.** Sch 13 cl 9903 directs that Division 132.3 be read "as if
+  ... replaced with the following" and sets out clauses 132.311 to 132.314.
+  They were being cited as "Sch 13 cl 132.311". A Schedule 2 clause number
+  outside Schedule 2 is now left inside the clause that quotes it.
+* **Act: every section was labelled a Schedule clause.** The cover page of a
+  multi-volume compilation lists what each volume holds ("Volume 2: /
+  sections 262-507 / Schedule / Endnotes"). `_opening_schedule` took that
+  bare "Schedule" line for the real heading, so s 1 to s 507 of the
+  Migration Act came out as "Sch 1 cl 1" to "Sch 1 cl 507". It did the same
+  to the Regulations' own regs 1.01 to 5.45. `VOLUME_LISTING` bounds the
+  listing by the compilation's fixed wording at both ends, and neither
+  `_opening_schedule` nor `schedule_spans` reads a Schedule heading inside
+  it.
+
+**No stored document is affected.** All 50 originals under `sources/` were
+re-split with the old and the new code. Under the Act pattern, none changes.
+Under the regulation pattern, two WA originals would split differently if
+re-ingested as regulations. Neither is in the database, and the larger change
+turns a retail-lease Schedule's "1.1 Terms used in this clause" into its own
+clause.
+
+**A Part-numbered pinpoint is looked up whole.** `SECTION_REFERENCE` and
+`SCHEDULE_REFERENCE` stopped at the dot, so pasting back the pinpoint Michael
+renders, "Migration Regulations 1994 (Cth) s 2.59", looked up "2": every
+section 2 in the corpus, returned as an exact identifier match. Both now
+accept "2.59", "2.57A" and "Sch 2 cl 010.211".
+
+**The `migration` domain** (`domains.yaml`) filters to `commonwealth` and to
+`[act, regulation, case, guidance]`. Its keywords avoid bare "nomination" and
+"sponsor" so that it does not take corporate or employment requests.
+`tests/test_domains.py` pins both, and pins that no other domain reaches
+guidance.
+
+### Departmental guidance is never cited as legislation
+
+`guidance` is a document type for how a department says it applies the law.
+Pages from `immigration.homeaffairs.gov.au` are guidance and nothing else, and
+nothing else is guidance (`sources.check_doc_type`, enforced in `ingest_url`,
+`ingest_file` and again in `ingest_document`, which every path passes
+through). Four controls stop a guidance page from being taken for law, and
+none of them depends on the model:
+
+| where | what happens to guidance |
+|---|---|
+| splitting | stored as one `(whole document)` row. Its numbered steps ("1. Check you are eligible") are never taken for sections |
+| citation | `pinpoint()` renders `(departmental guidance, not legislation)` in place of any section, paragraph or whole-document locator, decided by `doc_type` before `unit_type`, so it reaches BASED ON, outlines, the tool payload and the judge's prompt with no separate step |
+| drafting | VERIFY BEFORE USE names every guidance page relied on, and says it is not the law. An outline introduces it as "guidance", not "authority" |
+| verification | judged as `kind="guidance"`, never as legislation or as a judgment. The judge's rule for it is appended only when guidance is in the evidence, so every prompt without guidance is byte-for-byte unchanged and the measured judge figures still apply. In code, a claim that **only** guidance carries is never SUPPORTED: it is marked PARTIAL, with the reason "supported only by departmental guidance, which is not legislation" |
+
+No guidance has been ingested yet. Phase 1 adds the host and the type only.
 
 ### Case law is split and cited as case law
 
@@ -398,7 +569,8 @@ and writes the outline to `templates/drafts/` for review.
 **Work health and safety and privacy questions cannot return case law.**
 `domains.yaml` filters both domains to `doc_types: [act, regulation]`, so no
 WHS or privacy question reaches a judgment however well it matches, while
-`employment`, `contracts`, `consumer`, `property` and `corporate` do. Both
+`employment`, `contracts`, `consumer`, `property`, `corporate` and `migration`
+do. Both
 exclusions are arguably wrong for the reason `employment`'s was — WHS
 prosecutions and privacy determinations are reasoned in decided cases — but
 widening a domain changes what retrieval searches and therefore moves the
@@ -430,6 +602,30 @@ yields no claims at all. The outcome is what `verify_draft` already documents
 ("0 claims, this draft holds no verifiable prose"), so nothing is currently
 wrong with an output — but it is right for the wrong reason, and a test
 asserting "no claim mentions X" over an outline cannot fail.
+
+**About 100 transitional clauses of the Migration Regulations carry the
+previous clause's pinpoint.** Schedule 13's clauses are headed "Operation of
+Schedule 4" and the like. Each sits next to a Part heading ending in a year
+("... Regulation 2013"), or next to another such heading. `_is_table_row` and
+`_is_contents_entry` read two neighbouring lines that end in bare numbers as
+pagination, and reject the heading. Measured in volume 3: 99 rejected as
+table rows and 3 as contents rows. None of the text is lost; each clause's
+text is stored inside the clause before it, so a hit on it is cited to the
+wrong transitional clause. The heuristic is shared by every document type,
+and changing it moves every future split, so it was not changed here.
+Schedule 13 holds application and transitional provisions, not visa criteria.
+
+**Regulations are cited "s 2.59", not "reg 2.59".** `locator()` renders any
+numbered section-type unit as `s N`. AGLC cites a regulation as `reg` (and a
+Schedule clause as `sch 2 cl`, which this already does). The Migration
+Regulations inherit a form every WA regulation in the corpus already has.
+Changing it re-renders every existing regulation citation, so it is recorded
+here, not made silently.
+
+**A guidance page is embedded from its opening only.** It is stored as one
+row, so a page longer than `EMBEDDING_MAX_CHARS` has a vector built from its
+first part. Its full text is still stored and indexed by BM25. A heading-based
+guidance splitter is the fix, and no guidance is ingested yet.
 
 **The threshold does not separate covered from uncovered questions.** Measured
 2026-09-24 against the production corpus with 48 known-good and 33 known-absent
@@ -702,7 +898,16 @@ schema work and production ingests run on Railway.
 **The first ingest of any new source runs locally first.** That gate caught
 `_is_contents_entry` dropping every section heading that ended in a cited Act's
 year; a production-first ingest would have landed 355 provisions with a section
-missing and no symptom beyond an occasional wrong `NOT COVERED`.
+missing and no symptom beyond an occasional wrong `NOT COVERED`. It caught
+more on the migration ingest (2026-09-25): every section of the Migration Act
+cited as "Sch 1 cl N", and Part 2A of the Migration Regulations missing
+entirely. Both are in "Migration law: what was ingested".
+
+**Migration law is local only.** Production has neither migration 0002 nor
+the Migration corpus. When it is taken there: deploy the image, run
+`michael migrate` (0002 must precede any guidance ingest, since the old CHECK
+refuses the type), ingest the five volumes by the dated URLs above, then
+re-run calibration against production.
 
 **Deploy before ingesting on Railway.** The container runs the code in its
 image, not the working tree, so a parser change that has not been pushed and

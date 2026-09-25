@@ -27,6 +27,13 @@ LEXICAL_WEIGHT = 0.5
 VECTOR_WEIGHT = 0.5
 
 
+#: What a guidance row carries where legislation carries "s 15A". It is part
+#: of the citation string itself, so it travels into BASED ON, the outline,
+#: the judge's prompt and the tool payload without any of them having to
+#: remember to add it - there is no rendering of a guidance row without it.
+GUIDANCE_LOCATOR = "(departmental guidance, not legislation)"
+
+
 @dataclass(frozen=True, slots=True)
 class RetrievedProvision:
     """A provision with the full metadata needed to cite it."""
@@ -67,6 +74,9 @@ class RetrievedProvision:
           an order and one is not invented here
         * a document with no internal numbering - ``(whole document)``
 
+        * departmental guidance - ``(departmental guidance, not legislation)``,
+          whatever unit it was stored as; see :data:`GUIDANCE_LOCATOR`
+
         Before this, every unit was rendered as a section, so paragraph 2 of
         Muir v Open Brethren [1956] HCA 14 was cited as "s 2" - a citation
         that asserts the High Court's reasons are a statutory provision.
@@ -75,6 +85,11 @@ class RetrievedProvision:
 
     def locator(self) -> str:
         """The pinpoint alone, without the citation or the snapshot date."""
+        # Decided by the document, before the unit: a guidance page is not
+        # law however it was split, and no pinpoint form of legislation or of
+        # a judgment may be rendered for it.
+        if self.doc_type == "guidance":
+            return GUIDANCE_LOCATOR
         number = self.section_number
         if self.unit_type == "paragraph":
             return f"at [{number}]"
@@ -142,9 +157,17 @@ class RetrievalResult:
 #: on. `\bs\b` cannot fire inside a word ("is 47", "As 47"), only on a genuine
 #: standalone "s" token, which is common Australian pinpoint-citation style
 #: and essentially never plain English on its own.
+#:
+#: The number may be Part-numbered - "2.59", "2.57A" - because that is how the
+#: Migration Regulations number theirs and how pinpoint() renders them. Before
+#: it could be, "s 2.59" stopped at the dot and looked up "2": every section 2
+#: in the corpus, returned as an exact identifier match for a question about
+#: regulation 2.59. The fraction needs a digit after the dot, so a sentence
+#: ending "section 47." is still "47".
+_IDENTIFIER = r"\d{1,4}[A-Za-z]{0,4}(?:\.\d{1,4}[A-Za-z]{0,4})?"
 SECTION_REFERENCE = re.compile(
-    r"\bsection\s+(?P<num1>\d{1,4}[A-Za-z]{0,4})\b"
-    r"|\bs\.?\s?(?P<num2>\d{1,4}[A-Za-z]{0,4})\b",
+    rf"\bsection\s+(?P<num1>{_IDENTIFIER})\b"
+    rf"|\bs\.?\s?(?P<num2>{_IDENTIFIER})\b",
     re.IGNORECASE,
 )
 
@@ -158,7 +181,7 @@ SECTION_REFERENCE = re.compile(
 #: and miss the Schedule and clause numbers either side of it.
 SCHEDULE_REFERENCE = re.compile(
     r"\bsch(?:edule)?\.?\s*(?P<sch>\d{1,4}[A-Za-z]{0,4})"
-    r"\s+cl(?:ause)?\.?\s*(?P<cl>\d{1,4}[A-Za-z]{0,4})\b",
+    rf"\s+cl(?:ause)?\.?\s*(?P<cl>{_IDENTIFIER})\b",
     re.IGNORECASE,
 )
 

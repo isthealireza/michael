@@ -14,6 +14,7 @@ from michael.draft import (
     draft_from_template,
     fill,
     find_template,
+    guidance_warnings,
     outline_without_template,
     unresolved,
     wrong_jurisdiction_warnings,
@@ -242,3 +243,39 @@ def test_an_outline_labels_an_unheaded_judgment_paragraph_by_its_paragraph_numbe
     )
     assert "### 1. Paragraph [6]" in draft.body
     assert "Section 6" not in draft.body
+
+
+# --- departmental guidance -------------------------------------------------
+
+GUIDANCE_PAGE = provision(
+    section_number="(whole document)",
+    heading="",
+    citation="Department of Home Affairs, 'Fixture visa' (web page)",
+    unit_type="document",
+    doc_type="guidance",
+    source_url="https://immigration.homeaffairs.gov.au/visas/fixture",
+)
+
+
+def test_guidance_is_cited_as_guidance_in_based_on_and_flagged_for_review() -> None:
+    (citation,) = citations_of((GUIDANCE_PAGE,))
+    assert "(departmental guidance, not legislation)" in citation
+    (warning,) = guidance_warnings((*FAIR_WORK_PROVISIONS, GUIDANCE_PAGE))
+    assert "not the law" in warning
+    assert citation in warning
+
+
+def test_no_guidance_no_warning() -> None:
+    assert guidance_warnings(FAIR_WORK_PROVISIONS) == ()
+
+
+def test_an_outline_introduces_guidance_as_guidance() -> None:
+    outline = outline_without_template(
+        request="visa outline",
+        provisions=(GUIDANCE_PAGE,),
+        domain="migration",
+        write_template=False,
+    )
+    assert "Nearest retrieved guidance" in outline.body
+    assert "Nearest retrieved authority" not in outline.body
+    assert any("not the law" in line for line in outline.verify_before_use)

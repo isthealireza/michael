@@ -220,6 +220,8 @@ UNIT_NOUNS = {
 
 
 def _unit_noun(provision: RetrievedProvision) -> str:
+    if provision.doc_type == "guidance":
+        return "guidance"
     return UNIT_NOUNS.get(provision.unit_type, "provision")
 
 
@@ -252,6 +254,23 @@ def wrong_jurisdiction_warnings(
         "WA legislation was retrieved for an employment question. National-system "
         "employment is governed by the Fair Work Act 2009 (Cth) and the applicable "
         "Modern Award, so these were not relied on: " + "; ".join(offenders),
+    )
+
+
+def guidance_warnings(provisions: tuple[RetrievedProvision, ...]) -> tuple[str, ...]:
+    """Name every departmental guidance page this draft rests on.
+
+    The citation already says "(departmental guidance, not legislation)"; this
+    puts the consequence in VERIFY BEFORE USE, where a practitioner reads what
+    must be checked, rather than leaving it to be noticed in a list.
+    """
+    pages = sorted({p.pinpoint() for p in provisions if p.doc_type == "guidance"})
+    if not pages:
+        return ()
+    return (
+        "Departmental guidance was retrieved. It states how the Department says it "
+        "applies the law; it is not the law, and nothing here rests on it as "
+        "legislation. Confirm each point against the Act or Regulations: " + "; ".join(pages),
     )
 
 
@@ -309,6 +328,7 @@ def draft_from_template(
 
     verify = list(extra_verify)
     verify += list(wrong_jurisdiction_warnings(domain=domain, provisions=provisions))
+    verify += list(guidance_warnings(provisions))
     if not citations:
         verify.append(
             "No provisions were retrieved for this draft, so no clause here is tied to a source."
@@ -405,6 +425,7 @@ def outline_without_template(
             "one actually supports its clause before relying on it."
         )
     verify += list(wrong_jurisdiction_warnings(domain=domain, provisions=provisions))
+    verify += list(guidance_warnings(provisions))
     if not provisions:
         verify.append("Nothing in this outline is grounded in a retrieved provision.")
 

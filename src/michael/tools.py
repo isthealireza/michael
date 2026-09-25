@@ -31,6 +31,7 @@ from michael import verify as verification
 from michael.config import settings
 from michael.domains import Routing, load_domains, route
 from michael.output_check import citation_fidelity
+from michael.schema import DOC_TYPES
 from michael.schema import apply_schema as _apply_schema
 from michael.sources import ALLOWED_HOSTS
 
@@ -557,7 +558,7 @@ INGESTION_TOOLS: tuple[dict[str, Any], ...] = (
                 "citation": {"type": "string"},
                 "doc_type": {
                     "type": "string",
-                    "enum": ["act", "regulation", "award", "case"],
+                    "enum": list(DOC_TYPES),
                 },
                 "snapshot_date": {"type": "string", "description": "ISO date. Defaults to today."},
             },
@@ -579,7 +580,7 @@ INGESTION_TOOLS: tuple[dict[str, Any], ...] = (
                 "jurisdiction": {"type": "string", "enum": ["wa", "commonwealth"]},
                 "title": {"type": "string"},
                 "citation": {"type": "string"},
-                "doc_type": {"type": "string", "enum": ["act", "regulation", "award", "case"]},
+                "doc_type": {"type": "string", "enum": list(DOC_TYPES)},
                 "snapshot_date": {"type": "string"},
             },
             "required": ["path", "source_url", "jurisdiction", "title", "citation", "doc_type"],
@@ -599,7 +600,7 @@ INGESTION_TOOLS: tuple[dict[str, Any], ...] = (
                     "type": "array",
                     "items": {
                         "type": "string",
-                        "enum": ["act", "regulation", "award", "case"],
+                        "enum": list(DOC_TYPES),
                     },
                     "description": "Narrow what is stored. Omit to take everything.",
                 },

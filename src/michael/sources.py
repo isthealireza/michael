@@ -29,8 +29,19 @@ ALLOWED_HOSTS: frozenset[str] = frozenset(
         "legislation.gov.au",
         "fairwork.gov.au",
         "austlii.edu.au",
+        "immigration.homeaffairs.gov.au",
     }
 )
+
+#: Hosts that publish departmental guidance, not law. A page from one of these
+#: is stored as doc_type "guidance" and nothing else, and doc_type "guidance"
+#: comes from these hosts and nowhere else: see :func:`check_doc_type`.
+#: Deliberately narrower than ``homeaffairs.gov.au`` - only the immigration
+#: site was asked for, and the parent domain is not on the allowlist at all.
+GUIDANCE_HOSTS: frozenset[str] = frozenset({"immigration.homeaffairs.gov.au"})
+
+#: The one doc_type a guidance host's pages may be stored as.
+GUIDANCE_DOC_TYPE = "guidance"
 
 MAX_REDIRECTS = 5
 MAX_BYTES = 64 * 1024 * 1024
@@ -69,6 +80,38 @@ def is_allowed_host(host: str) -> bool:
     if not host:
         return False
     return any(host == allowed or host.endswith("." + allowed) for allowed in ALLOWED_HOSTS)
+
+
+def is_guidance_host(host: str) -> bool:
+    """True if ``host`` is a guidance host or a subdomain of one."""
+    host = host.lower().rstrip(".")
+    if not host:
+        return False
+    return any(host == guidance or host.endswith("." + guidance) for guidance in GUIDANCE_HOSTS)
+
+
+def check_doc_type(url: str, doc_type: str) -> None:
+    """Refuse a doc_type that misstates what the source at ``url`` is.
+
+    Both directions are refused, because either one ends with guidance cited
+    as law. A Home Affairs page stored as ``act`` or ``regulation`` would be
+    rendered with a section pinpoint and judged as legislation - it is policy
+    about how the Department applies the law, not the law. And ``guidance``
+    claimed for a legislation.gov.au compilation would demote the law itself
+    to guidance. The doc_type is otherwise the caller's word; here it is
+    fixed by where the bytes came from, which the caller cannot choose.
+    """
+    host = host_of(url)
+    if is_guidance_host(host) and doc_type != GUIDANCE_DOC_TYPE:
+        raise SourceRefused(
+            f"refused: {host!r} publishes departmental guidance, not legislation; "
+            f"doc_type must be {GUIDANCE_DOC_TYPE!r}, got {doc_type!r} ({url})"
+        )
+    if doc_type == GUIDANCE_DOC_TYPE and not is_guidance_host(host):
+        raise SourceRefused(
+            f"refused: doc_type {GUIDANCE_DOC_TYPE!r} is only for "
+            f"{', '.join(sorted(GUIDANCE_HOSTS))}, not {host!r} ({url})"
+        )
 
 
 def check_url(url: str) -> str:

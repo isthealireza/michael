@@ -1209,3 +1209,70 @@ def test_an_invented_fifth_verdict_is_still_a_failure() -> None:
     ruling = _judged("The parties will meet quarterly.", "OUT_OF_SCOPE")
     assert ruling.verdict == "UNSUPPORTED"
     assert "no usable verdict" in ruling.reason
+
+
+# --- departmental guidance -------------------------------------------------
+
+GUIDANCE_PAGE = provision(
+    section_number="(whole document)",
+    heading="",
+    citation="Department of Home Affairs, 'Fixture visa' (web page)",
+    unit_type="document",
+    doc_type="guidance",
+    source_url="https://immigration.homeaffairs.gov.au/visas/fixture",
+)
+GUIDANCE_ID = str(GUIDANCE_PAGE.provision_id)
+
+
+def test_guidance_is_judged_as_guidance_not_as_a_judgment() -> None:
+    # Stored as one "document" row, which by unit alone reads as a judgment.
+    assert verify.evidence_kind(GUIDANCE_PAGE) == "guidance"
+
+
+def test_the_guidance_rule_is_added_only_when_guidance_is_in_the_evidence() -> None:
+    claims = one_claim()
+    without = build_prompt(claims, FAIR_WORK_PROVISIONS)
+    # Byte-for-byte what it was before guidance existed, so the measured
+    # judge figures still describe the prompt every existing draft gets.
+    assert without.startswith(verify.JUDGE_INSTRUCTIONS + "\n\nPROVISIONS (")
+    assert verify.GUIDANCE_INSTRUCTIONS not in without
+
+    with_guidance = build_prompt(claims, (*FAIR_WORK_PROVISIONS, GUIDANCE_PAGE))
+    assert verify.GUIDANCE_INSTRUCTIONS in with_guidance
+    assert 'kind="guidance"' in with_guidance
+
+
+def _supported_by(*ids: str) -> str:
+    return json.dumps(
+        {
+            "verdicts": [
+                {
+                    "claim_id": "c1",
+                    "verdict": "SUPPORTED",
+                    "provision_ids": list(ids),
+                    "reason": "the text states it",
+                }
+            ]
+        }
+    )
+
+
+def test_a_claim_only_guidance_carries_is_never_supported() -> None:
+    (ruling,) = validate_verdicts(
+        _supported_by(GUIDANCE_ID),
+        claims=one_claim(),
+        retrieved_ids=[*PROVISION_IDS, GUIDANCE_ID],
+        guidance_ids=[GUIDANCE_ID],
+    )
+    assert ruling.verdict == "PARTIAL"
+    assert "not legislation" in ruling.reason
+
+
+def test_a_claim_legislation_also_carries_stays_supported() -> None:
+    (ruling,) = validate_verdicts(
+        _supported_by(GUIDANCE_ID, PROVISION_IDS[0]),
+        claims=one_claim(),
+        retrieved_ids=[*PROVISION_IDS, GUIDANCE_ID],
+        guidance_ids=[GUIDANCE_ID],
+    )
+    assert ruling.verdict == "SUPPORTED"

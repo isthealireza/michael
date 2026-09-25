@@ -431,3 +431,15 @@ def test_the_migrations_directory_is_configurable_not_derived_from_the_package(
         )
     finally:
         config.settings.cache_clear()
+
+
+def test_0002_declares_the_same_doc_types_as_the_schema() -> None:
+    """Same reason as 0001's parity test: a migrated database and a freshly
+    created one must accept exactly the same document types."""
+    from michael.schema import DOC_TYPES, schema_sql
+
+    migration = next(m for m in load_migrations() if m.id == "0002")
+    for doc_type in DOC_TYPES:
+        assert f"'{doc_type}'" in migration.up
+        assert f"'{doc_type}'" in schema_sql(8)
+    assert "'case', 'guidance'" not in migration.down

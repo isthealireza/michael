@@ -30,7 +30,15 @@ from michael.docx_text import docx_to_text, looks_like_docx
 from michael.embeddings import embed
 from michael.html_text import html_to_text, looks_like_html
 from michael.schema import DOC_TYPES, JURISDICTIONS, refresh_corpus_stats
-from michael.sources import SourceRefused, check_url, fetch, host_of, log_attempt
+from michael.sources import (
+    GUIDANCE_DOC_TYPE,
+    SourceRefused,
+    check_doc_type,
+    check_url,
+    fetch,
+    host_of,
+    log_attempt,
+)
 
 #: A section heading in Australian legislation: a number that may carry letter
 #: suffixes ("15", "15A", "23AB"), followed by a heading on the same line.
@@ -50,6 +58,59 @@ SECTION_RE = re.compile(
     r"^[ \t]*(?P<number>\d{1,4}[A-Z]{0,3})[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]*)$",
     re.MULTILINE,
 )
+
+#: A regulation heading may also be numbered by Part: "2.57 Interpretation",
+#: "2.57A Meaning of earnings", and in a Schedule "189.211 Criteria". The
+#: Migration Regulations 1994 (Cth) number every regulation this way, and
+#: SECTION_RE cannot match one: its number stops at the dot and then demands
+#: whitespace. Measured on compilation 288 before this existed: volume 1 split
+#: into 74 provisions, none of them in Parts 1-5, so Part 2A was simply absent,
+#: and volumes 2 and 4 each came out as ONE "(whole document)" row of about
+#: 780,000 characters - embedded from its opening only, cited without a
+#: pinpoint, and passed by detect_headings_only because one row has nothing to
+#: compare against.
+#:
+#: Used for doc_type "regulation" only. An award numbers its SUBclauses the
+#: same way - "10. Types of employment" then "10.1 A full-time employee is" -
+#: and under this pattern every subclause would become a provision of its own.
+#: A plain number still matches exactly as it does under SECTION_RE, so a
+#: regulation numbered "3. Terms used" splits as it always did.
+#:
+#: Two refinements, both from the shape of Schedule 2 of the Migration
+#: Regulations, where each visa subclass is laid out as
+#:
+#:     010.2—Primary criteria                               (Division)
+#:     010.21—Criteria to be satisfied at the time of ...   (Subdivision)
+#:     010.211                                              (clause)
+#:     (1) The applicant meets the requirements of ...
+#:
+#: * A clause number stands ALONE on its line, with no heading - "010.211" -
+#:   so a bare three-digit.three-digit number is accepted as a heading with an
+#:   empty title. Nothing shorter is: a bare "2.57" or "177" on its own line
+#:   is a page number or a cross-reference far more often than a provision.
+#: * A Division or Subdivision heading - three digits, a dot, one or two
+#:   digits, "010.21—..." - is NOT a provision. Taken as one it was cited as
+#:   "Sch 2 cl 010.21", a clause that does not exist, carrying the real
+#:   clause 010.211 inside it. It stays in the text of the clause before it,
+#:   as a Part or Division heading of an Act does. A regulation of Parts 1-5
+#:   ("2.57") has a one-digit Part number and is unaffected.
+DOTTED_SECTION_RE = re.compile(
+    r"^[ \t]*(?!\d{3}\.\d{1,2}(?![\d]))"
+    r"(?P<number>\d{1,4}[A-Z]{0,3}(?:\.\d{1,4}[A-Z]{0,3})?)"
+    r"(?:[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]*)"
+    r"|(?:(?<=\d{3}\.\d{3})|(?<=\d{3}\.\d{3}[A-Z]))[ \t]*)$",
+    re.MULTILINE,
+)
+
+
+#: The shape of a Schedule 2 clause number - subclass, dot, three digits.
+SCHEDULE_2_CLAUSE = re.compile(r"\d{3}\.\d{3}[A-Z]{0,3}")
+
+
+def section_pattern(doc_type: str) -> re.Pattern[str]:
+    """The heading pattern ``doc_type`` is split with; see DOTTED_SECTION_RE."""
+    return DOTTED_SECTION_RE if doc_type == "regulation" else SECTION_RE
+
 
 MIN_PROVISION_CHARS = 40
 
@@ -203,10 +264,16 @@ def _is_paginated_row(stripped: str, *, previous: str = "", following: str = "")
     return _ends_in_bare_number(previous) or _ends_in_bare_number(following)
 
 
-def _is_contents_entry(line: str, *, previous: str = "", following: str = "") -> bool:
+def _is_contents_entry(
+    line: str,
+    *,
+    previous: str = "",
+    following: str = "",
+    pattern: re.Pattern[str] = SECTION_RE,
+) -> bool:
     """True when ``line`` is a row of a table of provisions, not an operative heading."""
     stripped = line.strip()
-    if not SECTION_RE.match(stripped):
+    if not pattern.match(stripped):
         return False
     return _is_paginated_row(stripped, previous=previous, following=following)
 
@@ -315,12 +382,12 @@ def _is_table_row(
 # section - and not on where its number sits in a sequence.
 
 
-def _is_structural(line: str) -> bool:
+def _is_structural(line: str, *, pattern: re.Pattern[str] = SECTION_RE) -> bool:
     """True when a line is a heading, a page number or blank - never operative text."""
     stripped = line.strip()
     if not stripped:
         return True
-    if SECTION_RE.match(stripped):
+    if pattern.match(stripped):
         return True
     if stripped.lower().startswith(STRUCTURAL_PREFIXES):
         return True
@@ -521,6 +588,33 @@ def apparatus_rows(text: str, matches: list[re.Match[str]]) -> set[int]:
     return suppressed
 
 
+#: The cover page of a multi-volume Commonwealth compilation lists what each
+#: volume holds, one item per line:
+#:
+#:     This compilation is in 2 volumes
+#:     Volume 1:
+#:     sections 1-261K
+#:     Volume 2:
+#:     sections 262-507
+#:     Schedule
+#:     Endnotes
+#:     Each volume has its own contents
+#:
+#: Those "Schedule" / "Schedule 1" lines are a listing, not headings, and the
+#: line after each one is another listing line - which _has_prose_ahead reads
+#: as prose, because "Volume 2:" is not heading-shaped. Before this was
+#: excluded, the listing's "Schedule" made _opening_schedule report that the
+#: Migration Act 1958 (Cth) body opens inside Schedule 1, and every section of
+#: both volumes - s 1 to s 507 - was stored as "Sch 1 cl N". The Migration
+#: Regulations 1994 cover lists "Schedule 1" and did the same to regs 1.01 to
+#: 5.45. The block is bounded by the compilation's own fixed wording at both
+#: ends, so nothing outside it is skipped.
+VOLUME_LISTING = re.compile(
+    r"^This compilation is in \d+ volumes[ \t]*$.*?^Each volume has its own contents[ \t]*$",
+    re.MULTILINE | re.DOTALL | re.IGNORECASE,
+)
+
+
 def schedule_spans(text: str) -> list[tuple[int, str]]:
     """Where each Schedule starts, and its number, in document order.
 
@@ -531,7 +625,14 @@ def schedule_spans(text: str) -> list[tuple[int, str]]:
     """
     numbered = _numbers_its_schedules(text)
     spans: list[tuple[int, str]] = []
+    # The cover's volume listing, when the text still has it - a document
+    # whose table of provisions is too short to be cut keeps its cover page,
+    # and the listing's "Schedule" line would otherwise open a Schedule that
+    # swallows every section after it. See VOLUME_LISTING.
+    cover = VOLUME_LISTING.search(text)
     for match in SCHEDULE_HEADING.finditer(text):
+        if cover is not None and cover.start() <= match.start() < cover.end():
+            continue
         number = _schedule_number(match)
         if number is None:
             # An unnumbered "Schedule - Title". A document with exactly one
@@ -546,7 +647,9 @@ def schedule_spans(text: str) -> list[tuple[int, str]]:
     return spans
 
 
-def _opening_schedule(text: str, body_start: int) -> str | None:
+def _opening_schedule(
+    text: str, body_start: int, *, pattern: re.Pattern[str] = SECTION_RE
+) -> str | None:
     """The Schedule a document's operative body starts *inside*, if any.
 
     A compilation volume is not always the whole Act. Fair Work Act volume 04
@@ -604,9 +707,12 @@ def _opening_schedule(text: str, body_start: int) -> str | None:
     lines, offsets = _line_index(text)
     numbered = _numbers_its_schedules(text)
     last_real: str | None = None
+    cover = VOLUME_LISTING.search(text, 0, body_start)
     for match in SCHEDULE_HEADING.finditer(text):
         if match.start() > body_start:
             break
+        if cover is not None and cover.start() <= match.start() < cover.end():
+            continue
         line_end = text.find("\n", match.start())
         line = text[match.start() : line_end if line_end != -1 else len(text)]
         previous, following = _adjacent_lines(text, match.start())
@@ -616,7 +722,7 @@ def _opening_schedule(text: str, body_start: int) -> str | None:
         lookahead_start = index + 1
         if re.fullmatch(r"schedule\s+\S+", line.strip(), re.IGNORECASE):
             lookahead_start += 1  # this heading's own title wraps onto the next line
-        if _has_prose_ahead(lines, lookahead_start):
+        if _has_prose_ahead(lines, lookahead_start, pattern=pattern):
             number = _schedule_number(match)
             if number is None:
                 if numbered:
@@ -626,7 +732,9 @@ def _opening_schedule(text: str, body_start: int) -> str | None:
     return last_real
 
 
-def _has_prose_ahead(lines: list[str], start: int) -> bool:
+def _has_prose_ahead(
+    lines: list[str], start: int, *, pattern: re.Pattern[str] = SECTION_RE
+) -> bool:
     """Does real prose appear within :data:`PROSE_LOOKAHEAD` lines of ``start``?
 
     Walked rather than sliced: a bare "Schedule N" met while looking ahead is
@@ -643,14 +751,14 @@ def _has_prose_ahead(lines: list[str], start: int) -> bool:
         if re.fullmatch(r"schedule\s+\S+", line.strip(), re.IGNORECASE):
             index += 2  # the heading, and its wrapped title
             continue
-        if not _is_structural(line):
+        if not _is_structural(line, pattern=pattern):
             return True
         found += 1
         index += 1
     return False
 
 
-def find_body_start(text: str) -> int | None:
+def find_body_start(text: str, *, pattern: re.Pattern[str] = SECTION_RE) -> int | None:
     """Character offset where the operative text begins, or None if not found.
 
     A table of provisions is a run of section headings with nothing between
@@ -668,16 +776,16 @@ def find_body_start(text: str) -> int | None:
         running += len(line) + 1
 
     for index, line in enumerate(lines):
-        if not SECTION_RE.match(line.strip()):
+        if not pattern.match(line.strip()):
             continue
         previous_line = lines[index - 1] if index > 0 else ""
         next_line = lines[index + 1] if index + 1 < len(lines) else ""
         # A wrapped contents line can look like prose, so an entry carrying a
         # page number is never treated as the start of the body.
-        if _is_contents_entry(line, previous=previous_line, following=next_line):
+        if _is_contents_entry(line, previous=previous_line, following=next_line, pattern=pattern):
             continue
         window = lines[index + 1 : index + 1 + PROSE_LOOKAHEAD]
-        if any(not _is_structural(candidate) for candidate in window):
+        if any(not _is_structural(candidate, pattern=pattern) for candidate in window):
             return offsets[index]
     return None
 
@@ -722,7 +830,7 @@ class IngestResult:
     note: str = ""
 
 
-def split_sections(text: str) -> list[Provision]:
+def split_sections(text: str, *, pattern: re.Pattern[str] = SECTION_RE) -> list[Provision]:
     """Split a document into provisions by section heading, not by token count.
 
     Text before the first section (cover page, long title, table of provisions)
@@ -738,14 +846,14 @@ def split_sections(text: str) -> list[Provision]:
     # under BM25 length normalisation.
     offset = 0
     opening_schedule: str | None = None
-    body_start = find_body_start(text)
+    body_start = find_body_start(text, pattern=pattern)
     if body_start is not None:
-        preceding = sum(1 for _ in SECTION_RE.finditer(text[:body_start]))
+        preceding = sum(1 for _ in pattern.finditer(text[:body_start]))
         if preceding >= CONTENTS_MIN_ENTRIES:
             # A compilation volume can begin mid-Schedule: find the real
             # Schedule heading, if any, that the cut text opens inside -
             # before the cut, so it still sees what the cut removes.
-            opening_schedule = _opening_schedule(text, body_start)
+            opening_schedule = _opening_schedule(text, body_start, pattern=pattern)
             offset = body_start
             text = text[body_start:]
 
@@ -756,7 +864,7 @@ def split_sections(text: str) -> list[Provision]:
     if body_end is not None:
         text = text[:body_end]
 
-    matches = list(SECTION_RE.finditer(text))
+    matches = list(pattern.finditer(text))
     if not matches:
         stripped = text.strip()
         if not stripped:
@@ -800,7 +908,9 @@ def split_sections(text: str) -> list[Provision]:
         # Belt and braces: a contents entry anywhere - a second contents table,
         # a per-Part list - is never stored as a provision.
         previous_line, next_line = _adjacent_lines(text, start)
-        if _is_contents_entry(match.group(0), previous=previous_line, following=next_line):
+        if _is_contents_entry(
+            match.group(0), previous=previous_line, following=next_line, pattern=pattern
+        ):
             continue
         # A commencement table, embedded in section 2's own body, wraps a
         # cell of prose between two dated rows - the same pagination signal
@@ -811,6 +921,17 @@ def split_sections(text: str) -> list[Provision]:
         # not a provision of its own.
         if start in apparatus:
             continue
+        # A Schedule 2 clause number is a clause of Schedule 2 and of nothing
+        # else. Met inside another Schedule it is quoted: Migration
+        # Regulations Sch 13 cl 9903 directs that Division 132.3 be read "as
+        # if ... replaced with the following", then sets out clauses 132.311
+        # to 132.314 in full. Split off, they were cited as "Sch 13 cl
+        # 132.311", which does not exist; kept, they stay in 9903, which is
+        # where the law put them.
+        if pattern is DOTTED_SECTION_RE and SCHEDULE_2_CLAUSE.fullmatch(match.group("number")):
+            enclosing_now = [n for position, n in schedules if position < start]
+            if not enclosing_now or enclosing_now[-1] != "2":
+                continue
         kept.append(index)
 
     for position, index in enumerate(kept):
@@ -818,7 +939,14 @@ def split_sections(text: str) -> list[Provision]:
         start = match.start()
         end = matches[kept[position + 1]].start() if position + 1 < len(kept) else len(text)
         body = text[start:end]
-        if len(body.strip()) < MIN_PROVISION_CHARS:
+        # The floor exists to drop a heading with nothing under it. A bare
+        # Schedule 2 clause number has no heading to be left alone with, and
+        # its whole text can be shorter than the floor - "417.611 / Conditions
+        # 8547 and 8548." is 33 characters and is the visa's conditions.
+        # Dropped, that text was in no provision at all.
+        heading_less = match.group("heading") is None
+        too_short = len(body.strip()) < MIN_PROVISION_CHARS
+        if too_short and not (heading_less and body.strip() != match.group(0).strip()):
             continue
         number = match.group("number").strip()
         # A clause inside a Schedule is cited as a clause of that Schedule, not
@@ -831,7 +959,8 @@ def split_sections(text: str) -> list[Provision]:
         provisions.append(
             Provision(
                 section_number=number,
-                heading=match.group("heading").strip(),
+                # None for a bare Schedule 2 clause number; see DOTTED_SECTION_RE.
+                heading=(match.group("heading") or "").strip(),
                 text=body.strip(),
                 char_start=offset + start,
                 char_end=offset + end,
@@ -1154,6 +1283,31 @@ def split_judgment(text: str) -> list[Provision]:
     return provisions
 
 
+def split_guidance(text: str) -> list[Provision]:
+    """A guidance page as ONE provision, cited without a pinpoint.
+
+    Departmental guidance has no section numbering of its own. What it does
+    have is numbered steps and lists - "1. Check you are eligible" - which
+    split_sections would take for section headings and render as "s 1",
+    a pinpoint asserting the page is a statute. So nothing is split: the page
+    is stored whole, under the same sentinel a judgment with no paragraph
+    numbers gets, and pinpoint() renders it as guidance.
+    """
+    stripped = text.strip()
+    if not stripped:
+        return []
+    return [
+        Provision(
+            section_number=WHOLE_DOCUMENT,
+            heading="",
+            text=stripped,
+            char_start=0,
+            char_end=len(text),
+            unit_type="document",
+        )
+    ]
+
+
 def unnumbered_note(provisions: list[Provision]) -> str:
     """What to report about a judgment that carried no paragraph numbers.
 
@@ -1292,14 +1446,27 @@ def ingest_document(
     written inside one transaction, and the foreign key is NOT NULL.
     """
     _validate(jurisdiction, doc_type, sha256)
+    # Every path that writes a document passes here, so the host/doc_type
+    # binding is enforced here too - not only at the fetch. ingest_url and
+    # ingest_file check it first so the refusal is logged before any work.
+    try:
+        check_doc_type(source_url, doc_type)
+    except SourceRefused as exc:
+        raise IngestionError(str(exc)) from exc
 
     # A judgment is split by the unit a court is cited by, which is not the
     # unit legislation is cited by. See split_judgment.
     is_judgment = doc_type == "case"
-    provisions = split_judgment(text) if is_judgment else split_sections(text)
+    is_guidance = doc_type == GUIDANCE_DOC_TYPE
+    if is_judgment:
+        provisions = split_judgment(text)
+    elif is_guidance:
+        provisions = split_guidance(text)
+    else:
+        provisions = split_sections(text, pattern=section_pattern(doc_type))
     if not provisions:
         raise IngestionError(f"{citation}: no text to ingest")
-    if not is_judgment:
+    if not is_judgment and not is_guidance:
         # detect_headings_only is calibrated on legislation: it asks whether
         # provisions carry subsection markers and vary in length. A judgment's
         # paragraphs carry neither property by nature, so running it here
@@ -1468,6 +1635,12 @@ def ingest_url(
 ) -> IngestResult:
     """Gap-filling fetch and ingest. Refuses any host outside the allowlist."""
     try:
+        check_doc_type(url, doc_type)
+    except SourceRefused as exc:
+        _log_refusal(url=url, reason=str(exc))
+        log_attempt(url=url, host=host_of(url), outcome="refused", reason=str(exc))
+        raise
+    try:
         source = fetch(url)
     except SourceRefused as exc:
         _log_refusal(url=url, reason=str(exc))
@@ -1555,6 +1728,7 @@ def ingest_file(
     """
     try:
         check_url(source_url)
+        check_doc_type(source_url, doc_type)
     except SourceRefused as exc:
         _log_refusal(url=source_url, reason=str(exc))
         log_attempt(url=source_url, host=host_of(source_url), outcome="refused", reason=str(exc))
