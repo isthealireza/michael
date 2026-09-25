@@ -516,7 +516,12 @@ def test_a_verdict_survives_the_whole_path_when_the_judge_answers_properly() -> 
         }
     )
     result = verify_draft(DRAFT, provisions=FAIR_WORK_PROVISIONS, judge=judge)
-    assert result.counts == {"SUPPORTED": 1, "PARTIAL": 1, "UNSUPPORTED": 0}
+    assert result.counts == {
+        "SUPPORTED": 1,
+        "PARTIAL": 1,
+        "UNSUPPORTED": 0,
+        "NOT_A_LEGAL_CLAIM": 0,
+    }
     assert [r.claim_id for r in result.flagged] == ["c2"]
 
 
@@ -1106,3 +1111,101 @@ def test_a_very_short_supplied_value_cannot_remove_a_claim_by_coincidence() -> N
     judged, aside = verify._set_aside_instructed((claim,), ("a",))
     assert aside == ()
     assert judged == (claim,)
+
+
+# --- the fourth verdict, and the veto over it -------------------------------
+
+
+def _judged(claim_text: str, verdict: str, *, ids: list[str] | None = None) -> verify.Ruling:
+    """Run one claim and one judge answer through the real validator."""
+    claim = verify.Claim(claim_id="c1", text=claim_text, start=0, end=len(claim_text))
+    body = json.dumps(
+        {
+            "verdicts": [
+                {
+                    "claim_id": "c1",
+                    "verdict": verdict,
+                    "provision_ids": ids if ids is not None else [],
+                    "reason": "because",
+                }
+            ]
+        }
+    )
+    rulings = verify.validate_verdicts(body, claims=(claim,), retrieved_ids=["p1"])
+    assert len(rulings) == 1
+    return rulings[0]
+
+
+def test_a_term_of_the_agreement_can_be_called_not_a_legal_claim() -> None:
+    """The case this verdict exists for.
+
+    "The Employee must not disclose the Employer's confidential information"
+    is a term the parties agree, not something the Fair Work Act says. No
+    provision will ever support it, so judged as law it returns UNSUPPORTED -
+    true in a useless sense. On the casual-contract template 18 of 19 claims
+    came back that way, which buries the ones that are real defects.
+    """
+    ruling = _judged(
+        "The Employee will keep the Employer's business information in confidence.",
+        "NOT_A_LEGAL_CLAIM",
+    )
+    assert ruling.verdict == "NOT_A_LEGAL_CLAIM"
+    assert ruling.provision_ids == ()
+
+
+def test_the_judge_cannot_excuse_itself_from_a_claim_that_asserts_law() -> None:
+    """The veto, and the whole reason a judge is allowed this verdict at all.
+
+    A judge that may declare a claim out of scope can make any hard call
+    disappear. So code decides what must be CHECKED and the judge only decides
+    whether what must be checked is SUPPORTED: a claim that reads as law to
+    _asserts_law comes back UNSUPPORTED however the judge labelled it, and the
+    reason says so rather than hiding the disagreement.
+    """
+    ruling = _judged(
+        "The Employee is not entitled to paid annual leave under the Act.",
+        "NOT_A_LEGAL_CLAIM",
+    )
+    assert ruling.verdict == "UNSUPPORTED", "the judge removed a legal claim from checking"
+    assert "asserts something about the law" in ruling.reason
+
+
+def test_naming_a_provision_while_disclaiming_the_law_is_incoherent() -> None:
+    """Both cannot be true, and the resolution is the closed one."""
+    ruling = _judged(
+        "The parties will meet quarterly to review these arrangements.",
+        "NOT_A_LEGAL_CLAIM",
+        ids=["p1"],
+    )
+    assert ruling.verdict == "UNSUPPORTED"
+    assert "cannot both be true" in ruling.reason
+
+
+def test_the_new_verdict_does_not_put_the_claim_in_front_of_a_human() -> None:
+    """NOT_A_LEGAL_CLAIM is not a defect, so it is not flagged - but it is
+    counted, because "not checked" must never read as "checked and passed"."""
+    assert "NOT_A_LEGAL_CLAIM" not in verify.FLAGGED
+    assert "NOT_A_LEGAL_CLAIM" in verify.VERDICTS
+
+    claim = verify.Claim(claim_id="c1", text="The parties will meet.", start=0, end=22)
+    report = verify.Verification(
+        claims=(claim,),
+        rulings=(
+            verify.Ruling(
+                claim_id="c1",
+                verdict="NOT_A_LEGAL_CLAIM",
+                provision_ids=(),
+                reason="a term of this agreement",
+            ),
+        ),
+        judge_model="test/judge",
+    )
+    body = verify.section(report)
+    assert "Not a claim about the law (a term of this agreement): 1" in body
+
+
+def test_an_invented_fifth_verdict_is_still_a_failure() -> None:
+    """Widening the set to four does not widen it to anything the judge likes."""
+    ruling = _judged("The parties will meet quarterly.", "OUT_OF_SCOPE")
+    assert ruling.verdict == "UNSUPPORTED"
+    assert "no usable verdict" in ruling.reason

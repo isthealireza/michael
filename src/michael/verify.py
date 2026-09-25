@@ -58,13 +58,33 @@ import httpx
 from michael.config import ConfigError, settings
 from michael.draft import MISSING_RE, Draft
 
-Verdict = Literal["SUPPORTED", "PARTIAL", "UNSUPPORTED"]
+Verdict = Literal["SUPPORTED", "PARTIAL", "UNSUPPORTED", "NOT_A_LEGAL_CLAIM"]
 
-#: The only three words a judge may answer with. Anything else - "PARTIALLY",
+#: The only four words a judge may answer with. Anything else - "PARTIALLY",
 #: "supported", "YES" - is not one of these and is therefore a failure, which
 #: resolves to UNSUPPORTED. Accepting near-misses would mean guessing what the
 #: judge meant, and a guess is the thing this module exists to remove.
-VERDICTS: tuple[Verdict, ...] = ("SUPPORTED", "PARTIAL", "UNSUPPORTED")
+VERDICTS: tuple[Verdict, ...] = (
+    "SUPPORTED",
+    "PARTIAL",
+    "UNSUPPORTED",
+    "NOT_A_LEGAL_CLAIM",
+)
+
+#: The fourth verdict, and why a judge is allowed to reach it.
+#:
+#: A drafted contract is mostly not propositions about the law. "The Employee
+#: must not disclose the Employer's confidential information" is a term the
+#: parties agree, not something the Fair Work Act says, and no provision will
+#: ever support it. Judged against legislation it comes back UNSUPPORTED - true
+#: in a useless sense, and on the casual-contract template 18 of 19 claims came
+#: back that way, which buries the ones that are real defects.
+#:
+#: Code cannot draw this line. "must" appears in "the Act requires" and in "this
+#: contract requires" alike, and a lexical guess that gets it wrong removes a
+#: genuine legal claim from checking. A judge can read the intent; so it may say
+#: so, under a veto it does not control - see :func:`validate_verdicts`.
+NOT_A_LEGAL_CLAIM = "NOT_A_LEGAL_CLAIM"
 
 #: Verdicts that put the claim in front of a human.
 FLAGGED: frozenset[str] = frozenset({"PARTIAL", "UNSUPPORTED"})
@@ -557,19 +577,47 @@ for it. Apply the rule for the kind of the provision you are relying on.
     rather than deciding is UNSUPPORTED, however closely the words match.
 
 For EVERY claim you must return one object:
-  {"claim_id": "<exact id>", "verdict": "SUPPORTED"|"PARTIAL"|"UNSUPPORTED",
+  {"claim_id": "<exact id>", "verdict": "SUPPORTED"|"PARTIAL"|"UNSUPPORTED"
+                                        |"NOT_A_LEGAL_CLAIM",
    "provision_ids": ["<id>", ...], "reason": "<one sentence>"}
 
   SUPPORTED   - as defined above for the kind of provision relied on.
   PARTIAL     - the provisions carry part of it: the substance is there but a
                 number, a party, a scope or a qualifier differs or is absent.
-  UNSUPPORTED - nothing in the provisions carries it.
+  UNSUPPORTED - the claim says something ABOUT THE LAW and nothing in the
+                provisions carries it.
+  NOT_A_LEGAL_CLAIM
+              - the claim is not a proposition about the law at all, so no
+                provision could support or contradict it. It is a term the
+                parties agree between themselves, or a statement of fact about
+                them or about this document.
+
+                Examples: "The Employee must not disclose the Employer's
+                confidential information" (a term of this agreement);
+                "This document records the whole agreement between the
+                parties" (a statement about the document); "The Employee must
+                comply with the Employer's policies" (an obligation the
+                employer creates, not one an Act imposes).
+
+                NOT examples - these SAY SOMETHING ABOUT THE LAW and must be
+                judged on the provisions: "The Employee is not entitled to
+                paid annual leave"; "notice is given in accordance with the
+                Fair Work Act"; "the employment is covered by the award";
+                anything naming an Act, a section, a regulation or an award;
+                anything asserting an entitlement, a prohibition, or what the
+                law requires or permits.
+
+                If you are unsure whether a claim is about the law, it IS
+                about the law. Judge it. Do not use this verdict to avoid a
+                difficult call - a claim wrongly put here is a claim nobody
+                checks.
 
 Rules:
 - provision_ids must name provisions from the list below, by their exact id.
   Never invent an id. If you cannot name one, the verdict is UNSUPPORTED and
   provision_ids is [].
 - SUPPORTED and PARTIAL require at least one provision_id.
+- UNSUPPORTED and NOT_A_LEGAL_CLAIM take no provision_ids: [].
 - A claim that names an obligation of the wrong party, a number the provisions
   do not state, an exception the provisions do not create, or a scope wider
   than the provisions grant, is not SUPPORTED.
@@ -760,6 +808,24 @@ def validate_verdicts(
             )
             continue
 
+        # The veto. A judge may say a claim is not about the law; it may not
+        # say so about a claim that reads as law to the code. _asserts_law is
+        # deliberately generous, so this disagreement is rare - and when it
+        # happens the claim goes back to UNSUPPORTED rather than out of
+        # verification, because the failure mode being guarded is a judge
+        # excusing itself from a hard call. Code decides what must be checked;
+        # the judge only decides whether what must be checked is supported.
+        if verdict == NOT_A_LEGAL_CLAIM and _asserts_law(claim.text):
+            rulings.append(
+                unsupported(
+                    claim.claim_id,
+                    "the judge called this not a legal claim, but it asserts "
+                    "something about the law, so it was checked as one and the "
+                    "provisions do not carry it",
+                )
+            )
+            continue
+
         reason = str(answer.get("reason", "")).strip() or "the judge gave no reason"
         ids = _ids(answer.get("provision_ids"))
         unknown = [i for i in ids if i not in known]
@@ -774,7 +840,16 @@ def validate_verdicts(
                 )
             )
             continue
-        if verdict != "UNSUPPORTED" and not ids:
+        if verdict == NOT_A_LEGAL_CLAIM and ids:
+            rulings.append(
+                unsupported(
+                    claim.claim_id,
+                    "the judge named a provision while saying the claim is not "
+                    "a legal claim, which cannot both be true",
+                )
+            )
+            continue
+        if verdict not in ("UNSUPPORTED", NOT_A_LEGAL_CLAIM) and not ids:
             rulings.append(
                 unsupported(
                     claim.claim_id,
@@ -1017,6 +1092,7 @@ def section(verification: Verification) -> str:
         f"- SUPPORTED: {counts['SUPPORTED']}",
         f"- PARTIAL: {counts['PARTIAL']}",
         f"- UNSUPPORTED: {counts['UNSUPPORTED']}",
+        f"- Not a claim about the law (a term of this agreement): {counts['NOT_A_LEGAL_CLAIM']}",
         f"- Not checked (value not supplied, see OPEN ITEMS): {verification.skipped_unsupplied}",
         f"- Not checkable against the corpus (your instructions, not law): "
         f"{len(verification.instructed)}",
