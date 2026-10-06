@@ -53,7 +53,8 @@ from michael.sources import SourceRefused, check_url, fetch, host_of, log_attemp
 #: has neither, so the optional hyphen and ``{0,2}`` dot-groups add those forms
 #: without changing Act splitting.
 SECTION_RE = re.compile(
-    r"^[ \t]*(?P<number>\d{1,4}[A-Z]{0,3}(?:-\d{1,4}[A-Z]{0,3})?(?:\.\d{1,4}[A-Z]{0,3}){0,2})[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]*)$",
+    r"^[ \t]*(?P<number>\d{1,4}[A-Z]{0,3}(?:-\d{1,4}[A-Z]{0,3})?(?:\.\d{1,4}[A-Z]{0,3}){0,2})"
+    r"[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]*)$",
     re.MULTILINE,
 )
 

@@ -399,7 +399,20 @@ def _instrument_pinpoint_lookup(
     jurisdiction_mismatch: str | None,
     filters: dict[str, tuple[str, ...]],
 ) -> RetrievalResult | None:
-    """A pinpoint inside a matched instrument is returned directly, not ranked."""
+    """A pinpoint inside a matched instrument is returned directly, not ranked.
+
+    A bare number also matches any ``Sch <s> cl <n>`` row of the same
+    instrument. The splitter stores a Schedule clause under its
+    Schedule-relative name ("Sch 1 cl 82"), not its bare number, so an
+    exact-string match alone misses it: "s 82 of <Act>" resolved to nothing and
+    fell through to an unranked hybrid guess. This is the same sibling rule
+    SECTION_LOOKUP_SQL applies, scoped to the resolved instrument so it cannot
+    reach a provision of some other Act.
+    """
+    schedule_sibling = None
+    if not pinpoint.upper().startswith("SCH "):
+        schedule_sibling = rf"^Sch \S+ cl {re.escape(pinpoint)}$"
+
     with readonly() as conn, conn.cursor() as cur:
         cur.execute(
             """
@@ -411,10 +424,18 @@ def _instrument_pinpoint_lookup(
               JOIN documents d ON d.id = p.document_id
              WHERE p.document_id = ANY(%(ids)s::bigint[])
                AND p.unit_type = 'section'
-               AND upper(p.section_number) = upper(%(pinpoint)s)
+               AND (
+                     upper(p.section_number) = upper(%(pinpoint)s)
+                     OR (%(schedule_sibling)s::text IS NOT NULL
+                         AND p.section_number ~* %(schedule_sibling)s)
+                   )
              ORDER BY d.citation, p.heading, p.id
             """,
-            {"ids": list(document_ids), "pinpoint": pinpoint},
+            {
+                "ids": list(document_ids),
+                "pinpoint": pinpoint,
+                "schedule_sibling": schedule_sibling,
+            },
         )
         rows = cur.fetchall()
 
