@@ -96,8 +96,17 @@ def check_url(url: str) -> str:
     else:
         raise SourceRefused(f"refused: IP literal {host} is not an allowlisted host ({url})")
 
-    if parts.port not in (None, 443):
-        raise SourceRefused(f"refused: port {parts.port} is not 443 ({url})")
+    # ``.port`` is a property that raises ValueError on a non-numeric port, and
+    # it raises while the expression is being evaluated - so without this the
+    # ValueError escapes instead of a refusal, and a caller that catches only
+    # SourceRefused to log it records nothing.
+    try:
+        port = parts.port
+    except ValueError:
+        raise SourceRefused(f"refused: port is not a number ({url})") from None
+
+    if port not in (None, 443):
+        raise SourceRefused(f"refused: port {port} is not 443 ({url})")
 
     if not is_allowed_host(host):
         raise SourceRefused(

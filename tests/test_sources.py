@@ -64,6 +64,38 @@ def test_host_of_lowercases_and_strips_trailing_dot() -> None:
     assert host_of("https://Legislation.GOV.au./x") == "legislation.gov.au"
 
 
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://legislation.gov.au:notaport/x",
+        "https://legislation.gov.au:443abc/x",
+    ],
+)
+def test_a_non_numeric_port_is_refused_like_any_other_bad_port(url: str) -> None:
+    """A port that is not a number is a refusal, not an internal error.
+
+    ``urlsplit(...).port`` raises ValueError while it is being read, so
+    without handling it the ValueError escaped ``check_url`` and every caller
+    that catches only ``SourceRefused`` - including ``fetch``, which exists to
+    log a refusal before it propagates - recorded nothing.
+
+    An *empty* port is not in this list: ``urlsplit`` reads ``:`` as no port at
+    all, which is the default for https, so that URL is correctly allowed.
+    """
+    with pytest.raises(SourceRefused):
+        check_url(url)
+
+
+def test_a_non_numeric_port_is_still_logged_as_a_refusal() -> None:
+    from michael.config import settings
+
+    with pytest.raises(SourceRefused):
+        fetch("https://legislation.gov.au:notaport/x")
+    log = settings().ingestion_log
+    assert log.is_file()
+    assert "refused" in log.read_text(encoding="utf-8")
+
+
 def test_refusal_is_logged_before_the_exception_escapes() -> None:
     from michael.config import settings
 
