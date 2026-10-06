@@ -118,3 +118,20 @@ def test_tabs_and_breaks_become_whitespace() -> None:
     text = docx_to_text(buffer.getvalue())
     assert "7 Heading" in text
     assert "after break" in text
+
+
+def test_adjacent_digit_runs_rejoin_with_hyphen() -> None:
+    body = (
+        f'<?xml version="1.0"?><w:document xmlns:w="{W}"><w:body>'
+        f"<w:p><w:r><w:t>4</w:t></w:r><w:r><w:t>15</w:t></w:r><w:r><w:tab/></w:r><w:r><w:t>Meaning of taxable income</w:t></w:r></w:p>"
+        f"<w:p><w:r><w:t>6</w:t></w:r><w:r><w:t>5</w:t></w:r><w:r><w:tab/></w:r><w:r><w:t>Income tax</w:t></w:r></w:p>"
+        f"</w:body></w:document>"
+    )
+    buffer = BytesIO()
+    with zipfile.ZipFile(buffer, "w") as archive:
+        archive.writestr("word/document.xml", body)
+    text = docx_to_text(buffer.getvalue())
+    assert "4-15 Meaning of taxable income" in text
+    assert "6-5 Income tax" in text
+    assert "415" not in text
+    assert "65" not in text
