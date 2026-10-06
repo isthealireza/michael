@@ -123,8 +123,10 @@ def test_tabs_and_breaks_become_whitespace() -> None:
 def test_adjacent_digit_runs_rejoin_with_hyphen() -> None:
     body = (
         f'<?xml version="1.0"?><w:document xmlns:w="{W}"><w:body>'
-        f"<w:p><w:r><w:t>4</w:t></w:r><w:r><w:t>15</w:t></w:r><w:r><w:tab/></w:r><w:r><w:t>Meaning of taxable income</w:t></w:r></w:p>"
-        f"<w:p><w:r><w:t>6</w:t></w:r><w:r><w:t>5</w:t></w:r><w:r><w:tab/></w:r><w:r><w:t>Income tax</w:t></w:r></w:p>"
+        f"<w:p><w:r><w:t>4</w:t></w:r><w:r><w:t>15</w:t></w:r>"
+        f"<w:r><w:tab/></w:r><w:r><w:t>Meaning of taxable income</w:t></w:r></w:p>"
+        f"<w:p><w:r><w:t>6</w:t></w:r><w:r><w:t>5</w:t></w:r><w:r><w:tab/></w:r>"
+        f"<w:r><w:t>Income tax</w:t></w:r></w:p>"
         f"</w:body></w:document>"
     )
     buffer = BytesIO()

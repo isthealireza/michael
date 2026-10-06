@@ -5,7 +5,14 @@ from __future__ import annotations
 from michael.domains import load_domains, route
 
 
-def test_all_seven_seed_domains_are_present() -> None:
+def test_all_thirteen_domains_are_present() -> None:
+    """The original seven, plus the six phase-2 domains added in ba54a08.
+
+    `domains.yaml` gained native_title, civil_liability, tax, duty,
+    interception and liquor. This set was not updated to match, so it failed
+    from the moment those domains landed - invisibly, because the strict-mypy
+    failure ahead of it in CI aborted the job first.
+    """
     names = {d.name for d in load_domains()}
     assert names == {
         "employment",
@@ -15,6 +22,12 @@ def test_all_seven_seed_domains_are_present() -> None:
         "corporate",
         "work_health_safety",
         "privacy",
+        "native_title",
+        "civil_liability",
+        "tax",
+        "duty",
+        "interception",
+        "liquor",
     }
 
 
