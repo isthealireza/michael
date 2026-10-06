@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any, Literal
 from unittest.mock import patch
 
 from michael.retrieve import (
@@ -9,39 +10,43 @@ from michael.retrieve import (
     _resolve_instrument,
 )
 
+#: A database row and a calibration entry are both heterogeneous mappings:
+#: these tests read named keys out of them and never depend on one value type.
+_Row = dict[str, Any]
+
 
 class _Cursor:
-    def __init__(self, rows):
+    def __init__(self, rows: list[_Row]) -> None:
         self._rows = rows
 
-    def __enter__(self):
+    def __enter__(self) -> _Cursor:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: object) -> Literal[False]:
         return False
 
-    def execute(self, *args, **kwargs):
+    def execute(self, *args: object, **kwargs: object) -> None:
         return None
 
-    def fetchall(self):
+    def fetchall(self) -> list[_Row]:
         return self._rows
 
 
 class _Conn:
-    def __init__(self, rows):
+    def __init__(self, rows: list[_Row]) -> None:
         self._rows = rows
 
-    def __enter__(self):
+    def __enter__(self) -> _Conn:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: object) -> Literal[False]:
         return False
 
-    def cursor(self):
+    def cursor(self) -> _Cursor:
         return _Cursor(self._rows)
 
 
-def _doc(id_, jurisdiction, citation, title=""):
+def _doc(id_: int, jurisdiction: str, citation: str, title: str = "") -> _Row:
     return {"id": id_, "jurisdiction": jurisdiction, "citation": citation, "title": title}
 
 
@@ -57,7 +62,12 @@ def test_wa_jurisdiction_narrows_retrieval_away_from_the_cth_twin() -> None:
 def test_naming_corporations_act_2001_resolves_that_instrument_not_regulations() -> None:
     rows = [
         _doc(10, "commonwealth", "Corporations Act 2001 (Cth)", "Corporations Act 2001"),
-        _doc(11, "commonwealth", "Corporations Regulations 2001 (Cth)", "Corporations Regulations 2001"),
+        _doc(
+            11,
+            "commonwealth",
+            "Corporations Regulations 2001 (Cth)",
+            "Corporations Regulations 2001",
+        ),
     ]
     with patch("michael.retrieve.readonly", return_value=_Conn(rows)):
         resolution = _resolve_instrument("Corporations Act 2001 (Cth) s 180")
@@ -84,7 +94,10 @@ def test_schedule_and_plain_section_pinpoints_are_detected() -> None:
 
 
 def test_instrument_name_extracts_the_title_verbatim() -> None:
-    assert _extract_instrument_name("Work Health and Safety Act 2020 duty") == "Work Health and Safety Act 2020"
+    assert (
+        _extract_instrument_name("Work Health and Safety Act 2020 duty")
+        == "Work Health and Safety Act 2020"
+    )
     assert _extract_instrument_name("the Act does not matter") is None
     assert _extract_instrument_name("The Act does not matter") is None
     assert _extract_instrument_name("An Act to provide for...") is None
@@ -96,7 +109,9 @@ def test_wa_duty_of_care_query_resolves_to_wa_not_cth() -> None:
 
     path = Path(__file__).parents[1] / "calibration" / "instrument_queries.json"
     data = json.loads(path.read_text(encoding="utf-8"))
-    wa = next(c for c in data["known_good"] if c["citation"] == "Work Health and Safety Act 2020 (WA)")
+    wa = next(
+        c for c in data["known_good"] if c["citation"] == "Work Health and Safety Act 2020 (WA)"
+    )
     rows = [
         _doc(10, "wa", "Work Health and Safety Act 2020 (WA)"),
         _doc(11, "commonwealth", "Work Health and Safety Act 2011 (Cth)"),
@@ -110,7 +125,9 @@ def test_every_named_query_resolves_to_the_named_instrument_only() -> None:
     import json
     from pathlib import Path
 
-    data = json.loads((Path(__file__).parents[1] / "calibration" / "instrument_queries.json").read_text())
+    data = json.loads(
+        (Path(__file__).parents[1] / "calibration" / "instrument_queries.json").read_text()
+    )
     docs = [
         _doc(i + 1, "wa" if "(WA)" in g["citation"] else "commonwealth", g["citation"])
         for i, g in enumerate(data["known_good"])
@@ -127,7 +144,9 @@ def test_absent_queries_resolve_to_no_instrument() -> None:
     import json
     from pathlib import Path
 
-    data = json.loads((Path(__file__).parents[1] / "calibration" / "instrument_queries.json").read_text())
+    data = json.loads(
+        (Path(__file__).parents[1] / "calibration" / "instrument_queries.json").read_text()
+    )
     docs = [
         _doc(i + 1, "wa" if "(WA)" in g["citation"] else "commonwealth", g["citation"])
         for i, g in enumerate(data["known_good"])
