@@ -282,6 +282,181 @@ def named_jurisdiction_mismatch(query: str) -> str | None:
     return match.group(0)
 
 
+# --- instrument-first routing ------------------------------------------------
+#
+# The hybrid BM25+vector fusion scores the whole corpus, so two copies of the
+# same Act - Work Health and Safety Act 2020 (WA) and 2011 (Cth), say - compete
+# on the same question. The fix is a hard filter before scoring, not a new
+# model: resolve which instrument the query names, then score only inside it.
+
+#: A Title Case instrument name ending in Act/Regulations/Code/Award, with an
+#: optional trailing year. The first word is capitalised, then up to eight
+#: mixed-case words (so "and"/"of" inside a title do not break the match),
+#: then the instrument-type word. Matches "Work Health and Safety Act 2020",
+#: "Corporations Regulations 2001", but not prose that merely says "the Act".
+INSTRUMENT_NAME = re.compile(
+    r"\b[A-Z][\w'-]*(?:\s+\w[\w'-]*){0,8}\s+(?:Act|Regulations?|Code|Award)\b(?:\s+\d{4})?"
+)
+
+#: A three-part decimal regulation number ("1.0.01", "2A.1.01"), the pinpoint
+#: form the Corporations Regulations 2001 uses and SECTION_REFERENCE cannot see.
+DECIMAL_PINPOINT = re.compile(r"\b\d{1,4}[A-Z]?(?:\.\d{1,4}[A-Z]?){2}\b")
+
+
+def _normalise_name(text: str) -> str:
+    """Lowercase and strip everything but ASCII letters and digits."""
+    return re.sub(r"[^a-z0-9]+", "", text.lower())
+
+
+def _query_jurisdiction(query: str) -> str | None:
+    """The held jurisdiction the query itself names, or None."""
+    text = query.lower()
+    if re.search(r"\bwestern australia(?:n)?\b|\bwa\b", text):
+        return "wa"
+    if re.search(r"\bcommonwealth\b|\bcth\b|\(cth\)|\bfederal\b", text):
+        return "commonwealth"
+    return None
+
+
+def _extract_instrument_name(query: str) -> str | None:
+    match = INSTRUMENT_NAME.search(query)
+    if match is None:
+        return None
+    phrase = match.group(0).strip()
+    # Reject trivial matches like "The Act" or "An Act" - check if the first
+    # word is a common article that makes this clearly prose, not a title.
+    first_word = phrase.split()[0]
+    if first_word in ("The", "An", "A"):
+        return None
+    return phrase
+
+
+def _extract_pinpoint(query: str) -> str | None:
+    """A pinpoint identifier: Schedule clause, decimal regulation, or section."""
+    schedule = SCHEDULE_REFERENCE.search(query)
+    if schedule is not None:
+        return f"Sch {schedule.group('sch').upper()} cl {schedule.group('cl').upper()}"
+    decimal = DECIMAL_PINPOINT.search(query)
+    if decimal is not None:
+        return decimal.group(0)
+    match = SECTION_REFERENCE.search(query)
+    if match is not None:
+        return (match.group("num1") or match.group("num2")).upper()
+    return None
+
+
+@dataclass(frozen=True, slots=True)
+class InstrumentResolution:
+    """What instrument-first resolution found in a query."""
+
+    document_ids: tuple[int, ...] = ()
+    pinpoint: str | None = None
+    jurisdiction: str | None = None
+
+
+def _resolve_instrument(query: str) -> InstrumentResolution:
+    """Resolve an instrument, pinpoint and jurisdiction from a query.
+
+    Exact title or citation match only: the normalised instrument name must
+    appear verbatim inside a stored title or citation. A jurisdiction named in
+    the query narrows the match to that jurisdiction when one is available.
+    """
+    pinpoint = _extract_pinpoint(query)
+    jurisdiction = _query_jurisdiction(query)
+    phrase = _extract_instrument_name(query)
+    if phrase is None:
+        return InstrumentResolution((), pinpoint, jurisdiction)
+
+    needle = _normalise_name(phrase)
+    if not needle:
+        return InstrumentResolution((), pinpoint, jurisdiction)
+
+    with readonly() as conn, conn.cursor() as cur:
+        cur.execute("SELECT id, jurisdiction, citation, title FROM documents")
+        docs = cur.fetchall()
+
+    matched = [
+        d
+        for d in docs
+        if needle in _normalise_name(d["citation"]) or needle in _normalise_name(d["title"])
+    ]
+    if jurisdiction is not None:
+        narrowed = [d for d in matched if d["jurisdiction"] == jurisdiction]
+        if narrowed:
+            matched = narrowed
+    return InstrumentResolution(tuple(int(d["id"]) for d in matched), pinpoint, jurisdiction)
+
+
+def _instrument_pinpoint_lookup(
+    document_ids: tuple[int, ...],
+    pinpoint: str,
+    *,
+    query: str,
+    routing: Routing,
+    threshold: float,
+    jurisdiction_mismatch: str | None,
+    filters: dict[str, tuple[str, ...]],
+) -> RetrievalResult | None:
+    """A pinpoint inside a matched instrument is returned directly, not ranked."""
+    with readonly() as conn, conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT p.id AS provision_id, p.document_id, p.section_number, p.unit_type,
+                   p.heading, p.text, p.char_start, p.char_end,
+                   d.jurisdiction, d.title, d.citation, d.source_url, d.snapshot_date,
+                   d.sha256, d.doc_type
+              FROM provisions p
+              JOIN documents d ON d.id = p.document_id
+             WHERE p.document_id = ANY(%(ids)s::bigint[])
+               AND p.unit_type = 'section'
+               AND upper(p.section_number) = upper(%(pinpoint)s)
+             ORDER BY d.citation, p.heading, p.id
+            """,
+            {"ids": list(document_ids), "pinpoint": pinpoint},
+        )
+        rows = cur.fetchall()
+
+    if not rows:
+        return None
+
+    provisions = tuple(
+        RetrievedProvision(
+            provision_id=int(row["provision_id"]),
+            document_id=int(row["document_id"]),
+            jurisdiction=str(row["jurisdiction"]),
+            title=str(row["title"]),
+            citation=str(row["citation"]),
+            source_url=str(row["source_url"]),
+            snapshot_date=row["snapshot_date"],
+            sha256=str(row["sha256"]),
+            doc_type=str(row["doc_type"]),
+            section_number=str(row["section_number"]),
+            unit_type=str(row["unit_type"]),
+            heading=str(row["heading"]),
+            text=str(row["text"]),
+            char_start=int(row["char_start"]),
+            char_end=int(row["char_end"]),
+            lexical_score=1.0,
+            vector_score=1.0,
+            score=1.0,
+        )
+        for row in rows
+    )
+    return RetrievalResult(
+        query=query,
+        routing_domain=routing.name,
+        domain_recognised=routing.recognised,
+        provisions=provisions,
+        threshold=threshold,
+        best_score=1.0,
+        reason="",
+        filters=filters,
+        identifier_lookup=True,
+        total_matches=len(provisions),
+        jurisdiction_mismatch=jurisdiction_mismatch,
+    )
+
+
 #: Restricted to ``unit_type = 'section'``. The query forms this lookup is
 #: reached by - "section 47", "s 47", "Sch 1 cl 3" - ask for legislation, and
 #: once case law is in the corpus a bare number matches judgment paragraphs
@@ -411,6 +586,7 @@ SELECT p.id
  WHERE p.search_vector @@ websearch_to_tsquery('english', %(query)s)
    AND (%(jurisdictions)s::text[] IS NULL OR d.jurisdiction = ANY(%(jurisdictions)s))
    AND (%(doc_types)s::text[] IS NULL OR d.doc_type = ANY(%(doc_types)s))
+   AND (%(document_ids)s::bigint[] IS NULL OR d.id = ANY(%(document_ids)s))
  ORDER BY ts_rank_cd(p.search_vector, websearch_to_tsquery('english', %(query)s)) DESC
  LIMIT %(limit)s
 """
@@ -422,6 +598,7 @@ SELECT p.id, 1.0 - (p.embedding <=> %(embedding)s::vector) AS similarity
  WHERE p.embedding IS NOT NULL
    AND (%(jurisdictions)s::text[] IS NULL OR d.jurisdiction = ANY(%(jurisdictions)s))
    AND (%(doc_types)s::text[] IS NULL OR d.doc_type = ANY(%(doc_types)s))
+   AND (%(document_ids)s::bigint[] IS NULL OR d.id = ANY(%(document_ids)s))
  ORDER BY p.embedding <=> %(embedding)s::vector
  LIMIT %(limit)s
 """
@@ -505,23 +682,54 @@ def search(
     if not query.strip():
         return empty("empty query")
 
-    # Tried first, and only on a query that names an explicit section marker:
-    # an identifier lookup, not a ranking arm. Returns None (not a result) when
-    # it finds nothing, so an ordinary content query, or a section reference
-    # this lookup could not resolve, still falls through to hybrid search
-    # below rather than this path deciding NOT COVERED on its own.
-    direct = _section_lookup(query, routing=routing)
-    if direct is not None:
-        return replace(direct, jurisdiction_mismatch=jurisdiction_mismatch)
+    # Instrument-first routing: resolve the instrument the query names and
+    # narrow retrieval to it before scoring. Disabled when RETRIEVAL_ROUTE is
+    # not "instrument", so the old fused search stays callable for comparison.
+    resolution = (
+        _resolve_instrument(query)
+        if config.retrieval_route == "instrument"
+        else InstrumentResolution()
+    )
+
+    # A pinpoint inside a matched instrument is returned directly, not ranked.
+    if resolution.document_ids and resolution.pinpoint:
+        direct = _instrument_pinpoint_lookup(
+            resolution.document_ids,
+            resolution.pinpoint,
+            query=query,
+            routing=routing,
+            threshold=threshold,
+            jurisdiction_mismatch=jurisdiction_mismatch,
+            filters=filters,
+        )
+        if direct is not None:
+            return direct
+
+    # A jurisdiction the query names narrows the domain filter, so WA law is
+    # never answered with its Cth twin and vice versa.
+    jurisdictions = routing.jurisdictions
+    if resolution.jurisdiction and not resolution.document_ids:
+        jurisdictions = (resolution.jurisdiction,)
+    filters["jurisdictions"] = jurisdictions
+
+    # The generic identifier lookup remains the path for a bare "s 47" with no
+    # instrument named. When an instrument was resolved, retrieval is narrowed
+    # to that instrument below instead.
+    if not resolution.document_ids:
+        direct = _section_lookup(query, routing=routing)
+        if direct is not None:
+            return replace(direct, jurisdiction_mismatch=jurisdiction_mismatch)
 
     # Fails closed: no embeddings means no vector arm, and a lexical-only
     # answer would be a different, weaker guarantee than the one advertised.
     embedding = vector_literal(embed_one(query))
 
+    document_ids = list(resolution.document_ids) if resolution.document_ids else None
     params = {
         "query": query,
-        "jurisdictions": _array(routing.jurisdictions),
+        "jurisdictions": _array(jurisdictions),
         "doc_types": _array(routing.doc_types),
+        "document_ids": document_ids,
         "limit": config.retrieval_candidates,
         "embedding": embedding,
     }
