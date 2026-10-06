@@ -48,11 +48,13 @@ from michael.sources import SourceRefused, check_url, fetch, host_of, log_attemp
 #: section, with no warning. (W1-S2.)
 #: A Corporations Regulations 2001 number is three-part decimal - chapter,
 #: part, regulation ("1.0.01", "2A.1.01", "1.0.02AA") - with a letter suffix
-#: allowed on any component. A simple section number ("19", "15A") has zero
-#: dot-components, so ``{0,2}`` adds the decimal form without changing Act
-#: splitting.
+#: allowed on any component. An Income Tax Assessment Act 1997 number is
+#: hyphenated ("4-15", "6-5", "415-1"). A simple section number ("19", "15A")
+#: has neither, so the optional hyphen and ``{0,2}`` dot-groups add those forms
+#: without changing Act splitting.
 SECTION_RE = re.compile(
-    r"^[ \t]*(?P<number>\d{1,4}[A-Z]{0,3}(?:\.\d{1,4}[A-Z]{0,3}){0,2})[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]*)$",
+    r"^[ \t]*(?P<number>\d{1,4}[A-Z]{0,3}(?:-\d{1,4}[A-Z]{0,3})?(?:\.\d{1,4}[A-Z]{0,3}){0,2})"
+    r"[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]*)$",
     re.MULTILINE,
 )
 

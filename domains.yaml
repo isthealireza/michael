@@ -163,3 +163,65 @@ domains:
     jurisdictions: [commonwealth]
     doc_types: [act, regulation]
     templates: privacy
+
+  - name: native_title
+    keywords:
+      - native title
+      - native title determination
+      - traditional owner
+    jurisdictions: [commonwealth]
+    doc_types: [act, regulation]
+    templates: native_title
+
+  - name: civil_liability
+    keywords:
+      - civil liability
+      - negligence
+      - duty of care
+      - damages
+      - personal injury
+    jurisdictions: [wa]
+    doc_types: [act, regulation]
+    templates: civil_liability
+
+  - name: tax
+    keywords:
+      - tax
+      - taxable income
+      - income tax
+      - assessable income
+      - deduction
+    jurisdictions: [commonwealth]
+    doc_types: [act, regulation]
+    templates: tax
+
+  - name: duty
+    keywords:
+      - transfer duty
+      - stamp duty
+      - duty
+      - landholder duty
+    jurisdictions: [wa]
+    doc_types: [act, regulation]
+    templates: duty
+
+  - name: interception
+    keywords:
+      - interception
+      - metadata
+      - data retention
+      - telecommunications interception
+      - surveillance
+    jurisdictions: [commonwealth]
+    doc_types: [act, regulation]
+    templates: interception
+
+  - name: liquor
+    keywords:
+      - liquor
+      - liquor licence
+      - licensed premises
+      - alcohol
+    jurisdictions: [wa]
+    doc_types: [act, regulation]
+    templates: liquor
