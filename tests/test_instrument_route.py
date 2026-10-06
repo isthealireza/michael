@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from typing import Any, Literal
 from unittest.mock import patch
 
 from michael.retrieve import (
@@ -9,39 +10,43 @@ from michael.retrieve import (
     _resolve_instrument,
 )
 
+#: A database row and a calibration entry are both heterogeneous mappings:
+#: these tests read named keys out of them and never depend on one value type.
+_Row = dict[str, Any]
+
 
 class _Cursor:
-    def __init__(self, rows):
+    def __init__(self, rows: list[_Row]) -> None:
         self._rows = rows
 
-    def __enter__(self):
+    def __enter__(self) -> _Cursor:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: object) -> Literal[False]:
         return False
 
-    def execute(self, *args, **kwargs):
+    def execute(self, *args: object, **kwargs: object) -> None:
         return None
 
-    def fetchall(self):
+    def fetchall(self) -> list[_Row]:
         return self._rows
 
 
 class _Conn:
-    def __init__(self, rows):
+    def __init__(self, rows: list[_Row]) -> None:
         self._rows = rows
 
-    def __enter__(self):
+    def __enter__(self) -> _Conn:
         return self
 
-    def __exit__(self, *args):
+    def __exit__(self, *args: object) -> Literal[False]:
         return False
 
-    def cursor(self):
+    def cursor(self) -> _Cursor:
         return _Cursor(self._rows)
 
 
-def _doc(id_, jurisdiction, citation, title=""):
+def _doc(id_: int, jurisdiction: str, citation: str, title: str = "") -> _Row:
     return {"id": id_, "jurisdiction": jurisdiction, "citation": citation, "title": title}
 
 
