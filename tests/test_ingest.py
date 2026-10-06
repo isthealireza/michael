@@ -97,6 +97,16 @@ def test_decimal_regulation_numbering_splits_into_regulations() -> None:
     assert [p.section_number for p in split_sections(text)] == ["1.0.01", "1.0.02"]
 
 
+def test_hyphenated_section_numbers_are_split() -> None:
+    text = (
+        "4-15 Meaning of taxable income\n"
+        "Your taxable income is your assessable income less your allowable deductions.\n"
+        "6-5 Income tax\n"
+        "Income tax is payable by each individual and company, and by some other entities.\n"
+    )
+    assert [p.section_number for p in split_sections(text)] == ["4-15", "6-5"]
+
+
 def test_empty_text_yields_nothing() -> None:
     assert split_sections("   \n  ") == []
 

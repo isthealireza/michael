@@ -11,7 +11,8 @@
     {"query": "when is an electronic signature valid under the Electronic Transactions Act 2011 (WA) s 8", "citation": "Electronic Transactions Act 2011 (WA)", "section": "8"},
     {"query": "how is a transfer registered under the Transfer of Land Act 1893 (WA) Schedule 12 clause 86", "citation": "Transfer of Land Act 1893 (WA)", "section": "Sch 12 cl 86"},
     {"query": "what is the duty to provide first aid under the Work Health and Safety (General) Regulations 2022 (WA) regulation 42", "citation": "Work Health and Safety (General) Regulations 2022 (WA)", "section": "42"},
-    {"query": "when is a strata plan registered under the Strata Titles Act 1985 (WA) Schedule 3 clause 2", "citation": "Strata Titles Act 1985 (WA)", "section": "Sch 3 cl 2"}
+    {"query": "when is a strata plan registered under the Strata Titles Act 1985 (WA) Schedule 3 clause 2", "citation": "Strata Titles Act 1985 (WA)", "section": "Sch 3 cl 2"},
+    {"query": "what metadata must be retained under the Telecommunications (Interception and Access) Act 1979 (Cth)", "citation": "Telecommunications (Interception and Access) Act 1979 (Cth)", "section": "Sch 1 cl 187A"}
   ],
   "known_absent": [
     {"query": "what is the standard business sponsorship under the Migration Act 1958 (Cth) s 140E"},
@@ -24,7 +25,6 @@
     {"query": "what is the cooling off period under the Franchising Code of Conduct"},
     {"query": "what are the powers of a biosecurity officer under the Biosecurity Act 2015 (Cth)"},
     {"query": "what commercial electronic messages are banned under the Spam Act 2003 (Cth)"},
-    {"query": "what metadata must be retained under the Telecommunications Act 1997 (Cth)"},
     {"query": "how do I apply for a liquor licence under the Liquor Control Act 1988 (WA)"}
   ]
 }
