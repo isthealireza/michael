@@ -233,7 +233,15 @@ def test_an_off_topic_query_returns_empty_not_the_nearest_guess(michael_db: None
     )
     assert result.covered is False
     assert result.provisions == ()
-    assert "below the threshold" in result.reason
+    # The reason changed when the `duty` domain landed. "stamp duty" now routes
+    # to it, which narrows both retrieval arms to WA legislation. The fixture
+    # corpus is Cth-only, so every candidate is filtered out before scoring and
+    # the "below the threshold" branch - which needs candidates that all scored
+    # too low - is no longer reachable. The empty result is the same empty
+    # result: covered is still False and there is still no provision, so nothing
+    # is weakened here. Pinned exactly rather than as a substring union so it
+    # cannot quietly stop matching.
+    assert result.reason == "no provision matched the query in either arm"
     assert result.not_covered_message("racehorse syndicates").startswith("NOT COVERED")
 
 
