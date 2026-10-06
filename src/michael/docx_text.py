@@ -45,15 +45,31 @@ def looks_like_docx(body: bytes, content_type: str = "") -> bool:
 
 
 def _paragraph_text(paragraph: ElementTree.Element) -> str:
-    """Concatenate the text runs of one paragraph, in order."""
+    """Concatenate the text runs of one paragraph, in order.
+
+    legislation.gov.au renders an Income Tax Assessment Act 1997 section
+    number like "4-15" as two adjacent runs ("4" then "15") with no hyphen
+    stored; the Division-Section hyphen is implied. Rejoin that one pattern -
+    a pure-digit run immediately followed by another pure-digit run - so "4" +
+    "15" becomes "4-15". A tab, break, or any non-digit run separates the pair
+    and leaves it alone, so ordinary words and numbers that already carry a
+    hyphen are untouched.
+    """
     pieces: list[str] = []
+    last_was_digit_run = False
     for node in paragraph.iter():
         if node.tag == f"{W}t":
-            pieces.append(node.text or "")
+            text = node.text or ""
+            if last_was_digit_run and text.isdigit():
+                pieces.append("-")
+            pieces.append(text)
+            last_was_digit_run = text.isdigit()
         elif node.tag == f"{W}tab":
             pieces.append(" ")
+            last_was_digit_run = False
         elif node.tag in (f"{W}br", f"{W}cr"):
             pieces.append("\n")
+            last_was_digit_run = False
     return "".join(pieces)
 
 
