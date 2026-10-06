@@ -87,6 +87,16 @@ def test_a_document_with_no_sections_is_kept_whole_not_dropped() -> None:
     assert provisions[0].section_number == "(whole document)"
 
 
+def test_decimal_regulation_numbering_splits_into_regulations() -> None:
+    text = (
+        "1.0.01 Name of Regulations\n"
+        "These Regulations are the Corporations Regulations 2001.\n"
+        "1.0.02 Definitions\n"
+        "In these Regulations, Act means the Corporations Act 2001.\n"
+    )
+    assert [p.section_number for p in split_sections(text)] == ["1.0.01", "1.0.02"]
+
+
 def test_empty_text_yields_nothing() -> None:
     assert split_sections("   \n  ") == []
 

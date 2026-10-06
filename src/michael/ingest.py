@@ -46,8 +46,13 @@ from michael.sources import SourceRefused, check_url, fetch, host_of, log_attemp
 #: Act divisions), and a heading the pattern does not match is not "kept as
 #: a heading" - it is silently absorbed into the body of the PREVIOUS
 #: section, with no warning. (W1-S2.)
+#: A Corporations Regulations 2001 number is three-part decimal - chapter,
+#: part, regulation ("1.0.01", "2A.1.01", "1.0.02AA") - with a letter suffix
+#: allowed on any component. A simple section number ("19", "15A") has zero
+#: dot-components, so ``{0,2}`` adds the decimal form without changing Act
+#: splitting.
 SECTION_RE = re.compile(
-    r"^[ \t]*(?P<number>\d{1,4}[A-Z]{0,3})[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]*)$",
+    r"^[ \t]*(?P<number>\d{1,4}[A-Z]{0,3}(?:\.\d{1,4}[A-Z]{0,3}){0,2})[.)]?[ \t–—-]+(?P<heading>[A-Z][^\n]*)$",
     re.MULTILINE,
 )
 
