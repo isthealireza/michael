@@ -297,7 +297,7 @@ def named_jurisdiction_mismatch(query: str) -> str | None:
 #: Regulations 2022", "Corporations Regulations 2001", but not prose that
 #: merely says "the Act".
 INSTRUMENT_NAME = re.compile(
-    r"\b[A-Z][\w'-]*(?:\s+(?:\w[\w'-]*|\([A-Z][\w'-]*\))){0,8}\s+(?:Act|Regulations?|Code|Award)\b(?:\s+\d{4})?"
+    r"\b[A-Z][\w'-]*(?:\s+(?:\w[\w'-]*|\([A-Z][\w'-]*(?:\s+\w[\w'-]*)*\))){0,8}\s+(?:Act|Regulations?|Code|Award)\b(?:\s+\d{4})?"
 )
 
 #: A three-part decimal regulation number ("1.0.01", "2A.1.01"), the pinpoint
