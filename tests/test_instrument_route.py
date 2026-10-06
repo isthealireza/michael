@@ -88,3 +88,19 @@ def test_instrument_name_extracts_the_title_verbatim() -> None:
     assert _extract_instrument_name("the Act does not matter") is None
     assert _extract_instrument_name("The Act does not matter") is None
     assert _extract_instrument_name("An Act to provide for...") is None
+
+
+def test_wa_duty_of_care_query_resolves_to_wa_not_cth() -> None:
+    import json
+    from pathlib import Path
+
+    path = Path(__file__).parents[1] / "calibration" / "instrument_queries.json"
+    data = json.loads(path.read_text(encoding="utf-8"))
+    wa = next(c for c in data["known_good"] if c["citation"] == "Work Health and Safety Act 2020 (WA)")
+    rows = [
+        _doc(10, "wa", "Work Health and Safety Act 2020 (WA)"),
+        _doc(11, "commonwealth", "Work Health and Safety Act 2011 (Cth)"),
+    ]
+    with patch("michael.retrieve.readonly", return_value=_Conn(rows)):
+        resolution = _resolve_instrument(wa["query"])
+    assert resolution.document_ids == (10,)

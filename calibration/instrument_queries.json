@@ -1,0 +1,30 @@
+{
+  "known_good": [
+    {"query": "what is the primary duty of care under the Work Health and Safety Act 2020 (WA) section 19", "citation": "Work Health and Safety Act 2020 (WA)", "section": "19"},
+    {"query": "what is the primary duty of care under the Work Health and Safety Act 2011 (Cth) section 19", "citation": "Work Health and Safety Act 2011 (Cth)", "section": "19"},
+    {"query": "what is the duty of care and diligence under the Corporations Act 2001 (Cth) s 180", "citation": "Corporations Act 2001 (Cth)", "section": "180"},
+    {"query": "who is a financial services licensee under the Corporations Regulations 2001 (Cth) reg 7.7A.17", "citation": "Corporations Regulations 2001 (Cth)", "section": "7.7A.17"},
+    {"query": "what are the maximum weekly hours under the Fair Work Act 2009 (Cth) s 62", "citation": "Fair Work Act 2009 (Cth)", "section": "62"},
+    {"query": "what is the guarantee of acceptable quality under the Competition and Consumer Act 2010 (Cth) Schedule 2 clause 54", "citation": "Competition and Consumer Act 2010 (Cth)", "section": "Sch 2 cl 54"},
+    {"query": "what must be notified under the Privacy Act 1988 (Cth) s 26WL", "citation": "Privacy Act 1988 (Cth)", "section": "26WL"},
+    {"query": "when does property in goods pass under the Sale of Goods Act 1895 (WA) s 18", "citation": "Sale of Goods Act 1895 (WA)", "section": "18"},
+    {"query": "when is an electronic signature valid under the Electronic Transactions Act 2011 (WA) s 8", "citation": "Electronic Transactions Act 2011 (WA)", "section": "8"},
+    {"query": "how is a transfer registered under the Transfer of Land Act 1893 (WA) Schedule 12 clause 86", "citation": "Transfer of Land Act 1893 (WA)", "section": "Sch 12 cl 86"},
+    {"query": "what is the duty to provide first aid under the Work Health and Safety (General) Regulations 2022 (WA) regulation 42", "citation": "Work Health and Safety (General) Regulations 2022 (WA)", "section": "42"},
+    {"query": "when is a strata plan registered under the Strata Titles Act 1985 (WA) Schedule 3 clause 2", "citation": "Strata Titles Act 1985 (WA)", "section": "Sch 3 cl 2"}
+  ],
+  "known_absent": [
+    {"query": "what is the standard business sponsorship under the Migration Act 1958 (Cth) s 140E"},
+    {"query": "how many demerit points apply under the Road Traffic Code 2000 (WA)"},
+    {"query": "what is native title under the Native Title Act 1993 (Cth)"},
+    {"query": "what is the duty of care under the Civil Liability Act 2002 (WA)"},
+    {"query": "what is taxable income under the Income Tax Assessment Act 1997 (Cth)"},
+    {"query": "what is the transfer duty under the Duties Act 2008 (WA)"},
+    {"query": "what is the penalty for theft under the Criminal Code 1913 (WA)"},
+    {"query": "what is the cooling off period under the Franchising Code of Conduct"},
+    {"query": "what are the powers of a biosecurity officer under the Biosecurity Act 2015 (Cth)"},
+    {"query": "what commercial electronic messages are banned under the Spam Act 2003 (Cth)"},
+    {"query": "what metadata must be retained under the Telecommunications Act 1997 (Cth)"},
+    {"query": "how do I apply for a liquor licence under the Liquor Control Act 1988 (WA)"}
+  ]
+}
