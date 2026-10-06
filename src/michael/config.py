@@ -126,7 +126,7 @@ def settings() -> Settings:
         retrieval_min_score=_float("RETRIEVAL_MIN_SCORE", 0.02),
         retrieval_candidates=_int("RETRIEVAL_CANDIDATES", 200),
         retrieval_top_k=_int("RETRIEVAL_TOP_K", 12),
-        retrieval_route=os.environ.get("RETRIEVAL_ROUTE", "").strip() or "off",
+        retrieval_route=os.environ.get("RETRIEVAL_ROUTE", "").strip() or "instrument",
         sources_dir=_path("MICHAEL_SOURCES_DIR", "sources"),
         templates_dir=_path("MICHAEL_TEMPLATES_DIR", "templates"),
         ingestion_log=_path("MICHAEL_INGESTION_LOG", "sources/ingestion.log.jsonl"),

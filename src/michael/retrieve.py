@@ -292,10 +292,12 @@ def named_jurisdiction_mismatch(query: str) -> str | None:
 #: A Title Case instrument name ending in Act/Regulations/Code/Award, with an
 #: optional trailing year. The first word is capitalised, then up to eight
 #: mixed-case words (so "and"/"of" inside a title do not break the match),
-#: then the instrument-type word. Matches "Work Health and Safety Act 2020",
-#: "Corporations Regulations 2001", but not prose that merely says "the Act".
+#: optionally parenthesised ("(General)"), then the instrument-type word.
+#: Matches "Work Health and Safety Act 2020", "Work Health and Safety (General)
+#: Regulations 2022", "Corporations Regulations 2001", but not prose that
+#: merely says "the Act".
 INSTRUMENT_NAME = re.compile(
-    r"\b[A-Z][\w'-]*(?:\s+\w[\w'-]*){0,8}\s+(?:Act|Regulations?|Code|Award)\b(?:\s+\d{4})?"
+    r"\b[A-Z][\w'-]*(?:\s+(?:\w[\w'-]*|\([A-Z][\w'-]*\))){0,8}\s+(?:Act|Regulations?|Code|Award)\b(?:\s+\d{4})?"
 )
 
 #: A three-part decimal regulation number ("1.0.01", "2A.1.01"), the pinpoint

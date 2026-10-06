@@ -104,3 +104,35 @@ def test_wa_duty_of_care_query_resolves_to_wa_not_cth() -> None:
     with patch("michael.retrieve.readonly", return_value=_Conn(rows)):
         resolution = _resolve_instrument(wa["query"])
     assert resolution.document_ids == (10,)
+
+
+def test_every_named_query_resolves_to_the_named_instrument_only() -> None:
+    import json
+    from pathlib import Path
+
+    data = json.loads((Path(__file__).parents[1] / "calibration" / "instrument_queries.json").read_text())
+    docs = [
+        _doc(i + 1, "wa" if "(WA)" in g["citation"] else "commonwealth", g["citation"])
+        for i, g in enumerate(data["known_good"])
+    ]
+    by_id = {d["id"]: d["citation"] for d in docs}
+    for g in data["known_good"]:
+        with patch("michael.retrieve.readonly", return_value=_Conn(docs)):
+            resolution = _resolve_instrument(g["query"])
+        citations = {by_id[i] for i in resolution.document_ids}
+        assert citations == {g["citation"]}, f"{g['query']} -> {citations}"
+
+
+def test_absent_queries_resolve_to_no_instrument() -> None:
+    import json
+    from pathlib import Path
+
+    data = json.loads((Path(__file__).parents[1] / "calibration" / "instrument_queries.json").read_text())
+    docs = [
+        _doc(i + 1, "wa" if "(WA)" in g["citation"] else "commonwealth", g["citation"])
+        for i, g in enumerate(data["known_good"])
+    ]
+    for a in data["known_absent"]:
+        with patch("michael.retrieve.readonly", return_value=_Conn(docs)):
+            resolution = _resolve_instrument(a["query"])
+        assert resolution.document_ids == (), f"{a['query']} -> {resolution.document_ids}"
