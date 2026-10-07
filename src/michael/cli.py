@@ -125,6 +125,17 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["act", "regulation", "award", "case"],
         help="only store these document types. Repeatable. Omit to take all.",
     )
+    seed.add_argument(
+        "--jurisdiction",
+        action="append",
+        default=[],
+        choices=["wa", "commonwealth"],
+        help=(
+            "only seed these jurisdictions. Repeatable. Omit to take both, which "
+            "is the default and what this command has always done; no other "
+            "jurisdiction can be reached either way."
+        ),
+    )
 
     ingest = sub.add_parser("ingest", help="fetch and ingest one URL from an allowlisted host")
     ingest.add_argument("url")
@@ -239,7 +250,10 @@ def _run(args: argparse.Namespace) -> int:
         case "seed":
             _print(
                 tools.seed_corpus(
-                    limit=args.limit, max_new=args.max_new, doc_types=args.doc_type or None
+                    limit=args.limit,
+                    max_new=args.max_new,
+                    doc_types=args.doc_type or None,
+                    jurisdictions=args.jurisdiction or None,
                 )
             )
         case "ingest-file":

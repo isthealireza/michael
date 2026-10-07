@@ -1825,6 +1825,7 @@ def _seed_with_stored(
     *,
     records: list[dict[str, object]],
     already_stored: set[str],
+    jurisdictions: tuple[str, ...] = ("wa", "commonwealth"),
     **kwargs: object,
 ) -> tuple[list[ingest.IngestResult], _StoredConnection]:
     conn = _StoredConnection(already_stored)
@@ -1844,7 +1845,7 @@ def _seed_with_stored(
     monkeypatch.setitem(
         sys.modules, "datasets", SimpleNamespace(load_dataset=lambda *a, **kw: _FakeStream())
     )
-    results = ingest.seed_from_corpus(jurisdictions=("wa", "commonwealth"), **kwargs)  # type: ignore[arg-type]
+    results = ingest.seed_from_corpus(jurisdictions=jurisdictions, **kwargs)  # type: ignore[arg-type]
     return results, conn
 
 
@@ -1920,6 +1921,45 @@ def test_limit_still_counts_every_record_including_already_stored(
         "Stored One Act 2000 (WA)",
         "Stored Two Act 2001 (WA)",
     ], "limit counts records read, so two stored citations are still two records"
+
+
+def test_jurisdiction_commonwealth_does_not_store_a_wa_document(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`--jurisdiction commonwealth` must reach the corpus filter, not just parse.
+
+    A flag that parses but never reaches `seed_from_corpus` would look correct
+    on the command line and seed the whole corpus anyway, so this asserts on
+    what was actually written rather than on the argument.
+    """
+    records = [
+        _corpus_record("wa", "A Wa Act 2000 (WA)"),
+        _corpus_record("commonwealth", "A Cth Act 2000 (Cth)"),
+    ]
+
+    results, conn = _seed_with_stored(
+        monkeypatch, records=records, already_stored=set(), jurisdictions=("commonwealth",)
+    )
+
+    assert [r.citation for r in results] == ["A Cth Act 2000 (Cth)"]
+    assert conn.inserted == ["A Cth Act 2000 (Cth)"], (
+        "a WA document reached storage under --jurisdiction commonwealth"
+    )
+
+
+def test_omitting_jurisdiction_still_seeds_both(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The default is unchanged, so existing callers are unaffected."""
+    records = [
+        _corpus_record("wa", "Both Wa Act 2000 (WA)"),
+        _corpus_record("commonwealth", "Both Cth Act 2000 (Cth)"),
+    ]
+
+    results, _ = _seed_with_stored(monkeypatch, records=records, already_stored=set())
+
+    assert [r.citation for r in results] == [
+        "Both Wa Act 2000 (WA)",
+        "Both Cth Act 2000 (Cth)",
+    ]
 
 
 # Agricultural Produce Commission Act 1988 (WA), excerpted and verbatim from

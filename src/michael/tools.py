@@ -427,6 +427,7 @@ def seed_corpus(
     limit: int | None = None,
     max_new: int | None = None,
     doc_types: list[str] | None = None,
+    jurisdictions: list[str] | None = None,
 ) -> dict[str, Any]:
     """Seed from the Open Australian Legal Corpus, WA and Commonwealth only.
 
@@ -437,8 +438,17 @@ def seed_corpus(
     ``max_new`` counts only documents this run actually created, so a corpus
     that already holds most of the stream does not consume it. Both default to
     None, which is the original behaviour.
+
+    ``jurisdictions`` narrows which jurisdictions are seeded. None leaves
+    ``seed_from_corpus``'s own default of both WA and Commonwealth, rather than
+    repeating that default here where the two could drift apart.
     """
-    results = ingestion.seed_from_corpus(limit=limit, max_new=max_new, doc_types=doc_types)
+    results = ingestion.seed_from_corpus(
+        limit=limit,
+        max_new=max_new,
+        doc_types=doc_types,
+        jurisdictions=jurisdictions or ("wa", "commonwealth"),
+    )
     return {
         "documents": len(results),
         "created": sum(1 for r in results if r.created),
