@@ -1179,6 +1179,26 @@ def unnumbered_note(provisions: list[Provision]) -> str:
     return ""
 
 
+def whole_document_note(provisions: list[Provision]) -> str:
+    """Report legislation that ``split_sections`` could not divide at all.
+
+    Empty when the document produced citable units. A single provision typed
+    ``document`` is ``split_sections`` saying it found no section headings, so
+    the whole text would be stored as one unciteable row.
+
+    A document with exactly one provision typed ``section`` is *not* this case:
+    it is an ordinary one-section instrument that split cleanly, and is kept.
+    """
+    if len(provisions) != 1:
+        return ""
+    if provisions[0].unit_type != "document":
+        return ""
+    return (
+        "no section headings found; not citable at a pinpoint and not legislation "
+        "in substance, so it was not stored"
+    )
+
+
 def detect_headings_only(provisions: list[Provision]) -> str | None:
     """Detect a document whose provisions carry headings but not operative text.
 
@@ -1315,6 +1335,32 @@ def ingest_document(
         if headings_only_reason is not None:
             raise IngestionError(f"{citation}: refused as headings-only - {headings_only_reason}")
     note = unnumbered_note(provisions) if is_judgment else ""
+
+    # Legislation the splitter could not divide into citable units is stored by
+    # split_sections as a single (whole document) row. That row is not law: it
+    # has no pinpoint, so nothing can cite it at a section, and in practice it
+    # is not legislation at all. The Commonwealth corpus carries Airworthiness
+    # Directives, commencement notices, and a notice disqualifying a named
+    # person, all classified `secondary_legislation` and therefore mapped to
+    # `regulation`. Keeping one would put a non-citable row in the corpus under
+    # a type that says it is a regulation.
+    #
+    # So it is not kept. The document is reported and nothing is written, which
+    # is why this returns before the write closure below rather than raising:
+    # raising would drop it from the results and lose the note, and the operator
+    # would see a count that cannot be reconciled with the log.
+    #
+    # A judgment is exempt: an older report with no paragraph numbers is
+    # legitimately one (whole document) row, and unnumbered_note already says so.
+    if not is_judgment and whole_document_note(provisions):
+        return IngestResult(
+            document_id=0,
+            citation=citation,
+            sha256=sha256,
+            provisions=0,
+            created=False,
+            note=whole_document_note(provisions),
+        )
 
     def write(target: Connection[DictRow]) -> IngestResult:
         return _write(
