@@ -1962,6 +1962,82 @@ def test_omitting_jurisdiction_still_seeds_both(monkeypatch: pytest.MonkeyPatch)
     ]
 
 
+def test_legislation_the_splitter_cannot_divide_is_not_stored(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """An Act or regulation stored as one (whole document) row is not kept.
+
+    That row has no pinpoint, so nothing can cite it at a section, and in
+    substance it is not legislation: the Commonwealth corpus maps Airworthiness
+    Directives, commencement notices and a notice disqualifying a named person
+    all to `regulation` via `secondary_legislation`. Keeping one puts a
+    non-citable row in the corpus under a type that claims it is a regulation.
+
+    Nothing may be written, and the operator must still be told, because a count
+    that cannot be reconciled with the log is how this stays invisible.
+    """
+    record = _corpus_record("commonwealth", "AD/B747/295 - Wing Foreflap (Cth)")
+    record["text"] = (
+        "AD/B747/295\nThis Airworthiness Directive requires the modification, "
+        "inspection or alteration of the aeroplane, and applies to all operators."
+    )
+
+    results, conn = _seed_with_stored(monkeypatch, records=[record], already_stored=set())
+
+    assert conn.inserted == [], "an unciteable document reached storage"
+    assert [r.created for r in results] == [False]
+    assert [r.provisions for r in results] == [0]
+    assert "not stored" in results[0].note, results[0].note
+
+
+def test_a_one_section_instrument_is_still_stored(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """One section is not the same as no sections.
+
+    ``split_sections`` returns a single provision typed ``section`` for a
+    genuine one-section instrument, and one typed ``document`` when it found no
+    headings at all. Conflating them would delete valid legislation, so the
+    distinction is pinned in both directions.
+    """
+    results, conn = _seed_with_stored(
+        monkeypatch,
+        records=[_corpus_record("wa", "One Section Act 2000 (WA)")],
+        already_stored=set(),
+    )
+
+    assert conn.inserted == ["One Section Act 2000 (WA)"]
+    assert [r.created for r in results] == [True]
+    assert results[0].note == ""
+
+
+def test_a_judgment_with_no_paragraphs_is_still_stored(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The judgment exemption holds: an old report is legitimately one row.
+
+    Muir v Open Brethren [1956] HCA 14 is continuous prose with no paragraph
+    numbers. Storing it as one (whole document) row is correct for a judgment,
+    and this filter must not take it.
+    """
+    record = _corpus_record("commonwealth", "Some Case [1956] HCA 14 (Cth)")
+    record["type"] = "decision"
+    # Continuous prose with no paragraph numbers. A fixture that began "1. Short
+    # title" would be read as a numbered paragraph and would never exercise the
+    # whole-document path this test is about.
+    record["text"] = (
+        "The plaintiff brought an action for damages and the defendant pleaded "
+        "the general issue. The Court held the plea good and gave judgment for "
+        "the defendant with costs."
+    )
+
+    results, conn = _seed_with_stored(monkeypatch, records=[record], already_stored=set())
+
+    assert conn.inserted == ["Some Case [1956] HCA 14 (Cth)"]
+    assert [r.created for r in results] == [True]
+    assert "whole document" in results[0].note, results[0].note
+
+
 # Agricultural Produce Commission Act 1988 (WA), excerpted and verbatim from
 # the production corpus. The Act has exactly ONE Schedule, so Western
 # Australian drafting heads it "Schedule" with no number at all. Its clauses
