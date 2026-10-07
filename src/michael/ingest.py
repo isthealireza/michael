@@ -1620,6 +1620,7 @@ CORPUS_JURISDICTION_MAP = {
 def seed_from_corpus(
     *,
     limit: int | None = None,
+    max_new: int | None = None,
     jurisdictions: Iterable[str] = ("wa", "commonwealth"),
     doc_types: Iterable[str] | None = None,
     dataset_id: str = "isaacus/open-australian-legal-corpus",
@@ -1632,7 +1633,22 @@ def seed_from_corpus(
 
     ``doc_types`` narrows what is stored, e.g. ("act", "regulation") to take
     legislation and leave case law out. None takes everything mappable.
+
+    ``limit`` counts every record the stream yields, including one already in
+    the corpus. ``max_new`` counts only documents this run actually created: a
+    citation already stored is skipped by the (citation, sha256) conflict and
+    does not consume it. That distinction matters when re-seeding a corpus that
+    already holds the head of the stream, where ``limit`` can be spent entirely
+    on documents already present and create nothing.
+
+    Either may be given; the first one reached stops the run. Both None is the
+    original behaviour.
     """
+    if limit is not None and limit <= 0:
+        raise IngestionError(f"limit must be positive, got {limit}")
+    if max_new is not None and max_new <= 0:
+        raise IngestionError(f"max_new must be positive, got {max_new}")
+
     try:
         from datasets import load_dataset
     except ImportError as exc:  # pragma: no cover - optional extra
@@ -1653,6 +1669,7 @@ def seed_from_corpus(
 
     stream = load_dataset(dataset_id, split="corpus", streaming=True)
     results: list[IngestResult] = []
+    created = 0
     with writable() as conn:
         for record in normalise_corpus_records(stream, wanted, wanted_types):
             body = str(record["text"]).encode("utf-8")
@@ -1699,7 +1716,13 @@ def seed_from_corpus(
                 _log_refusal(url=str(record["source_url"]), reason=f"{citation}: {exc}")
                 continue
             results.append(result)
+            if result.created:
+                created += 1
             if limit is not None and len(results) >= limit:
+                break
+            # Counted on r.created, not on len(results): a citation already in
+            # the corpus returns created=False and must not consume the cap.
+            if max_new is not None and created >= max_new:
                 break
         conn.commit()
 
