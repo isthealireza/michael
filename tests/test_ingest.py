@@ -1739,6 +1739,189 @@ def test_a_refusal_after_the_document_row_is_written_leaves_no_half_document(
     assert conn.written == ["Alpha Act 2000 (WA)", "Charlie Act 2000 (Cth)"], conn.written
 
 
+class _StoredCursor:
+    """A cursor that reports some citations as already in the corpus.
+
+    `_write` inserts the document row with ON CONFLICT (citation, sha256) DO
+    NOTHING RETURNING id, so a citation already stored comes back as no row and
+    `_already_stored` reads it back instead. Modelling that is the only way a
+    test can tell "this run created it" from "this run found it already there",
+    which is the entire distinction `max_new` counts on.
+    """
+
+    def __init__(self, conn: _StoredConnection) -> None:
+        self._conn = conn
+        self._last_sql = ""
+
+    def execute(self, query: str, params: object = None) -> None:
+        self._last_sql = query
+        if "INSERT INTO documents" in query:
+            citation = str(params[2]) if isinstance(params, tuple) else ""
+            self._conn.inserted.append(citation)
+
+    def fetchone(self) -> dict[str, int] | None:
+        if "INSERT INTO documents" in self._last_sql:
+            citation = self._conn.inserted[-1] if self._conn.inserted else ""
+            if citation in self._conn.already_stored:
+                return None  # the conflict: nothing inserted
+            return {"id": 100 + len(self._conn.inserted)}
+        if "SELECT id FROM documents" in self._last_sql:
+            return {"id": 7}
+        if "count(*) AS n FROM provisions" in self._last_sql:
+            return {"n": 3}
+        return None
+
+    def fetchall(self) -> list[dict[str, object]]:
+        return []
+
+    def __enter__(self) -> _StoredCursor:
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        return None
+
+
+class _StoredConnection:
+    def __init__(self, already_stored: set[str]) -> None:
+        self.already_stored = already_stored
+        self.inserted: list[str] = []
+
+    def cursor(self) -> _StoredCursor:
+        return _StoredCursor(self)
+
+    def commit(self) -> None:
+        pass
+
+    @contextmanager
+    def transaction(self) -> Iterator[None]:
+        mark = len(self.inserted)
+        try:
+            yield
+        except BaseException:
+            del self.inserted[mark:]
+            raise
+
+    def __enter__(self) -> _StoredConnection:
+        return self
+
+    def __exit__(self, *exc_info: object) -> None:
+        return None
+
+
+def _corpus_record(where: str, citation: str) -> dict[str, object]:
+    name = citation.split(" (")[0]
+    return {
+        "jurisdiction": where,
+        "type": "primary_legislation",
+        "text": f"1. Short title\nThis Act may be cited as the {name}.\n",
+        "citation": citation,
+        "url": f"https://legislation.gov.au/{name.replace(' ', '-').lower()}",
+        "date": "2020-01-01",
+    }
+
+
+def _seed_with_stored(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    records: list[dict[str, object]],
+    already_stored: set[str],
+    **kwargs: object,
+) -> tuple[list[ingest.IngestResult], _StoredConnection]:
+    conn = _StoredConnection(already_stored)
+
+    @contextmanager
+    def _shared_writable(*, connect_timeout: int = 10) -> Iterator[_StoredConnection]:
+        yield conn
+
+    monkeypatch.setattr(ingest, "writable", _shared_writable)
+    monkeypatch.setattr(schema, "writable", _shared_writable)
+    monkeypatch.setattr(ingest, "embed", lambda texts, **kw: [[0.0] * 8 for _ in texts])
+
+    class _FakeStream:
+        def __iter__(self) -> Iterator[dict[str, object]]:
+            return iter(records)
+
+    monkeypatch.setitem(
+        sys.modules, "datasets", SimpleNamespace(load_dataset=lambda *a, **kw: _FakeStream())
+    )
+    results = ingest.seed_from_corpus(jurisdictions=("wa", "commonwealth"), **kwargs)  # type: ignore[arg-type]
+    return results, conn
+
+
+def test_an_already_stored_citation_does_not_consume_the_max_new_cap(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`max_new` counts documents this run created, not records it read.
+
+    Seeding a corpus that already holds the head of the stream is the case that
+    made `--limit` useless: every record it read was already stored, so it
+    created nothing and stopped. Here the first two records are already stored
+    and the cap is 2, so a cap that counted records would stop on the first
+    record and create nothing. Counting creates must get past both stored
+    citations and stop on the second new one.
+    """
+    records = [
+        _corpus_record("wa", "Stored One Act 2000 (WA)"),
+        _corpus_record("wa", "Stored Two Act 2001 (WA)"),
+        _corpus_record("wa", "New One Act 2002 (WA)"),
+        _corpus_record("wa", "New Two Act 2003 (WA)"),
+        _corpus_record("wa", "New Three Act 2004 (WA)"),
+    ]
+    stored = {"Stored One Act 2000 (WA)", "Stored Two Act 2001 (WA)"}
+
+    results, _ = _seed_with_stored(monkeypatch, records=records, already_stored=stored, max_new=2)
+
+    assert [r.citation for r in results] == [
+        "Stored One Act 2000 (WA)",
+        "Stored Two Act 2001 (WA)",
+        "New One Act 2002 (WA)",
+        "New Two Act 2003 (WA)",
+    ], "stored citations must not consume the cap, nor the third new one be read"
+    assert [r.created for r in results] == [False, False, True, True]
+    assert sum(1 for r in results if r.created) == 2
+
+
+def test_max_new_stops_the_run_at_the_cap(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The cap bounds creates even when nothing is already stored."""
+    records = [_corpus_record("commonwealth", f"Fresh Act {n} (Cth)") for n in range(1, 6)]
+
+    results, _ = _seed_with_stored(monkeypatch, records=records, already_stored=set(), max_new=2)
+
+    assert [r.citation for r in results] == ["Fresh Act 1 (Cth)", "Fresh Act 2 (Cth)"]
+    assert all(r.created for r in results)
+    assert len(results) == 2
+
+
+def test_max_new_defaults_off_so_limit_and_the_original_meaning_are_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With no cap the whole filtered stream is read, as it always was."""
+    records = [_corpus_record("commonwealth", f"Fresh Act {n} (Cth)") for n in range(1, 6)]
+
+    results, _ = _seed_with_stored(monkeypatch, records=records, already_stored=set())
+
+    assert len(results) == 5, "no cap must mean no early stop"
+
+
+def test_limit_still_counts_every_record_including_already_stored(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """`--limit` keeps its meaning; only `max_new` counts creates."""
+    records = [
+        _corpus_record("wa", "Stored One Act 2000 (WA)"),
+        _corpus_record("wa", "Stored Two Act 2001 (WA)"),
+        _corpus_record("wa", "New One Act 2002 (WA)"),
+    ]
+    stored = {"Stored One Act 2000 (WA)", "Stored Two Act 2001 (WA)"}
+
+    results, _ = _seed_with_stored(monkeypatch, records=records, already_stored=stored, limit=2)
+
+    assert [r.citation for r in results] == [
+        "Stored One Act 2000 (WA)",
+        "Stored Two Act 2001 (WA)",
+    ], "limit counts records read, so two stored citations are still two records"
+
+
 # Agricultural Produce Commission Act 1988 (WA), excerpted and verbatim from
 # the production corpus. The Act has exactly ONE Schedule, so Western
 # Australian drafting heads it "Schedule" with no number at all. Its clauses

@@ -108,6 +108,17 @@ def build_parser() -> argparse.ArgumentParser:
     seed = sub.add_parser("seed", help="seed from the Open Australian Legal Corpus")
     seed.add_argument("--limit", type=int)
     seed.add_argument(
+        "--max-new",
+        type=int,
+        help=(
+            "stop after this many NEWLY CREATED documents. A citation already in "
+            "the corpus does not count toward it, so this can add a bounded "
+            "number of documents however much of the corpus is already stored. "
+            "Off by default; --limit is unchanged and still counts every record "
+            "processed. Both may be given: whichever is reached first stops the run."
+        ),
+    )
+    seed.add_argument(
         "--doc-type",
         action="append",
         default=[],
@@ -226,7 +237,11 @@ def _run(args: argparse.Namespace) -> int:
             result = tools.draft_document(args.request, facts=_facts(args.fact), domain=args.domain)
             _print(result["document"])
         case "seed":
-            _print(tools.seed_corpus(limit=args.limit, doc_types=args.doc_type or None))
+            _print(
+                tools.seed_corpus(
+                    limit=args.limit, max_new=args.max_new, doc_types=args.doc_type or None
+                )
+            )
         case "ingest-file":
             _print(
                 tools.ingest_local_file(

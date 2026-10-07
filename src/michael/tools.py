@@ -422,13 +422,23 @@ def ingest_local_file(
     }
 
 
-def seed_corpus(*, limit: int | None = None, doc_types: list[str] | None = None) -> dict[str, Any]:
+def seed_corpus(
+    *,
+    limit: int | None = None,
+    max_new: int | None = None,
+    doc_types: list[str] | None = None,
+) -> dict[str, Any]:
     """Seed from the Open Australian Legal Corpus, WA and Commonwealth only.
 
     ``doc_types`` narrows what is stored, e.g. ["act", "regulation"] for
     legislation only.
+
+    ``limit`` counts every record processed, including one already stored.
+    ``max_new`` counts only documents this run actually created, so a corpus
+    that already holds most of the stream does not consume it. Both default to
+    None, which is the original behaviour.
     """
-    results = ingestion.seed_from_corpus(limit=limit, doc_types=doc_types)
+    results = ingestion.seed_from_corpus(limit=limit, max_new=max_new, doc_types=doc_types)
     return {
         "documents": len(results),
         "created": sum(1 for r in results if r.created),
